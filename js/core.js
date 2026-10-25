@@ -88,6 +88,7 @@
     else if (kind === 'ng') { beep(220, 0, 0.18, 'square', 0.06); beep(196, 0.1, 0.22, 'square', 0.06); }
     else if (kind === 'combo') { [988, 1175, 1568].forEach(function (f, i) { beep(f, i * 0.06, 0.14, 'triangle', 0.1); }); }
     else if (kind === 'count') beep(740, 0, 0.12, 'sine', 0.15);
+    else if (kind === 'tick') { beep(1760, 0, 0.04, 'square', 0.05); beep(880, 0, 0.06, 'sine', 0.08); }
     else if (kind === 'go') beep(1480, 0, 0.35, 'sine', 0.18);
     else if (kind === 'whistle') { beep(2100, 0, 0.5, 'sine', 0.12); beep(2160, 0, 0.5, 'sine', 0.08); }
     else if (kind === 'fanfare') { [523, 659, 784, 1047].forEach(function (f, i) { beep(f, i * 0.11, i === 3 ? 0.5 : 0.14, 'triangle', 0.12); }); }

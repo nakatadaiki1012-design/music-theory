@@ -412,6 +412,40 @@ svg.dia .en { font-family: var(--font-en); }
   .emel { height: 64px; }
 }
 
+/* ゲームの演出（ステージ） */
+.stagebar { flex: none; display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--chip), var(--panel)); font-size: 13.5px; font-weight: 700; position: relative; overflow: hidden; transition: background .6s; }
+.stagebar::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .6s;
+  background: radial-gradient(ellipse 40% 140% at 50% -40%, rgba(255, 230, 150, .55), transparent 70%); }
+.stagebar[data-v="2"]::before, .stagebar[data-v="3"]::before { opacity: .5; }
+.stagebar[data-v="4"]::before, .stagebar[data-v="5"]::before, .stagebar[data-v="6"]::before, .stagebar[data-v="7"]::before { opacity: 1; }
+.stagebar[data-v="4"], .stagebar[data-v="5"] { border-color: var(--gold); }
+.stagebar[data-v="6"], .stagebar[data-v="7"] { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.stagebar > * { position: relative; }
+.stagebar .sv { white-space: nowrap; }
+.stagebar .sb { font-size: 18px; letter-spacing: 1px; white-space: nowrap; }
+.stagebar .sa { flex: 1; min-width: 40px; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.stagebar .sa i { display: block; height: 100%; width: 0; background: var(--gold); transition: width .4s; }
+.stagebar .sn { color: var(--muted); font-weight: 500; font-size: 12px; white-space: nowrap; }
+.stagebar.ff { background: linear-gradient(90deg, var(--gold-soft), var(--warm-soft), var(--gold-soft)); background-size: 200% 100%; animation: ffbg 1.2s linear infinite; border-color: var(--warm); }
+@keyframes ffbg { to { background-position: 200% 0; } }
+.gbanner { position: absolute; left: 50%; top: 128px; transform: translateX(-50%); z-index: 7; background: var(--panel); border: 2px solid var(--ink); border-radius: 999px; padding: 4px 16px; font-weight: 800; white-space: nowrap; box-shadow: 2px 2px 0 var(--ink); animation: bannerin 1.6s ease-out forwards; pointer-events: none; }
+.gbanner.ffb { border-color: var(--warm); color: var(--warm); box-shadow: 2px 2px 0 var(--warm); }
+.gbanner.ffb .en { font-style: italic; font-size: 1.3em; }
+.gbanner.venue { border-color: var(--gold); box-shadow: 2px 2px 0 var(--gold); }
+@keyframes bannerin { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.9); } 12%, 75% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
+.fnote { position: fixed; z-index: 65; pointer-events: none; font-family: var(--font-sym); font-size: 24px; color: var(--accent); animation: noteup 1.3s ease-out forwards; }
+.fnote.gold { color: var(--gold); font-size: 28px; }
+@keyframes noteup { from { opacity: 1; transform: translate(0, 0) rotate(0); } to { opacity: 0; transform: translate(var(--dx), -110px) rotate(-20deg); } }
+.curtain { display: flex; align-items: center; gap: 12px; text-align: left; border: 1.5px solid var(--gold); border-radius: 8px; padding: 8px 14px; background: var(--gold-soft); }
+.curtain .cv { font-size: 40px; line-height: 1; }
+.curtain small { color: var(--muted); }
+.estrip.gain .emel { animation: gainp 1.4s ease-out; border-radius: 6px; }
+@keyframes gainp { 0% { box-shadow: 0 0 0 0 var(--accent); } 30% { box-shadow: 0 0 0 6px var(--accent-soft); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.tempopop { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 8; font-size: 46px; font-weight: 600; font-style: italic; color: var(--warm); pointer-events: none; animation: tempoin 1.6s ease-out forwards; }
+@keyframes tempoin { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.5) rotate(-8deg); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.15) rotate(-4deg); } 70% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-4deg); } 100% { opacity: 0; transform: translate(-50%, -80%) scale(1); } }
+@media (max-width: 640px) { .stagebar .sn { display: none; } .gbanner { top: 120px; font-size: 13px; } }
+
 /* ダイアログ */
 dialog { border: 1.5px solid var(--ink); border-radius: 8px; background: var(--panel); color: var(--ink); padding: 0; width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); box-shadow: 4px 4px 0 var(--ink); }
 dialog::backdrop { background: rgba(20, 22, 20, .45); }
@@ -561,13 +595,14 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261025c"></script>
-<script src="js/music.js?v=20261025c"></script>
-<script src="js/core.js?v=20261025c"></script>
-<script src="js/figs.js?v=20261025c"></script>
-<script src="js/lessons.js?v=20261025c"></script>
-<script src="js/quiz.js?v=20261025c"></script>
-<script src="js/app.js?v=20261025c"></script>
-<script src="js/game.js?v=20261025c"></script>
+<script src="js/config.js?v=20261025d"></script>
+<script src="js/music.js?v=20261025d"></script>
+<script src="js/core.js?v=20261025d"></script>
+<script src="js/figs.js?v=20261025d"></script>
+<script src="js/lessons.js?v=20261025d"></script>
+<script src="js/quiz.js?v=20261025d"></script>
+<script src="js/app.js?v=20261025d"></script>
+<script src="js/stage.js?v=20261025d"></script>
+<script src="js/game.js?v=20261025d"></script>
 </body>
 </html>

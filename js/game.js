@@ -87,7 +87,7 @@
     stopGame();
     G = { cfg: cfg, qs: makeQs(cfg, seed), i: 0, mode: mode, startAt: startAt, score: 0, combo: 0, maxCombo: 0, ok: 0, ng: 0, res: [], over: false, hooks: hooks || {}, box: box,
       left: cfg.t * 1000, last: startAt };
-    box.innerHTML = '<section class="panel qz" style="position:relative"><div class="ta-top"><span class="tm" id="gtm"></span><div class="tbar" id="gbar"><i></i></div><span class="cb" id="gcb"></span><span class="sc" id="gsc">0<small> 点</small></span>' + (mode === 'battle' ? '<span class="rank" id="grk">−</span>' : '') + '</div><div id="gq" style="flex:1;min-height:0;display:flex;flex-direction:column"></div></section>';
+    box.innerHTML = '<section class="panel qz" style="position:relative"><div class="ta-top"><span class="tm" id="gtm"></span><div class="tbar" id="gbar"><i></i></div><span class="cb" id="gcb"></span><span class="sc" id="gsc">0<small> 点</small></span>' + (mode === 'battle' ? '<span class="rank" id="grk">−</span>' : '') + '</div>' + GK.STAGE.html() + '<div id="gq" style="flex:1;min-height:0;display:flex;flex-direction:column"></div></section>';
     G.timer = setInterval(tick, 100);
     GK.quizKeys(function () { return G && G.qel; });
     tick();
@@ -113,7 +113,8 @@
     var left = timeLeft(), max = G.mode === 'battle' ? G.cfg.t * 1000 : Math.max(G.cfg.t * 1000, 1);
     var bar = $('#gbar', G.box); if (bar) { bar.firstChild.style.width = Math.min(100, left / max * 100) + '%'; bar.classList.toggle('low', left < 10000); }
     var tm = $('#gtm', G.box), dr = G.mode === 'battle' ? 1 : drainRate((now() - G.startAt) / 1000);
-    if (tm) tm.innerHTML = Math.ceil(left / 1000) + '秒' + (dr > 1.05 ? '<small style="color:var(--warm);font-size:13px;margin-left:4px">⏩×' + dr.toFixed(1) + '</small>' : '');
+    if (tm) tm.innerHTML = Math.ceil(left / 1000) + '秒' + (dr > 1.05 ? '<small style="color:var(--warm);font-size:13px;margin-left:4px;font-family:var(--font-en);font-style:italic">accel. ×' + dr.toFixed(1) + '</small>' : '');
+    GK.STAGE.tick(G, left);
     if (G.mode !== 'battle' && t - G.startAt > HARD_END * 1000) left = 0;
     if (left <= 0 && !G.over) { G.over = true; clearInterval(G.timer); G.dur = (now() - G.startAt) / 1000; GK.fx('whistle'); G.hooks.end && G.hooks.end(G); }
   }
@@ -130,19 +131,20 @@
         var pop = '';
         if (ok) {
           G.combo++; G.ok++; G.maxCombo = Math.max(G.maxCombo, G.combo);
-          var pts = Math.round(q.st * 30 * mult(G.combo));
-          G.score += pts; pop = '+' + pts;
+          var ff = GK.STAGE.ffOn(G), pts = Math.round(q.st * 30 * mult(G.combo) * (ff ? 2 : 1));
+          G.score += pts; pop = '+' + pts + (ff ? ' ff' : '');
           if (G.mode !== 'battle') {
             var b = bonusSec(q.st, G.ok - 1) + (G.combo % 5 === 0 ? COMBO_BONUS : 0);
             G.left = Math.min(Math.max(G.cfg.t * 1000, timeLeft()), timeLeft() + b * 1000); G.last = now();
             pop += '　+' + b + '秒';
           }
-          if (G.combo % 10 === 0) { GK.fx('combo'); }
           G.qel.classList.add('flash-ok');
+          GK.STAGE.correct(G, G.qel.querySelector('.ch button.ok'));
         } else {
           G.combo = 0; G.ng++; pop = '✕';
           if (G.mode !== 'battle') { G.left = timeLeft() - PENALTY * 1000; G.last = now(); pop += '　−' + PENALTY + '秒'; }
           G.qel.classList.add('flash-ng');
+          GK.STAGE.wrong(G);
         }
         popup(pop, !ok);
         $('#gsc', G.box).innerHTML = GK.fmtN(G.score) + '<small> 点</small>';
@@ -155,7 +157,7 @@
   function popup(t, ng) {
     var p = document.createElement('div'); p.className = 'pop' + (ng ? ' ng' : ''); p.textContent = t;
     var sc = $('#gsc', G.box); if (!sc) return;
-    p.style.right = '16px'; p.style.top = '78px';
+    p.style.right = '16px'; p.style.top = (G.box.querySelector('#stg') ? G.box.querySelector('#stg').offsetTop + G.box.querySelector('#stg').offsetHeight + 34 : 78) + 'px';
     G.box.firstChild.appendChild(p); setTimeout(function () { p.remove(); }, 800);
   }
 
@@ -171,10 +173,12 @@
     GK.rwSave(); GK.earn(Math.floor(g.score / 20)); GK.checkBadges();
     if (nb && g.score > 0) GK.confetti(60);
     var mm = Math.floor(g.dur / 60), ss = Math.round(g.dur % 60);
-    V.innerHTML = '<section class="panel res"><p class="note">' + esc(rangeName(g.cfg)) + '・⏱ ' + (mm ? mm + ' 分 ' : '') + ss + ' 秒 つづいた</p><div class="big">' + GK.fmtN(g.score) + '<small> 点</small></div>' +
+    setTimeout(function () { GK.STAGE.applause(Math.min(1, 0.3 + GK.STAGE.venueOf(g.score) * 0.1 + (nb ? 0.3 : 0))); }, 300);
+    V.innerHTML = '<section class="panel res"><p class="note">🎭 カーテンコール・' + esc(rangeName(g.cfg)) + '・⏱ ' + (mm ? mm + ' 分 ' : '') + ss + ' 秒 つづいた</p>' + GK.STAGE.curtain(g) + '<div class="big">' + GK.fmtN(g.score) + '<small> 点</small></div>' +
       '<p class="msg">' + (nb ? '🎉 ベスト更新！' : 'ベスト ' + GK.fmtN(best) + ' 点') + '　正解 ' + g.ok + ' 問・最大 ' + g.maxCombo + ' コンボ</p><p>📏 <b>' + g.ok + ' 問正解 ≒ ' + ruler(g.ok) + '</b></p>' +
-      '<div class="acts">' + (g.res.length ? '<button type="button" class="btn" id="rv">📖 ' + (g.ng ? 'まちがえた ' + g.ng + ' 問の解説' : '解説を見る') + '</button>' : '') + '<button type="button" class="btn" id="brag">📣 自慢する</button><button type="button" class="btn main" data-go="#ta">▶ もう一度</button><button type="button" class="btn ghost" data-go="#game">◀ ゲームのトップ</button></div></section>';
-    $('#brag').onclick = function () { GK.share('🎼 楽典ラボ タイムアタック（' + rangeName(g.cfg) + '）で ' + GK.fmtN(g.score) + ' 点！ ' + g.ok + ' 問正解・最大 ' + g.maxCombo + ' コンボ（' + ruler(g.ok) + '）\n' + location.origin + location.pathname); };
+      '<div class="acts"><button type="button" class="btn" id="rep">🔊 あなたの演奏を聴く</button>' + (g.res.length ? '<button type="button" class="btn" id="rv">📖 ' + (g.ng ? 'まちがえた ' + g.ng + ' 問の解説' : '解説を見る') + '</button>' : '') + '<button type="button" class="btn" id="brag">📣 自慢する</button><button type="button" class="btn main" data-go="#ta">▶ もう一度</button><button type="button" class="btn ghost" data-go="#game">◀ ゲームのトップ</button></div></section>';
+    $('#rep').onclick = function () { GK.STAGE.replay(g); };
+    $('#brag').onclick = function () { GK.share('🎼 楽典ラボ タイムアタック（' + rangeName(g.cfg) + '）で ' + GK.fmtN(g.score) + ' 点！ ' + GK.STAGE.VENUES[GK.STAGE.venueOf(g.score)][2] + ' 公演まで とどいた！ ' + g.ok + ' 問正解・最大 ' + g.maxCombo + ' コンボ（' + ruler(g.ok) + '）\n' + location.origin + location.pathname); };
     var rv = $('#rv'); if (rv) rv.onclick = function () { GK.review(V, g.res, function () { GK.go('#game'); }); };
   }
 
@@ -567,7 +571,7 @@
         '<div class="eend"><div class="erank">' + rows(lst) + '</div><div class="esum"><p class="msg">クラスで ' + got + ' / ' + n + ' 音 そろった！' + (got === n ? ' 🎉 曲が完成！' : '') + '</p><button type="button" class="btn main" id="ePlay">🔊 クラスの曲を聴く</button></div></div>' + strip;
       M.score($('#eMel'), melodySpec(h, n));
       el.onclick = function (e) {
-        if (e.target.closest('#ePlay')) playMelody(h, n);
+        if (e.target.closest('#ePlay')) { var dur = playMelody(h, n); setTimeout(function () { GK.STAGE.applause(got / n); }, (dur || 0) * 1000 + 200); }
         if (e.target.closest('#ePod')) podium(r, function () { EH.key = ''; ensBoard(); }, '🎉 アンサンブル・クイズ 表彰式');
       };
       return;
@@ -593,7 +597,12 @@
     else figEl.style.flex = '0 0 0';
     $$('.efig', el).forEach(function (d) { F.render(d, q.ch[+d.dataset.fi].fig); });
     M.score($('#eMel'), melodySpec(h, n));
-    if (rev && EH.revPlayed !== r.round + ':' + r.qi) { EH.revPlayed = r.round + ':' + r.qi; if (r.h.charAt(r.qi) === '1') { GK.fx('ok'); setTimeout(function () { playMelody(r.h, r.qi + 1); }, 500); } else GK.fx('ng'); }
+    if (rev && EH.revPlayed !== r.round + ':' + r.qi) {
+      EH.revPlayed = r.round + ':' + r.qi;
+      var rate = stt.n ? stt.ok / stt.n : 0;
+      if (r.h.charAt(r.qi) === '1') { GK.fx('ok'); $('.estrip', el).classList.add('gain'); setTimeout(function () { playMelody(r.h, r.qi + 1); }, 500); setTimeout(function () { GK.STAGE.applause(rate); }, 500 + (r.qi + 1) * 470); }
+      else { GK.fx('ng'); GK.STAGE.applause(rate * 0.4); }
+    }
     el.onclick = function (e) {
       if (e.target.closest('#eEar')) GK.playQ(q);
       if (e.target.closest('#eStop')) { var hh = (r.h || '') + (stt.n && stt.ok / stt.n >= ENS_OK ? '1' : '0'); api('PATCH', ROOM(EH.code), { state: 'rev', h: hh }); }
@@ -688,6 +697,7 @@
       var late = now() > r.qAt + r.cfg.sec * 1000;
       if (!a) { mk.textContent = late ? '⏰' : '—'; mk.className = 'mk ng'; }
       var ps = playersOf(r, r.round), rk = ps.map(function (p) { return p.id; }).indexOf(pid()) + 1;
+      if (a && a.ok) { var tp = document.createElement('div'); tp.className = 'tempopop en'; tp.textContent = a.tn; el2.appendChild(tp); setTimeout(function () { tp.remove(); }, 1600); }
       ex.insertAdjacentHTML('afterbegin', '<b style="font-size:1.15em">' + (a && a.ok ? '+' + a.p + ' 点 <i class="en">' + a.tn + '</i>' : a ? '0 点' : late ? '時間切れ' : '答えなし') + '</b>　' + (rk ? rk + ' 位 / ' + ps.length + ' 人' : '') + (r.h && r.h.charAt(r.qi) === '1' ? '　🎶 クラスの音が ふえた！' : '') + '<br>');
       $('.sc', el2).innerHTML = GK.fmtN(EB.s) + '<small> 点</small>';
       return;
