@@ -93,7 +93,7 @@
         { k: 'ポイント 3', h: '付点は「半分を たす」', b: '音符の右の点＝<b>付点</b>。もとの長さの<em>半分</em>が たされる。付点2分音符＝2＋1＝3拍、付点4分音符＝1＋0.5＝1.5拍。', pts: ['点が2つ（複付点）なら さらに その半分も たす', '休符にも 付点がつく'], fig: { c: 'dotted' } }
       ],
       sum: ['全 → 2分 → 4分 → 8分 → 16分 で 半分ずつ', 'はたが1本ふえると 半分', '付点は もとの長さの 半分を たす'],
-      types: ['durName', 'restName', 'durCount', 'durSum', 'longest', 'restBeats']
+      types: ['durName', 'durBeats', 'restName', 'durCount', 'durSum', 'longest', 'restBeats']
     },
     /* ---------------- 03 ---------------- */
     {
@@ -119,7 +119,7 @@
         { k: 'ポイント 4', h: '弱起（アウフタクト）', b: '曲が 1拍目以外から始まること。<b>最初の小節</b>は拍が足りない。そのぶん<b>最後の小節</b>も短く、<em>2つ合わせて1小節</em>になる。', fig: { score: { clef: 'treble', time: '3/4', bars: [[{ k: 'G4', d: 'q', c: C.red, lab: '3拍目から' }], [{ k: 'C5', d: 'h' }, { k: 'B4', d: 'q' }], [{ k: 'A4', d: 'q' }, { k: 'G4', d: 'q' }, { k: 'F4', d: 'q' }], [{ k: 'E4', d: 'h', c: C.red, lab: '2拍だけ' }]], end: 'end', sp: 40, minBar: 54 }, play: true, cap: '1拍 ＋ 2拍 ＝ 3拍（1小節分）' } }
       ],
       sum: ['タイ＝同じ高さをつなぎ 長さをたす', '3連符＝2つ分を3等分', '弱起は 最初と最後の小節で 1小節分'],
-      types: ['tieLen', 'tripletQ', 'synco', 'pickup', 'beatCount']
+      types: ['tieSlur', 'tieLen', 'tripletQ', 'synco', 'pickup', 'pickupBeat', 'beatCount', 'rhythmEar']
     },
     /* ---------------- 05 ---------------- */
     {
@@ -133,7 +133,7 @@
         { k: 'ポイント 5', h: '日本音名では ♯＝嬰、♭＝変', b: '日本音名（ハニホ）では、♯ のついた音に<b>嬰（えい）</b>、♭ のついた音に<b>変（へん）</b>を<em>前に</em>つける。調の名前（嬰ヘ短調・変ロ長調）で よく使う。', pts: ['ファ♯ ＝ 嬰ヘ ＝ F♯', 'シ♭ ＝ 変ロ ＝ B♭', '𝄪 は 重嬰、𝄫 は 重変'], fig: { html: table(['ドレミ', '日本音名', '英語'], [['ファ♯', '<b>嬰</b>ヘ', 'F♯'], ['ド♯', '<b>嬰</b>ハ', 'C♯'], ['シ♭', '<b>変</b>ロ', 'B♭'], ['ミ♭', '<b>変</b>ホ', 'E♭'], ['ラ♭', '<b>変</b>イ', 'A♭']], { fs: 16, mw: 420 }) } }
       ],
       sum: ['♯ 半音上げ・♭ 半音下げ・♮ もどす', 'ミ‐ファ と シ‐ド は 白鍵どうしの半音', '臨時記号は その小節の 同じ高さの音だけ'],
-      types: ['accName', 'halfWhole', 'enharm', 'accRule', 'kbdName']
+      types: ['accName', 'accKbd', 'halfWhole', 'enharm', 'accRule', 'kbdName', 'jpAcc', 'dblAcc']
     },
     /* ---------------- 06 ---------------- */
     {
@@ -146,7 +146,7 @@
         { k: 'ポイント 4', h: '転回音程は「9 から引く」', b: '下の音を1オクターブ上げると<b>転回音程</b>。度数は <em>9 − もとの度数</em>、長と短・増と減が 入れかわり、完全は完全のまま。', pts: ['長3度 → 短6度', '完全4度 → 完全5度', '8度より広い音程は 複音程（9度＝8度＋2度）'], fig: function () { return { score: { clef: 'treble', notes: [{ k: ['C4', 'E4'], d: 'w', lab: '長3度' }, { k: ['E4', 'C5'], d: 'w', lab: '短6度', kc: [null, C.red] }, { k: ['D4', 'G4'], d: 'w', lab: '完全4度' }, { k: ['G4', 'D5'], d: 'w', lab: '完全5度', kc: [null, C.red] }], sp: 58 }, play: [[['C4', 'E4'], 2], [['E4', 'C5'], 2], [['D4', 'G4'], 2], [['G4', 'D5'], 2]] }; } }
       ],
       sum: ['度数は 両はしの音も数える', '1・4・5・8度は完全、2・3・6・7度は長・短', '転回すると 9−度数、長と短が 入れかわる'],
-      types: ['ivDeg', 'ivName', 'ivBuild', 'ivInv', 'ivEar', 'ivSemis']
+      types: ['ivDeg', 'ivName', 'ivBuild', 'ivInv', 'ivEar', 'ivSemis', 'ivQual']
     },
     /* ---------------- 07 ---------------- */
     {
@@ -159,7 +159,7 @@
         { k: 'ポイント 4', h: '導音は 主音に 進みたがる', b: '<b>導音</b>は 主音の<em>半音下</em>。鳴らすと 主音に解決したくなる。長音階の 明るく 終わった感じは この半音から 生まれる。', fig: function () { return { score: { clef: 'treble', time: '4/4', bars: [[{ k: 'G4', d: 'q' }, { k: 'A4', d: 'q' }, { k: 'B4', d: 'h', c: C.gold, lab: '導音' }], [{ k: 'C5', d: 'w', c: C.red, lab: '主音' }]], end: 'end', sp: 48 }, play: true }; } }
       ],
       sum: ['長音階は 全・全・半・全・全・全・半', '3〜4番目、7〜8番目が 半音', 'Ⅰ主音・Ⅳ下属音・Ⅴ属音・Ⅶ導音'],
-      types: ['majPattern', 'majWrong', 'degreeName', 'scaleName']
+      types: ['majPattern', 'majWrong', 'degreeName', 'scaleName', 'majSharps', 'majFill', 'majHalf']
     },
     /* ---------------- 08 ---------------- */
     {
@@ -172,7 +172,7 @@
         { k: 'ポイント 4', h: '長調と短調を 聴きくらべ', b: '同じ<b>ド</b>から始めても、ハ長調は明るく、ハ短調は暗い。ちがいは <em>3番目の音</em>（ミ と ミ♭）が いちばん大きい。', fig: function () { var a = M.scale('C4', 'major').map(M.str), b = M.scale('C4', 'harmonic').map(M.str); return { col: [{ score: { clef: 'treble', notes: a.map(function (k, i) { return { k: k, d: '8', c: i === 2 ? C.red : null }; }), sp: 30 }, play: true, bpm: 120, ttl: 'ハ長調' }, { score: { clef: 'treble', notes: b.map(function (k, i) { return { k: k, d: '8', c: i === 2 || i === 5 ? C.blue : null }; }), sp: 30 }, play: true, bpm: 120, ttl: 'ハ短調（和声短音階）' }] }; } }
       ],
       sum: ['自然短音階は 全・半・全・全・半・全・全', '和声短音階は 第7音を半音上げる（導音）', '旋律短音階は 上り 6・7を上げ、下りは自然'],
-      types: ['minType', 'minLead', 'minEar', 'majMinEar']
+      types: ['minType', 'minLead', 'minEar', 'majMinEar', 'minSteps', 'minName', 'minMel']
     },
     /* ---------------- 09 ---------------- */
     {
@@ -185,7 +185,7 @@
         { k: 'ポイント 4', h: 'となりの調（近親調）', b: '関係の深い調。<b>平行調</b>＝調号が同じ（ハ長調とイ短調）。<b>同主調</b>＝主音が同じ（ハ長調とハ短調）。<b>属調</b>・<b>下属調</b>＝五度圏の となり。', fig: { c: 'related', a: { f: 0 } } }
       ],
       sum: ['♯：ファドソレラミシ、♭：シミラレソドファ', '最後の♯の半音上／右から2番目の♭ が長調の主音', '平行調は短3度下、属調は♯が1つ多い'],
-      types: ['keyMaj', 'keyMin', 'keySig', 'related', 'keyOrderQ']
+      types: ['keyMaj', 'keyMin', 'keySig', 'sigCount', 'related', 'relMin', 'keyOrderQ']
     },
     /* ---------------- 10 ---------------- */
     {
@@ -209,18 +209,18 @@
         { k: 'ポイント 3', h: '調の中の 7 つの和音', b: '長調では <em>Ⅰ・Ⅳ・Ⅴ が長三和音</em>、Ⅱ・Ⅲ・Ⅵ が短三和音、Ⅶ が減三和音。ハ長調なら C・Dm・Em・F・G・Am・Bdim。', fig: function () { return { score: { clef: 'treble', notes: [1, 2, 3, 4, 5, 6, 7].map(function (d) { var ch = M.diatonic(0, false, d), t = M.chordType(ch); return { k: ch.map(M.str), d: 'w', lab: M.ROMAN[d - 1], top: M.chordName(ch[0], t), c: t === 'maj' ? C.red : t === 'min' ? C.blue : C.gray }; }), sp: 42 }, play: function () { M.play([1, 2, 3, 4, 5, 6, 7].map(function (d) { return [M.diatonic(0, false, d).map(M.str), 1]; }), 100); }, cap: '<b style="color:#c4452a">赤</b>＝長三和音　<b style="color:#2f6bb8">青</b>＝短三和音' }; } }
       ],
       sum: ['Ⅰ＝トニック、Ⅳ＝サブドミナント、Ⅴ＝ドミナント', 'Ⅴ→Ⅰ が完全終止、〜→Ⅴ が半終止', 'm＝短、7＝短7度、M7＝長7度'],
-      types: ['chordName', 'roman', 'func', 'cadence', 'nameToChord']
+      types: ['chordName', 'roman', 'func', 'funcName', 'cadence', 'cadenceEar', 'nameToChord', 'chordInKey']
     },
     /* ---------------- 12 ---------------- */
     {
       id: 'u12', title: '移調', en: 'Transposition', sym: '⇅', goal: 'メロディーを ほかの調に 書きかえられる',
       cards: [
         { k: '✨ ひとことで言うと', h: '移調は 高さの「引っこし」', b: 'メロディーの形はそのままに、<em>全部の音を 同じだけ</em> 上げたり下げたりすること。歌いやすい高さにしたり、楽器に合わせたりする。', fig: function () { var mel = ['C4', 'E4', 'G4', 'E4', 'C5', 'G4', 'C4'], d = mel.map(function (k) { return M.str(M.up(k, 2, 'M')); }); var mk = function (ks, key) { return { clef: 'treble', key: key, time: '4/4', bars: [ks.slice(0, 4).map(function (k) { return { k: k, d: 'q' }; }), [{ k: ks[4], d: 'q' }, { k: ks[5], d: 'q' }, { k: ks[6], d: 'h' }]], end: 'end', sp: 36 }; }; return { col: [{ score: mk(mel, 0), play: true, ttl: 'ハ長調' }, { score: mk(d, 2), play: true, ttl: 'ニ長調（長2度上へ）' }] }; } },
-        { k: 'ポイント 1', h: '移調の 3 ステップ', b: '<b>①</b> 何度 上げる（下げる）か決める　<b>②</b> 新しい調の<b>調号</b>を書く　<b>③</b> 全部の音を <em>同じ度数だけ</em> ずらして書く。', pts: ['ハ長調 → ト長調：完全5度上（または完全4度下）', '臨時記号は「半音上げた・下げた」関係を 保って書く'], fig: function () { var mel = ['E4', 'F4', 'G4', 'C5'], g = mel.map(function (k) { return M.str(M.up(k, 5, 'P')); }); return { col: [{ score: { clef: 'treble', notes: mel.map(function (k) { return { k: k, d: 'q', lab: N(k) }; }), sp: 40 }, ttl: 'ハ長調', play: true }, { score: { clef: 'treble', key: 1, notes: g.map(function (k) { return { k: k, d: 'q', lab: N(k), c: /#/.test(k) ? C.red : null }; }), sp: 40 }, ttl: 'ト長調（5度上）', play: true }] }; } },
+        { k: 'ポイント 1', h: '移調の 3 ステップ', b: '<b>①</b> 何度 上げる（下げる）か決める　<b>②</b> 新しい調の<b>調号</b>を書く　<b>③</b> 全部の音を <em>同じ度数だけ</em> ずらして書く。', pts: ['ハ長調 → ト長調：完全5度上（または完全4度下）', '臨時記号は「半音上げた・下げた」関係を 保って書く', 'コードネームも 根音を同じだけ ずらす（C → D なら Am → Bm）'], fig: function () { var mel = ['E4', 'F4', 'G4', 'C5'], g = mel.map(function (k) { return M.str(M.up(k, 5, 'P')); }); return { col: [{ score: { clef: 'treble', notes: mel.map(function (k) { return { k: k, d: 'q', lab: N(k) }; }), sp: 40 }, ttl: 'ハ長調', play: true }, { score: { clef: 'treble', key: 1, notes: g.map(function (k) { return { k: k, d: 'q', lab: N(k), c: /#/.test(k) ? C.red : null }; }), sp: 40 }, ttl: 'ト長調（5度上）', play: true }] }; } },
         { k: 'ポイント 2', h: '移調楽器', b: '<b>B♭管</b>のクラリネットやトランペットは、書いた音より<em>長2度低く</em>鳴る。だから楽譜は 長2度高く書く。<b>F管</b>のホルンは 完全5度低く鳴る。', fig: function () { return { row: [{ score: { clef: 'treble', key: 2, notes: [{ k: 'D5', d: 'w', lab: '楽譜：' + N('D5') }], minBar: 80 }, ttl: 'B♭クラリネットの楽譜' }, { score: { clef: 'treble', notes: [{ k: 'C5', d: 'w', lab: '実際：' + N('C5') }], minBar: 80 }, ttl: '鳴る音（ピアノと同じ）', play: [['C5', 2]] }] }; } }
       ],
       sum: ['移調＝全部の音を同じ度数ずらす', '先に新しい調号、次に音', 'B♭管は 長2度高く書く'],
-      types: ['transNote', 'transMelody', 'transInterval', 'transKey']
+      types: ['transNote', 'transMelody', 'transInterval', 'transBack', 'transKey', 'transInst', 'transChord']
     },
     /* ---------------- 13 ---------------- */
     {

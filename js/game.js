@@ -33,14 +33,14 @@
   var drainRate = function (sec) { return 1 + Math.max(0, sec - DRAIN0) / DRAINK; };
   // 問題：はじめの 8 問は ★1 の種類だけ、22 問目までは ★2 まで、そのあとは 全部（だんだん むずかしく）
   function makeQs(cfg, seed) {
-    var R = GK.rng(seed), T = GK.Q.T, all = GK.Q.typesOf(unitsOf(cfg), true), out = [], bag = [], last = null;
+    var R = GK.rng(seed), T = GK.Q.T, all = GK.Q.typesOf(unitsOf(cfg), true), out = [], bag = [], last = null, seen = {};
     for (var i = 0; i < 160; i++) {
       var tr = i < 8 ? 1 : i < 22 ? 2 : 3;
       var pool = all.filter(function (id) { return T[id].st <= tr; }); if (!pool.length) pool = all;
       bag = bag.filter(function (id) { return pool.indexOf(id) >= 0; });
       if (!bag.length) bag = GK.shuffle(pool.slice(), R);
       var id = bag.pop(); if (id === last && bag.length) { bag.unshift(id); id = bag.pop(); } last = id;
-      try { out.push(GK.Q.make(id, R, Math.max(T[id].st, tr))); } catch (e) { console.error(id, e); }
+      try { out.push(GK.Q.fresh(id, R, Math.max(T[id].st, tr), seen)); } catch (e) { console.error(id, e); }
     }
     return out;
   }
@@ -692,7 +692,7 @@
       if (!EB.qsel || EB.shown.indexOf(r.round + ':' + r.qi) !== 0 || !$('.qz', V)) { V.innerHTML = '<section class="panel qz"></section>'; GK.drawQ($('.qz', V), Object.assign({}, q, { play: null, ear: false, fig: q.ear ? null : q.fig }), { noFb: true }); $('.qtop', V).outerHTML = stuHead(r); }
       var el2 = $('.qz', V);
       $$('.ch button', el2).forEach(function (b, j) { b.disabled = true; b.classList.remove('picked', 'dim', 'ok', 'ng'); if (j === q.a) b.classList.add('ok'); else if (a && j === a.c) b.classList.add('ng'); else b.classList.add('dim'); });
-      GK.showFb(el2, q, a ? a.ok : false, {});
+      GK.showFb(el2, q, a ? a.ok : false, { pick: a ? a.c : -1 });
       var ex = $('.fb .ex', el2), mk = $('.fb .mk', el2);
       var late = now() > r.qAt + r.cfg.sec * 1000;
       if (!a) { mk.textContent = late ? '⏰' : '—'; mk.className = 'mk ng'; }

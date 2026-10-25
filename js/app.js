@@ -52,7 +52,7 @@
       var ok = i === q.a;
       $$('.ch button', el).forEach(function (b, j) { b.disabled = true; if (j === q.a) b.classList.add('ok'); else if (j === i) b.classList.add('ng'); else b.classList.add('dim'); });
       GK.fx(ok ? 'ok' : 'ng');
-      if (!o.noFb) GK.showFb(el, q, ok, o);
+      if (!o.noFb) GK.showFb(el, q, ok, Object.assign({}, o, { pick: i }));
       o.onPick && o.onPick(i, ok);
     }
     el.pick = function (i) { if (i >= 0 && i < q.ch.length) pick(i); };
@@ -67,7 +67,7 @@
     o = o || {};
     var fb = $('.fb', el);
     fb.hidden = false;
-    fb.innerHTML = '<span class="mk ' + (ok ? 'ok' : 'ng') + '">' + (ok == null ? '📖' : ok ? '○' : '✕') + '</span><div class="ex">' + (o.noEx ? (ok ? '正解！' : '正解は ' + (q.ch[q.a].fig ? (q.a + 1) + ' 番' : '<b>' + q.ch[q.a] + '</b>')) : q.ex) + '</div>' +
+    fb.innerHTML = '<span class="mk ' + (ok ? 'ok' : 'ng') + '">' + (ok == null ? '📖' : ok ? '○' : '✕') + '</span><div class="ex">' + (o.noEx ? (ok ? '正解！' : '正解は ' + (q.ch[q.a].fig ? (q.a + 1) + ' 番' : '<b>' + q.ch[q.a] + '</b>')) : q.ex) + (!ok && !o.noEx && q.why && q.why[o.pick] ? '<div class="why">✕ えらんだ答え：' + q.why[o.pick] + '</div>' : '') + '</div>' +
       (o.next ? '<button type="button" class="btn main" data-qa="next">' + (o.nextLabel || '次へ ▶') + '</button>' : '');
     if (!o.noEx && (q.exFig || q.ear)) {
       var fig = $('.qfig', el); el.classList.remove('nofig');
@@ -116,7 +116,7 @@
             noteMiss(q.t, ok); if (ok) { RW.drillOk++; if (q.ear) RW.earOk++; GK.earn(5); }
             // まちがえたら 同じ種類の 新しい問題を 3 問あとに（1 セット 3 回まで）
             if (!ok && retries < 3) {
-              try { var nq = GK.Q.make(q.t, RR, q.st); nq.retry = true; o.qs.splice(Math.min(o.qs.length, i + 3), 0, nq); retries++; } catch (e) { }
+              try { var sn = {}; o.qs.forEach(function (x) { sn[GK.Q.sig(x)] = 1; }); var nq = GK.Q.fresh(q.t, RR, q.st, sn); nq.retry = true; o.qs.splice(Math.min(o.qs.length, i + 3), 0, nq); retries++; } catch (e) { }
             }
           }
           var p = $('.prog', el); if (p) p.outerHTML = prog().replace(/<span>.*$/, '');
@@ -143,7 +143,7 @@
       var r = list[i];
       GK.drawQ(el, r.q, { top: '<span>📖 ' + (all ? '全部' : 'まちがえた問題') + ' ' + (i + 1) + ' / ' + list.length + '</span>', noFb: true });
       $$('.ch button', el).forEach(function (b, j) { b.disabled = true; if (j === r.q.a) b.classList.add('ok'); else if (j === r.pick) b.classList.add('ng'); else b.classList.add('dim'); });
-      GK.showFb(el, r.q, r.ok, { next: function () { i++; if (i < list.length) show(); else back(); }, nextLabel: i === list.length - 1 ? 'おわり ▶' : '次へ ▶' });
+      GK.showFb(el, r.q, r.ok, { pick: r.pick, next: function () { i++; if (i < list.length) show(); else back(); }, nextLabel: i === list.length - 1 ? 'おわり ▶' : '次へ ▶' });
       el.isDone = function () { return true; };
     }
     show();
@@ -312,7 +312,7 @@
     var weak = GK.store.get('weak', {}), wk = Object.keys(weak).filter(function (k) { return GK.Q.T[k]; }).sort(function (a, b) { return weak[b] - weak[a]; });
     V.innerHTML = '<div class="split"><aside class="panel side">' +
       '<h3>演習</h3>' +
-      [['mix', '単元をえらぶ', '好きな単元を まぜて 出題'], ['weak', '🔁 苦手をやり直す', wk.length ? wk.length + ' 種類の 苦手な問題' : 'まちがえた問題が ここにたまる'], ['ear', '👂 聴いて答える', '音程・和音・長調／短調'], ['all', '🎲 全単元ミックス', 'すべての範囲から']].map(function (x) { return '<button type="button" class="it" data-dm="' + x[0] + '" aria-current="' + (DR.mode === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('') +
+      [['mix', '単元をえらぶ', '好きな単元を まぜて 出題'], ['weak', '🔁 苦手をやり直す', wk.length ? wk.length + ' 種類の 苦手な問題' : 'まちがえた問題が ここにたまる'], ['ear', '👂 聴いて答える', '音程・和音・リズム・終止'], ['all', '🎲 全単元ミックス', 'すべての範囲から']].map(function (x) { return '<button type="button" class="it" data-dm="' + x[0] + '" aria-current="' + (DR.mode === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('') +
       '<h3 style="margin-top:auto">記録</h3><p class="note" style="padding:0 4px">演習で 正解 <b>' + GK.fmtN(RW.drillOk) + '</b> 問<br>聴く問題 正解 <b>' + RW.earOk + '</b> 問</p>' +
       '</aside><section class="panel main"><div class="mhead"><h2 class="ttl">💪 まとめて演習</h2></div><div class="mbody" id="dbody"></div></section></div>';
     var body = $('#dbody');
@@ -320,7 +320,7 @@
       var html = '';
       if (DR.mode === 'mix') html += '<div class="frow"><span>単元</span><button type="button" class="btn ghost sm" data-dx="allu">全部</button><button type="button" class="btn ghost sm" data-dx="noneu">はずす</button></div><div class="upick">' + GK.UNITS.map(function (u) { return '<button type="button" data-du="' + u.id + '" aria-pressed="' + (DR.us.indexOf(u.id) >= 0) + '"><i>' + u.no + '</i>' + esc(u.title) + '</button>'; }).join('') + '</div>';
       if (DR.mode === 'weak') html += wk.length ? '<p>まちがえた回数が多い 問題の種類から 出します。正解すると 少しずつ へります。</p><div class="upick">' + wk.slice(0, 12).map(function (k) { return '<button type="button" disabled style="opacity:1"><i>' + GK.UNIT[GK.Q.T[k].u].no + '</i>' + esc(GK.UNIT[GK.Q.T[k].u].title) + ' <small style="color:var(--warm)">×' + weak[k] + '</small></button>'; }).join('') + '</div>' : '<p>まだ 苦手な問題は ありません。演習で まちがえると ここに たまります。</p>';
-      if (DR.mode === 'ear') html += '<p>🔊 音を聴いて答える問題だけを出します（音程・長音階／短音階・長調／短調・長三和音／短三和音）。音が出る環境で どうぞ。</p>';
+      if (DR.mode === 'ear') html += '<p>🔊 音を聴いて答える問題だけを出します（音程・長音階／短音階・長調／短調・長三和音／短三和音・リズム・終わった感じ／続く感じ）。音が出る環境で どうぞ。</p>';
       if (DR.mode === 'all') html += '<p>' + GK.UNITS.length + ' 単元 すべてから 出題します。</p>';
       html += '<div class="frow"><span>問題の数</span><div class="seg">' + [10, 20, 30].map(function (n) { return '<button type="button" data-dn="' + n + '" aria-pressed="' + (DR.n === n) + '">' + n + ' 問</button>'; }).join('') + '</div></div>' +
         '<div class="frow"><span>むずかしさ</span><div class="seg">' + [[0, 'だんだん'], [1, '★ やさしい'], [2, '★★ ふつう'], [3, '★★★ 挑戦']].map(function (x) { return '<button type="button" data-ds="' + x[0] + '" aria-pressed="' + (DR.st === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div></div>' +

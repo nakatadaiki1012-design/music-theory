@@ -19,9 +19,10 @@
     seen[right.k] = 1;
     shuffle(wrongs.slice(), R).forEach(function (w) { if (list.length < n - 1 && !seen[w.k]) { seen[w.k] = 1; list.push(w); } });
     var all = shuffle([right].concat(list), R);
-    return { ch: all.map(function (x) { return x.fig ? { fig: x.fig, k: x.k } : x.t; }), a: all.indexOf(right) };
+    return { ch: all.map(function (x) { return x.fig ? { fig: x.fig, k: x.k } : x.t; }), a: all.indexOf(right), why: all.map(function (x) { return x.w || ''; }) };
   }
   var tx = function (t, k) { return { k: k == null ? t : k, t: t }; };
+  var tw = function (t, w, k) { var o = tx(t, k); o.w = w; return o; }; // w：その選択肢が 本当は何か（まちがえたときに 見せる）
   var pn = function (p) { p = M.p(p); return { k: M.str({ l: p.l, a: p.a, o: 4 }), t: N(p) }; }; // 音名の選択肢（オクターブなし）
   function nat(lo, hi) { var r = [], a = M.dia(lo), b = M.dia(hi); for (var d = a; d <= b; d++) r.push({ l: d % 7, a: 0, o: Math.floor(d / 7) }); return r; }
   function posTxt(p, clef) { // 五線の どこか
@@ -160,6 +161,13 @@
       return { q: '4分音符を 1 拍とすると、この休符は 何拍 休む？', fig: { score: { clef: 'treble', notes: [{ d: d }], minBar: 70, noClef: true, zoom: 1.6 } }, ch: m.ch, a: m.a, ex: '<b>' + RN[d] + '</b> は ' + DN[d.replace('r', '')] + 'と同じ長さ → <b>' + lens(b) + ' 拍</b>。休符も 音符と同じく 半分ずつ 短くなる。', exFig: { c: 'noteTree', a: { rest: true } } };
     }
   };
+  T.durBeats = {
+    u: 'u02', st: 1, gen: function (R, st) {
+      var ds = st >= 2 ? ['hd', 'qd', '8d', 'wd', 'h', 'q'] : ['w', 'h', 'q', '8', '16'], d = pick(ds, R), b = M.len(d), d0 = d.replace('d', '');
+      var m = mc(R, tx(lens(b) + ' 拍'), [6, 4, 3, 2, 1.5, 1, 0.75, 0.5, 0.25].map(function (x) { return tx(lens(x) + ' 拍'); }));
+      return { q: '4分音符を 1 拍とすると、この音符は 何拍？', fig: noteFig(d, { w: 70 }), ch: m.ch, a: m.a, ex: DN[d] + ' ＝ <b>' + lens(b) + ' 拍</b>。' + (d !== d0 ? 'もとの ' + DN[d0] + '（' + lens(M.len(d0)) + ' 拍）＋ その半分（' + lens(M.len(d0) / 2) + ' 拍）。' : '全音符 4 → 2分 2 → 4分 1 → 8分 0.5 → 16分 0.25 と 半分ずつ。'), exFig: d !== d0 ? sumFig([d0, ({ h: 'q', q: '8', '8': '16', w: 'h' })[d0]]) : { c: 'noteTree' } };
+    }
+  };
 
   /* =================== 03 拍子と小節 =================== */
   var FILL = {
@@ -183,7 +191,7 @@
   T.missing = {
     u: 'u03', st: 2, gen: function (R) {
       var t = pick(['2/4', '3/4', '4/4'], R), f = pick(FILL[t].filter(function (x) { return x.length >= 2; }), R).slice();
-      var last = f.pop(), rest = R() < 0.4;
+      var last = f.pop(), rest = R() < 0.4 && !/d/.test(last); // 付点の休符は 習っていないので 出さない
       var ans = rest ? last + 'r' : last;
       var all = ['h', 'q', '8', 'qd', 'hd', 'w', 'hr', 'qr', '8r'];
       var m = mc(R, { k: ans, fig: noteFig(ans) }, all.filter(function (d) { return M.len(d.replace('r', '')) !== M.len(last); }).map(function (d) { return { k: d, fig: noteFig(d) }; }));
@@ -271,6 +279,31 @@
       return { q: 'ぜんぶで 何拍分？（4分音符＝1拍、休符も数える）', fig: { score: { clef: 'treble', notes: ds.map(function (d) { return { k: melk(R), d: d }; }), sp: 40 } }, ch: m.ch, a: m.a, ex: ds.map(function (d) { return lens(M.len(d.replace('r', ''))); }).join(' ＋ ') + ' ＝ <b>' + lens(tot) + ' 拍</b>。' };
     }
   };
+  T.tieSlur = {
+    u: 'u04', st: 1, gen: function (R) {
+      var same = R() < 0.5, a = M.p(melk(R)), b = same ? a : M.P(a.l + pick([1, 2, -1, -2], R), 0, a.o);
+      return { q: 'この弧（こ）は タイ？ スラー？', fig: { score: { clef: 'treble', notes: [{ k: M.str(a), d: 'h', tie: same, sl: same ? 0 : 1, c: C.red }, { k: M.str(b), d: 'h', c: C.red }], sp: 70, minBar: 120 } }, ch: ['タイ（長さを たす）', 'スラー（なめらかに）'], a: same ? 0 : 1, ex: same ? '<b>同じ高さ</b>（' + N(a) + '）を つないでいる → <b>タイ</b>。2 つめは 弾き直さず のばす。' : '<b>ちがう高さ</b>（' + N(a) + '→' + N(b) + '）を つないでいる → <b>スラー</b>。なめらかに つなげて演奏する。', play: same ? [[a, 4]] : [[a, 2], [b, 2]] };
+    }
+  };
+  T.pickupBeat = {
+    u: 'u04', st: 2, gen: function (R) {
+      var t = pick([3, 4], R), p = ri(1, t - 1, R), start = t - p + 1;
+      var up = []; for (var i = 0; i < p; i++) up.push({ k: ['G4', 'A4', 'B4'][i], d: 'q', c: C.red });
+      var full = t === 3 ? [{ k: 'C5', d: 'h' }, { k: 'B4', d: 'q' }] : [{ k: 'C5', d: 'h' }, { k: 'D5', d: 'q' }, { k: 'B4', d: 'q' }];
+      var m = mc(R, tx(start + ' 拍目から'), [1, 2, 3, 4].filter(function (x) { return x <= t; }).map(function (x) { return tx(x + ' 拍目から'); }));
+      return { q: 'この曲は 何拍目から 始まる？', fig: { score: { clef: 'treble', time: t + '/4', bars: [up, full], sp: 40 } }, ch: m.ch, a: m.a, ex: '最初の小節は ' + p + ' 拍だけ（<b>弱起</b>）。' + t + ' 拍子なので 足りない ' + (t - p) + ' 拍分 おくれて <b>' + start + ' 拍目から</b>。最後の小節は ' + (t - p) + ' 拍に なる。' };
+    }
+  };
+  T.rhythmEar = {
+    u: 'u04', st: 2, ear: true, gen: function (R) {
+      var RH = [['q', 'q'], ['h'], ['8', '8', 'q'], ['q', '8', '8'], ['qd', '8'], ['8', 'q', '8'], ['8', '8', '8', '8'], ['16', '16', '8', 'q'], ['q', '16', '16', '8']];
+      var L = shuffle(RH.slice(), R).slice(0, 4), right = L[0];
+      var fig = function (x) { return { score: { clef: 'treble', notes: x.map(function (d) { return { k: 'B4', d: d, st: 1 }; }), noClef: true, sp: 26, minBar: 60, rhythm: true, above: 30, below: 22 } }; };
+      var m = mc(R, { k: right.join(), fig: fig(right) }, L.slice(1).map(function (x) { return { k: x.join(), fig: fig(x) }; }));
+      var say = { q: 'タン', h: 'ターアン', '8': 'タ', qd: 'ターア', '16': 'タ' };
+      return { q: '🔊 聴いて答えよう：どのリズム？（4分音符 2 拍分）', ear: true, ch: m.ch, a: m.a, ex: '正解は「' + right.map(function (d) { return say[d]; }).join('・') + '」。音の数と、長い音・短い音の 順番を 聴きくらべよう。', exFig: { score: { clef: 'treble', time: '2/4', notes: right.map(function (d) { return { k: 'A4', d: d }; }), sp: 44 } }, play: function () { M.play([[null, 0.25]].concat(right.map(function (d) { return ['A4', M.len(d)]; })), 84); } };
+    }
+  };
 
   /* =================== 05 変化記号 =================== */
   T.accName = {
@@ -324,15 +357,43 @@
       return { q: '★の 黒鍵の音名は？', fig: { kbd: { from: 'C4', to: 'B4', mark: mk, h: 100 } }, ch: m.ch, a: m.a, ex: '★は <b>' + N(bl[1]) + '</b> とも <b>' + N(bl[2]) + '</b> ともいう（左の白鍵の♯／右の白鍵の♭）。' };
     }
   };
+  T.accKbd = {
+    u: 'u05', st: 1, gen: function (R, st) {
+      var pool = st >= 3 ? ['E#4', 'B#4', 'Cb5', 'Fb4', 'C#4', 'Eb4', 'Ab4', 'F#4'] : st >= 2 ? ['C#4', 'D#4', 'F#4', 'G#4', 'A#4', 'Db4', 'Eb4', 'Gb4', 'Ab4', 'Bb4', 'E#4', 'Cb5'] : ['C#4', 'F#4', 'G#4', 'Eb4', 'Bb4', 'Ab4', 'Db4'];
+      var p = M.p(pick(pool, R)), mi = M.midi(p), cand = [mi];
+      shuffle([-2, -1, 1, 2], R).forEach(function (k) { var x = mi + k; if (cand.length < 4 && x >= 60 && x <= 72) cand.push(x); });
+      cand.sort(function (a, b) { return a - b; });
+      var lab = ['①', '②', '③', '④'], mk = {}; cand.forEach(function (x, i) { mk[x] = { c: 'var(--gold)', t: lab[i] }; });
+      var nat = { l: p.l, a: 0, o: p.o }, black = [1, 3, 6, 8, 10].indexOf(mi % 12) >= 0, ak = {}; ak[mi] = { c: C.red, t: N(p) }; ak[M.midi(nat)] = { c: C.blue, t: N(nat) };
+      return { q: 'この音を ひくのは どの鍵盤？', fig: { col: [one(p, 'treble'), { kbd: { from: 'C4', to: 'C5', mark: mk, h: 80 } }] }, ch: lab.slice(0, cand.length), a: cand.indexOf(mi), ex: N(nat) + ' の 鍵盤から ' + (p.a > 0 ? '右（上）' : '左（下）') + 'に 半音 → <b>' + (black ? '黒鍵' : '白鍵') + '</b>。' + (black ? '' : '白鍵どうしの 半音（ミ‐ファ・シ‐ド）に 注意。'), exFig: { kbd: { from: 'C4', to: 'C5', mark: ak, h: 80 } }, play: [[p, 1.5]] };
+    }
+  };
+  T.dblAcc = {
+    u: 'u05', st: 3, gen: function (R) {
+      var p = M.p(pick(['F##4', 'C##4', 'G##4', 'D##4', 'Bbb4', 'Ebb4', 'Abb4', 'Dbb5', 'Gbb4'], R)), mi = M.midi(p);
+      var white = { 0: 0, 2: 1, 4: 2, 5: 3, 7: 4, 9: 5, 11: 6 }, ans = { l: white[mi % 12], a: 0, o: 4 };
+      var wr = [{ l: p.l, a: p.a > 0 ? 1 : -1, o: 4 }, { l: p.l, a: 0, o: 4 }, M.P(ans.l + 1, 0, 4), M.P(ans.l - 1, 0, 4)].map(pn);
+      var m = mc(R, pn(ans), wr), mk = {}; mk[mi] = { c: C.red, t: N(p) };
+      return { q: '<b>' + N(p) + '</b> と 同じ鍵盤の 白鍵は？', fig: one(p, 'treble'), ch: m.ch, a: m.a, ex: (p.a > 0 ? '𝄪 は 全音（半音 2 つ）上げる' : '𝄫 は 全音（半音 2 つ）下げる') + '。' + N({ l: p.l, a: 0, o: 4 }) + ' から 鍵盤 2 つ ' + (p.a > 0 ? '右' : '左') + ' → <b>' + N(ans) + '</b>。', exFig: { kbd: { from: 'C4', to: 'B5', mark: mk, h: 70 } } };
+    }
+  };
+  T.jpAcc = {
+    u: 'u05', st: 2, gen: function (R) {
+      var p = { l: ri(0, 6, R), a: pick([1, -1], R), o: 4 };
+      var jp = function (x) { return tx(M.name(x, 'jp')); };
+      var m = mc(R, jp(p), [{ l: p.l, a: -p.a, o: 4 }, M.P(p.l + 1, p.a, 4), M.P(p.l - 1, p.a, 4), M.P(p.l + 1, -p.a, 4)].map(jp));
+      return { q: '<b>' + M.name(p, 'doremi') + '</b> を 日本音名で 言うと？', ch: m.ch, a: m.a, ex: M.name({ l: p.l, a: 0, o: 4 }, 'doremi') + '＝' + M.name({ l: p.l, a: 0, o: 4 }, 'jp') + '。' + (p.a > 0 ? '♯ は「嬰」' : '♭ は「変」') + ' を 前につける → <b>' + M.name(p, 'jp') + '</b>（' + M.name(p, 'en') + '）。' };
+    }
+  };
 
   /* =================== 06 音程 =================== */
   var IVS_EASY = [['m', 2], ['M', 2], ['m', 3], ['M', 3], ['P', 4], ['P', 5], ['m', 6], ['M', 6], ['m', 7], ['M', 7], ['P', 8]];
   var IVS_HARD = IVS_EASY.concat([['A', 4], ['d', 5], ['A', 2], ['d', 7], ['A', 5], ['d', 4], ['A', 6], ['d', 3]]);
   function ivWrongs(deg, q) {
     var r = [], perf = [1, 4, 5, 8].indexOf(deg) >= 0;
-    (perf ? ['P', 'A', 'd'] : ['M', 'm', 'A', 'd']).forEach(function (x) { if (x !== q) r.push(M.ivName(deg, x)); });
-    [deg - 1, deg + 1].forEach(function (d) { if (d >= 1 && d <= 8) r.push(M.ivName(d, [1, 4, 5, 8].indexOf(d) >= 0 ? 'P' : q === 'P' ? 'M' : q)); });
-    return r.map(function (s) { return tx(s); });
+    (perf ? ['P', 'A', 'd'] : ['M', 'm', 'A', 'd']).forEach(function (x) { if (x !== q) r.push([deg, x]); });
+    [deg - 1, deg + 1].forEach(function (d) { if (d >= 1 && d <= 8) r.push([d, [1, 4, 5, 8].indexOf(d) >= 0 ? 'P' : q === 'P' ? 'M' : q]); });
+    return r.map(function (x) { return tw(M.ivName(x[0], x[1]), M.ivName(x[0], x[1]) + ' なら 半音 ' + M.interval('C4', M.up('C4', x[0], x[1])).semis + ' 個'); });
   }
   function ivPair(R, hard) {
     for (var t = 0; t < 30; t++) {
@@ -356,7 +417,7 @@
       var pr = ivPair(R, st >= 3), a = pr[0], b = pr[1], iv = M.interval(a, b), harm = R() < 0.5;
       var m = mc(R, tx(iv.name), ivWrongs(iv.deg, iv.q));
       var mk = {}; mk[M.midi(a)] = { c: C.red }; mk[M.midi(b)] = { c: C.red };
-      return { q: '2つの音の音程は？', fig: { score: { clef: 'treble', notes: harm ? [{ k: [M.str(a), M.str(b)], d: 'w' }] : [{ k: M.str(a), d: 'w' }, { k: M.str(b), d: 'w' }], sp: 60, minBar: 80 } }, ch: m.ch, a: m.a, ex: N(a) + '〜' + N(b) + '：<b>' + iv.deg + '度</b>で 半音 <b>' + iv.semis + ' 個</b> → <b>' + iv.name + '</b>。', exFig: { kbd: { from: M.midi(a) < 60 ? 'C3' : 'C4', to: M.midi(b) > 83 ? 'B6' : 'B5', mark: mk, steps: [[M.midi(a), M.midi(b), '半音' + iv.semis, C.red]], h: 70 } }, play: harm ? [[[a, b], 2]] : [[a, 1], [b, 1.5]] };
+      return { q: '2つの音の音程は？', fig: { score: { clef: 'treble', notes: harm ? [{ k: [M.str(a), M.str(b)], d: 'w' }] : [{ k: M.str(a), d: 'w' }, { k: M.str(b), d: 'w' }], sp: 60, minBar: 80 } }, ch: m.ch, a: m.a, why: m.why, ex: N(a) + '〜' + N(b) + '：<b>' + iv.deg + '度</b>で 半音 <b>' + iv.semis + ' 個</b> → <b>' + iv.name + '</b>。', exFig: { kbd: { from: M.midi(a) < 60 ? 'C3' : 'C4', to: M.midi(b) > 83 ? 'B6' : 'B5', mark: mk, steps: [[M.midi(a), M.midi(b), '半音' + iv.semis, C.red]], h: 70 } }, play: harm ? [[[a, b], 2]] : [[a, 1], [b, 1.5]] };
     }
   };
   T.ivBuild = {
@@ -382,6 +443,15 @@
       var m = mc(R, tx(n + ' 個'), [n - 1, n + 1, n - 2, n + 2, n + 3].filter(function (k) { return k > 0; }).map(function (k) { return tx(k + ' 個'); }));
       var mk = {}; mk[M.midi(a)] = { c: C.red }; mk[M.midi(b)] = { c: C.red };
       return { q: '<b>' + iv.name + '</b> は 半音 いくつ分？', ch: m.ch, a: m.a, ex: '例：' + N(a) + '〜' + N(b) + ' を 鍵盤で数えると 半音 <b>' + n + ' 個</b>。' + (x[0] === 'A' || x[0] === 'd' ? '増4度と減5度は どちらも 半音 6 個（異名同音的な音程）。' : ''), exFig: { kbd: { from: 'C4', to: M.midi(b) > 83 ? 'B6' : 'B5', mark: mk, steps: [[M.midi(a), M.midi(b), '半音' + n, C.red]], h: 70 } }, play: [[a, 1], [b, 1.5]] };
+    }
+  };
+  T.ivQual = {
+    u: 'u06', st: 2, gen: function (R) {
+      var x = pick([['P', 4], ['P', 5], ['M', 3], ['M', 6], ['M', 2], ['m', 3], ['m', 6], ['m', 7]], R), wide = R() < 0.5;
+      var q2 = { P: wide ? 'A' : 'd', M: wide ? 'A' : 'm', m: wide ? 'M' : 'd' }[x[0]], perf = x[0] === 'P';
+      var all = (perf ? ['P', 'A', 'd'] : ['M', 'm', 'A', 'd']).filter(function (q) { return q !== q2; }).map(function (q) { return tx(M.ivName(x[1], q)); }).concat([(function (nd) { return tx(M.ivName(nd, [1, 4, 5, 8].indexOf(nd) >= 0 ? 'P' : 'M')); })(x[1] + (wide ? 1 : -1))]);
+      var m = mc(R, tx(M.ivName(x[1], q2)), all);
+      return { q: '<b>' + M.ivName(x[1], x[0]) + '</b> を 半音 <b>' + (wide ? '広げる' : 'せまくする') + '</b> と？', ch: m.ch, a: m.a, ex: (perf ? '完全グループ：減 ← <b>完全</b> → 増' : '長・短グループ：減 ← 短 ← 長 → 増') + '。度数は 変わらない → <b>' + M.ivName(x[1], q2) + '</b>。', exFig: { c: 'ivLadder' } };
     }
   };
   T.ivEar = {
@@ -435,6 +505,36 @@
       return { q: '何長調の 音階？', fig: { score: { clef: 'treble', notes: sc.map(function (p) { return { k: M.str(p), d: 'q' }; }), sp: 36, beam: false } }, ch: m.ch, a: m.a, ex: '始まりの音（主音）は <b>' + M.name(sc[0], 'jp') + '</b> → <b>' + M.keyName(f) + '</b>。', play: function () { M.playNotes(sc.map(M.str), { beat: 0.5, bpm: 100 }); } };
     }
   };
+  // 調号の ♯♭ を つく順に
+  var accList = function (f) { return f === 0 ? 'なし' : (f > 0 ? M.SHARPS : M.FLATS).slice(0, Math.abs(f)).map(function (l) { return N({ l: l, a: f > 0 ? 1 : -1, o: 4 }); }).join('・'); };
+  T.majSharps = {
+    u: 'u07', st: 2, gen: function (R) {
+      var f = pick([1, 2, 3, 4, -1, -2, -3, -4], R), sc = M.scale(M.keyTonic(f), 'major'), sh = f > 0;
+      var wr = [tx(accList(f - (sh ? 1 : -1))), tx(accList(f + (sh ? 1 : -1))), tx(accList(-f)), tx(sc.slice(1, 1 + Math.abs(f)).map(function (p) { return N({ l: p.l, a: sh ? 1 : -1, o: 4 }); }).join('・'))];
+      var m = mc(R, tx(accList(f)), wr);
+      return { q: '<b>' + M.keyName(f) + '</b> の 長音階で ' + (sh ? '♯' : '♭') + ' が つく音は？', ch: m.ch, a: m.a, ex: N(sc[0]) + ' から 全・全・半・全・全・全・半 に ならべると ' + sc.map(N).join('・') + ' → ' + (sh ? '♯' : '♭') + ' は <b>' + accList(f) + '</b>。', exFig: { score: { clef: 'treble', notes: sc.map(function (p) { return { k: M.str(p), d: 'q', c: p.a ? C.red : null }; }), sp: 34, beam: false } }, play: function () { M.playNotes(sc.map(M.str), { beat: 0.5, bpm: 100 }); } };
+    }
+  };
+  T.majHalf = {
+    u: 'u07', st: 3, gen: function (R) {
+      var f = pick([1, 2, 3, -1, -2, -3], R), sc = M.scale(M.keyTonic(f), 'major');
+      var say = function (i, j) { return tx(N(sc[i]) + '‐' + N(sc[i + 1]) + ' と ' + N(sc[j]) + '‐' + N(sc[j + 1]), i + '-' + j); };
+      var m = mc(R, say(2, 6), [say(1, 4), say(3, 6), say(2, 5), say(0, 4), tx('ミ‐ファ と シ‐ド', 'c')]);
+      return { q: '<b>' + M.keyName(f) + '</b> の 長音階で <b>半音</b> になるのは？', ch: m.ch, a: m.a, ex: 'どの長調でも 半音は <b>3〜4番目 と 7〜8番目</b>。' + M.keyName(f) + 'なら <b>' + N(sc[2]) + '‐' + N(sc[3]) + ' と ' + N(sc[6]) + '‐' + N(sc[7]) + '</b>（ミ‐ファ・シ‐ド は ハ長調のとき）。', exFig: { score: { clef: 'treble', key: f, notes: sc.map(function (p, j) { return { k: M.str(p), d: 'q', c: j === 2 || j === 3 || j === 6 || j === 7 ? C.red : null, lab: (j + 1) + '' }; }), sp: 34, beam: false } } };
+    }
+  };
+  T.majFill = {
+    u: 'u07', st: 2, gen: function (R) {
+      var f = pick([1, 2, 3, 4, -1, -2, -3, -4], R), sc = M.scale(M.keyTonic(f), 'major'), cand = [];
+      sc.forEach(function (p, j) { if (j >= 1 && j <= 6 && p.a) cand.push(j); });
+      var i = cand.length && R() < 0.75 ? pick(cand, R) : ri(1, 6, R), p = sc[i];
+      var wr = [{ l: p.l, a: p.a === 0 ? 1 : 0, o: 4 }, { l: p.l, a: p.a === 0 ? -1 : -p.a, o: 4 }, M.P(p.l + 1, p.a, 4), M.P(p.l - 1, p.a, 4)].map(pn);
+      var m = mc(R, pn(p), wr);
+      var notes = sc.map(function (x, j) { return j === i ? { k: M.str({ l: x.l, a: 0, o: x.o }), d: 'q', c: 'transparent', acc: 'none' } : { k: M.str(x), d: 'q' }; });
+      var st1 = M.midi(sc[i]) - M.midi(sc[i - 1]);
+      return { q: M.keyName(f) + 'の 長音階。<b>？</b> に入る音は？', fig: { score: { clef: 'treble', notes: notes, sp: 36, beam: false, after: function (o) { var n = o.notes[i]; M.svgText(o.svg, n.x, o.staves[0].getYForLine(2) + 9, '？', { size: 26, c: C.red }); } } }, ch: m.ch, a: m.a, ex: i + '〜' + (i + 1) + ' 番目は ' + (st1 === 1 ? '半音' : '全音') + '（全・全・半・全・全・全・半）。' + N(sc[i - 1]) + ' から ' + (st1 === 1 ? '半音' : '全音') + ' 上 → <b>' + N(p) + '</b>。', exFig: { score: { clef: 'treble', notes: sc.map(function (x, j) { return { k: M.str(x), d: 'q', c: j === i ? C.red : null, lab: j === i ? N(x) : null }; }), sp: 36, beam: false } } };
+    }
+  };
 
   /* =================== 08 短音階 =================== */
   T.minType = {
@@ -467,16 +567,48 @@
       return { q: '🔊 聴いて答えよう：長調？ 短調？', ear: true, ch: ['長調', '短調'], a: mj ? 0 : 1, ex: '<b>' + (mj ? 'ハ長調' : 'イ短調') + '</b> の Ⅰ‐Ⅳ‐Ⅴ‐Ⅰ。短調は Ⅰ が短三和音なので 暗く聞こえる。', play: function () { M.play(seq, 80); } };
     }
   };
+  T.minSteps = {
+    u: 'u08', st: 2, gen: function (R) {
+      if (R() < 0.5) {
+        var m = mc(R, tx('2〜3番目 と 5〜6番目'), ['3〜4番目 と 7〜8番目', '2〜3番目 と 6〜7番目', '3〜4番目 と 5〜6番目', '1〜2番目 と 5〜6番目'].map(function (x) { return tx(x); }));
+        return { q: '<b>自然短音階</b>で 半音になるのは どこ？', ch: m.ch, a: m.a, ex: '自然短音階は 全・<b>半</b>・全・全・<b>半</b>・全・全 → <b>2〜3番目 と 5〜6番目</b>。イ短調なら シ‐ド と ミ‐ファ。', exFig: { score: { clef: 'treble', notes: M.scale('A4', 'natural').map(function (p, j) { return { k: M.str(p), d: 'q', lab: (j + 1) + '', c: [1, 2, 4, 5].indexOf(j) >= 0 ? C.red : null }; }), sp: 34, beam: false } } };
+      }
+      var m2 = mc(R, tx('6〜7番目'), ['5〜6番目', '7〜8番目', '2〜3番目', '3〜4番目'].map(function (x) { return tx(x); }));
+      return { q: '<b>和声短音階</b>で 半音 3 つ分（増2度）の 広い へだたりが あるのは どこ？', ch: m2.ch, a: m2.a, ex: '第7音を 半音上げたので、第6音との間が 半音 3 つ（<b>増2度</b>）に広がる → <b>6〜7番目</b>。イ短調なら ファ‐ソ♯。', exFig: { score: { clef: 'treble', notes: M.scale('A4', 'harmonic').map(function (p, j) { return { k: M.str(p), d: 'q', lab: (j + 1) + '', c: j === 5 || j === 6 ? C.red : null }; }), sp: 34, beam: false } } };
+    }
+  };
+  T.minName = {
+    u: 'u08', st: 2, gen: function (R) {
+      var f = pick([0, 1, 2, 3, -1, -2, -3], R), ty = pick(['natural', 'harmonic'], R), tn = M.keyTonic(f, true), sc = M.scale(tn, ty);
+      while (M.midi(sc[7]) > 84) sc = sc.map(function (p) { return { l: p.l, a: p.a, o: p.o - 1 }; });
+      var wr = [tx(M.keyName(f), 'M'), tx(M.name(tn, 'jp') + '長調', 'MM')].concat([f - 1, f + 1, f + 3].filter(function (x) { return x >= -7 && x <= 7; }).map(function (x) { return tx(M.keyName(x, true), x); }));
+      var m = mc(R, tx(M.keyName(f, true), f), wr);
+      return { q: '何短調の 音階？（' + M.SCALE_NAME[ty] + '）', fig: { score: { clef: 'treble', notes: sc.map(function (p) { return { k: M.str(p), d: 'q' }; }), sp: 36, beam: false } }, ch: m.ch, a: m.a, ex: '始まりの音（主音）は <b>' + M.name(tn, 'jp') + '</b> → <b>' + M.keyName(f, true) + '</b>。', play: function () { M.playNotes(sc.map(M.str), { beat: 0.5, bpm: 100 }); } };
+    }
+  };
+  T.minMel = {
+    u: 'u08', st: 2, gen: function (R) {
+      var L = [
+        ['<b>旋律短音階</b>の <b>下り</b>は 何と同じ？', '自然短音階', ['和声短音階', '長音階', '上りと同じ'], '旋律短音階は 上りだけ 第6・第7音を上げ、下りは <b>自然短音階</b> にもどる。'],
+        ['<b>旋律短音階</b>の <b>上り</b>で 半音上げるのは？', '第6音と 第7音', ['第7音だけ', '第3音と 第6音', '第6音だけ'], '上りは 増2度を なくすため <b>第6音と 第7音</b> を 半音上げる。'],
+        ['<b>和声短音階</b>で 半音上げるのは？', '第7音だけ', ['第6音と 第7音', '第3音だけ', '第6音だけ'], '和声短音階は 導音を作るため <b>第7音だけ</b> 半音上げる。'],
+        ['第7音を 半音上げて 作る <b>導音</b> は、主音の 何下？', '半音下', ['全音下', '短3度下', '完全5度下'], '導音は 主音の <b>半音下</b>。主音へ 進みたくなる音。']
+      ];
+      var x = pick(L, R), m = mc(R, tx(x[1]), x[2].map(function (s) { return tx(s); }));
+      if (L.indexOf(x) >= 2) return { q: x[0], ch: m.ch, a: m.a, ex: x[3], exFig: { score: { clef: 'treble', notes: M.scale('A4', 'harmonic').map(function (p, j) { return { k: M.str(p), d: 'q', c: j === 6 ? C.red : null, lab: j === 6 ? '導音' : j === 7 ? '主音' : null }; }), sp: 34, beam: false }, ttl: 'イ短調の 和声短音階' } };
+      return { q: x[0], ch: m.ch, a: m.a, ex: x[3], exFig: { col: [{ score: { clef: 'treble', notes: M.scale('A4', 'melodic').map(function (p, j) { return { k: M.str(p), d: 'q', c: j === 5 || j === 6 ? C.red : null }; }), sp: 30, beam: false }, ttl: '旋律短音階（上り）' }, { score: { clef: 'treble', notes: M.scale('A4', 'natural').reverse().map(function (p) { return { k: M.str(p), d: 'q' }; }), sp: 30, beam: false }, ttl: '下り（自然短音階と同じ）' }] } };
+    }
+  };
 
   /* =================== 09 調と調号 =================== */
   var ksig = function (f, minor) { return { score: { clef: 'treble', key: f, minor: minor, notes: [], minBar: 30 } }; };
   T.keyMaj = {
     u: 'u09', st: 1, gen: function (R, st) {
       var f = st >= 2 ? pick([-7, -6, -5, -4, 4, 5, 6, 7, -3, 3], R) : ri(-3, 3, R);
-      var wr = [f - 1, f + 1, -f, f + 2, f - 2].filter(function (x) { return x >= -7 && x <= 7; }).map(function (x) { return tx(M.keyName(x), x); }).concat([tx(M.keyName(f, true), 'm')]);
+      var wr = [f - 1, f + 1, -f, f + 2, f - 2].filter(function (x) { return x >= -7 && x <= 7; }).map(function (x) { return tw(M.keyName(x), M.keyName(x) + ' の 調号は ' + sigTxt(x), x); }).concat([tw(M.keyName(f, true), M.keyName(f, true) + ' は 短調（この調号の 平行調）', 'm')]);
       var m = mc(R, tx(M.keyName(f), f), wr);
       var how = f === 0 ? '調号なしは ハ長調' : f > 0 ? 'いちばん右の♯（' + N({ l: M.SHARPS[f - 1], a: 1, o: 4 }) + '）の 半音上' : f === -1 ? '♭1つは ヘ長調' : '右から2番目の♭（' + N({ l: M.FLATS[-f - 2], a: -1, o: 4 }) + '）';
-      return { q: 'この調号の <b>長調</b> は？', fig: ksig(f), ch: m.ch, a: m.a, ex: how + ' → <b>' + M.keyName(f) + '</b>。', exFig: { score: { clef: 'treble', key: f, notes: [{ k: M.str(M.keyTonic(f)), d: 'w', c: C.red, lab: '主音' }], minBar: 60 } } };
+      return { q: 'この調号の <b>長調</b> は？', fig: ksig(f), ch: m.ch, a: m.a, why: m.why, ex: how + ' → <b>' + M.keyName(f) + '</b>。', exFig: { score: { clef: 'treble', key: f, notes: [{ k: M.str(M.keyTonic(f)), d: 'w', c: C.red, lab: '主音' }], minBar: 60 } } };
     }
   };
   T.keyMin = {
@@ -514,9 +646,27 @@
       return { q: (sh ? '♯' : '♭') + ' の調号で <b>' + n + ' 番目</b> に つくのは？', ch: m.ch, a: m.a, ex: (sh ? '♯は ファ・ド・ソ・レ・ラ・ミ・シ' : '♭は シ・ミ・ラ・レ・ソ・ド・ファ') + ' の順 → <b>' + N(p) + '</b>。', exFig: { c: 'keyOrder', a: { sharp: sh } } };
     }
   };
+  var sigTxt = function (f) { return f === 0 ? 'なし' : (f > 0 ? '♯ ' : '♭ ') + Math.abs(f) + ' つ'; };
+  T.sigCount = {
+    u: 'u09', st: 1, gen: function (R, st) {
+      var minor = st >= 2 && R() < 0.4, f = ri(-5, 5, R); if (f === 0) f = pick([1, -1], R);
+      var m = mc(R, tx(sigTxt(f)), [f - 1, f + 1, -f, f + 2, f - 2].filter(function (x) { return x >= -7 && x <= 7; }).map(function (x) { return tx(sigTxt(x)); }));
+      return { q: '<b>' + M.keyName(f, minor) + '</b> の 調号は？', ch: m.ch, a: m.a, ex: M.keyName(f, minor) + ' は <b>' + sigTxt(f) + '</b>（' + accList(f) + '）。' + (minor ? '平行調の ' + M.keyName(f) + ' と 同じ調号。' : ''), exFig: ksig(f, minor) };
+    }
+  };
+  T.relMin = {
+    u: 'u09', st: 2, gen: function (R) {
+      var f = ri(-4, 4, R), kind = R() < 0.6 ? '平行調' : '同主調', tn = M.keyTonic(f, true);
+      var par = M.keyName(f), same = M.name(tn, 'jp') + '長調', ans = kind === '平行調' ? par : same;
+      var m = mc(R, tx(ans), [par, same, M.keyName(f + 1), M.keyName(f - 1), M.keyName(f + 3)].map(function (s) { return tx(s); }));
+      return { q: '<b>' + M.keyName(f, true) + '</b> の <b>' + kind + '</b>（長調）は？', ch: m.ch, a: m.a, ex: kind === '平行調' ? '平行調＝調号が同じ。短調の主音の <b>短3度上</b> が 長調の主音 → <b>' + par + '</b>。' : '同主調＝主音が同じ（' + M.name(tn, 'jp') + '）→ <b>' + same + '</b>。', exFig: { c: 'related', a: { f: f } } };
+    }
+  };
 
   /* =================== 10 和音 =================== */
   var TRI = ['maj', 'min', 'aug', 'dim'];
+  var RECIPE = { maj: '長3度＋短3度', min: '短3度＋長3度', aug: '長3度＋長3度', dim: '短3度＋短3度', dom7: '長三和音＋短7度', maj7: '長三和音＋長7度', min7: '短三和音＋短7度', hdim7: '減三和音＋短7度', dim7: '減三和音＋減7度' };
+  var tyW = function (t) { return tw(M.CH_JP[t], M.CH_JP[t] + ' ＝ ' + RECIPE[t], t); };
   function chordFig(ps, o) { o = o || {}; return { score: { clef: 'treble', key: o.key || 0, notes: [{ k: ps.map(M.str), d: 'w', kc: o.kc }], minBar: o.w || 70, noClef: o.noClef } }; }
   T.triadType = {
     u: 'u10', st: 1, gen: function (R, st) {
@@ -524,9 +674,9 @@
       if (st >= 2) { root = pick(nat('C4', 'A4'), R); root.a = pick([0, 0, 1, -1], R); ty = pick(TRI, R); }
       else { var d = ri(1, 7, R), ch0 = M.diatonic(0, false, d); root = ch0[0]; ty = M.chordType(ch0); }
       var ps = M.chord(root, ty);
-      var m = mc(R, tx(M.CH_JP[ty], ty), TRI.map(function (t) { return tx(M.CH_JP[t], t); }));
+      var m = mc(R, tx(M.CH_JP[ty], ty), TRI.map(tyW));
       var i1 = M.interval(ps[0], ps[1]).name, i2 = M.interval(ps[1], ps[2]).name;
-      return { q: 'この三和音の 種類は？', fig: chordFig(ps), ch: m.ch, a: m.a, ex: '下から <b>' + i1 + '</b> ＋ <b>' + i2 + '</b> → <b>' + M.CH_JP[ty] + '</b>。', play: [[ps, 2]] };
+      return { q: 'この三和音の 種類は？', fig: chordFig(ps), ch: m.ch, a: m.a, ex: '下から <b>' + i1 + '</b> ＋ <b>' + i2 + '</b> → <b>' + M.CH_JP[ty] + '</b>。', play: [[ps, 2]], why: m.why };
     }
   };
   T.triadBuild = {
@@ -558,9 +708,9 @@
     u: 'u10', st: 3, gen: function (R) {
       var ts = ['dom7', 'maj7', 'min7', 'hdim7', 'dim7'], ty = pick(ts, R), root = pick(nat('C4', 'G4'), R);
       var ps = M.chord(root, ty);
-      var m = mc(R, tx(M.CH_JP[ty], ty), ts.map(function (t) { return tx(M.CH_JP[t], t); }));
+      var m = mc(R, tx(M.CH_JP[ty], ty), ts.map(tyW));
       var why = { dom7: '長三和音＋短7度', maj7: '長三和音＋長7度', min7: '短三和音＋短7度', hdim7: '減三和音＋短7度', dim7: '減三和音＋減7度' }[ty];
-      return { q: 'この 七の和音の 種類は？', fig: chordFig(ps), ch: m.ch, a: m.a, ex: '<b>' + why + '</b> → ' + M.CH_JP[ty] + '（' + M.chordName(root, ty) + '）。', play: [[ps, 2]] };
+      return { q: 'この 七の和音の 種類は？', fig: chordFig(ps), ch: m.ch, a: m.a, ex: '<b>' + why + '</b> → ' + M.CH_JP[ty] + '（' + M.chordName(root, ty) + '）。', play: [[ps, 2]], why: m.why };
     }
   };
   T.chordEar = {
@@ -577,9 +727,10 @@
       var root = pick(nat('C4', 'A4'), R);
       if (st >= 3) { root = M.p(pick(['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B3', 'F#4', 'C#4', 'Bb3', 'Eb4', 'Ab4', 'Db4'], R)); }
       var ty = pick(st >= 3 ? CNT : ['maj', 'min', 'dom7', 'maj7', 'min7'], R), ps = M.chord(root, ty);
-      var wr = CNT.map(function (t) { return tx(M.chordName(root, t)); }).concat([tx(M.chordName(M.P(root.l + 2, 0, 4), ty)), tx(M.chordName(M.P(root.l + 5, 0, 4), ty))]);
+      var cw = function (r, t) { var nm = M.chordName(r, t); return tw(nm, nm + ' ＝ ' + M.chord(r, t).map(N).join('・')); };
+      var wr = CNT.map(function (t) { return cw(root, t); }).concat([cw(M.P(root.l + 2, 0, 4), ty), cw(M.P(root.l + 5, 0, 4), ty)]);
       var m = mc(R, tx(M.chordName(root, ty)), wr);
-      return { q: 'この和音の コードネームは？', fig: chordFig(ps), ch: m.ch, a: m.a, ex: '根音は ' + M.name(root, 'en') + '、' + M.CH_JP[ty] + ' → <b>' + M.chordName(root, ty) + '</b>。', play: [[ps, 2]] };
+      return { q: 'この和音の コードネームは？', fig: chordFig(ps), ch: m.ch, a: m.a, ex: '根音は ' + M.name(root, 'en') + '、' + M.CH_JP[ty] + ' → <b>' + M.chordName(root, ty) + '</b>。', play: [[ps, 2]], why: m.why };
     }
   };
   T.roman = {
@@ -616,6 +767,30 @@
       var wr = ['maj', 'min', 'dom7', 'maj7', 'dim'].filter(function (t) { return t !== ty; }).map(function (t) { return tx(j(M.chord(root, t))); }).concat([tx(j(M.chord(M.P(root.l + 1, 0, 4), ty)))]);
       var m = mc(R, tx(j(ps)), wr);
       return { q: 'コードネーム <b class="en">' + M.chordName(root, ty) + '</b> の 構成音は？', ch: m.ch, a: m.a, ex: M.chordName(root, ty) + '＝' + M.CH_JP[ty] + ' → <b>' + j(ps) + '</b>。', exFig: chordFig(ps), play: [[ps, 2]] };
+    }
+  };
+  // 調の中の和音（d：1〜7、sev：七の和音）
+  function keyChord(f, d, sev) { var ps = M.diatonic(f, false, d, sev); return { ps: ps, name: M.chordName(ps[0], M.chordType(ps)) }; }
+  T.chordInKey = {
+    u: 'u11', st: 2, gen: function (R, st) {
+      var f = ri(-2, 2, R), d = st >= 3 ? ri(1, 7, R) : pick([1, 4, 5], R), sev = d === 5 && R() < 0.4, c = keyChord(f, d, sev);
+      var rn = M.ROMAN[d - 1] + (sev ? '7' : '');
+      var wr = [1, 2, 3, 4, 5, 6, 7].filter(function (x) { return x !== d; }).map(function (x) { return tx(keyChord(f, x).name); }).concat([tx(M.chordName(c.ps[0], sev ? 'maj' : M.chordType(c.ps) === 'maj' ? 'min' : 'maj'))]);
+      var m = mc(R, tx(c.name), wr);
+      return { q: '<b>' + M.keyName(f) + '</b> の <b>' + rn + '</b> の和音の コードネームは？', ch: m.ch, a: m.a, ex: M.keyName(f) + 'の ' + d + ' 番目の音は ' + M.name(c.ps[0], 'en') + '。' + (d === 1 || d === 4 || d === 5 ? (sev ? '属七の和音 → ' : 'Ⅰ・Ⅳ・Ⅴ は 長三和音 → ') : d === 7 ? 'Ⅶ は 減三和音 → ' : 'Ⅱ・Ⅲ・Ⅵ は 短三和音 → ') + '<b>' + c.name + '</b>（' + c.ps.map(N).join('・') + '）。', exFig: { score: { clef: 'treble', key: f, notes: [1, 2, 3, 4, 5, 6, 7].map(function (x) { var k = keyChord(f, x); return { k: k.ps.map(function (p) { return M.str({ l: p.l, a: p.a, o: p.o - (M.midi(k.ps[0]) > 69 ? 1 : 0) }); }), d: 'w', lab: k.name, c: x === d ? C.red : null }; }), sp: 40, ls: 11 } }, play: [[c.ps, 2]] };
+    }
+  };
+  T.funcName = {
+    u: 'u11', st: 2, gen: function (R) {
+      var f = ri(-2, 2, R), x = pick([[1, 'トニック'], [4, 'サブドミナント'], [5, 'ドミナント'], [5, 'ドミナント', 1]], R), c = keyChord(f, x[0], !!x[2]);
+      return { q: '<b>' + M.keyName(f) + '</b> で <b class="en">' + c.name + '</b> の和音の 働きは？', ch: ['トニック', 'サブドミナント', 'ドミナント'], a: ['トニック', 'サブドミナント', 'ドミナント'].indexOf(x[1]), ex: c.name + ' の根音 ' + M.name(c.ps[0], 'en') + ' は ' + M.keyName(f) + 'の ' + x[0] + ' 番目 → <b>' + M.ROMAN[x[0] - 1] + (x[2] ? '7' : '') + '</b> → <b>' + x[1] + '</b>。', play: [[c.ps, 2]] };
+    }
+  };
+  T.cadenceEar = {
+    u: 'u11', st: 2, ear: true, gen: function (R) {
+      var full = R() < 0.5, prog = full ? [1, 4, 5, 1] : [1, 4, 1, 5];
+      var ch = function (d) { var ps = M.diatonic(0, false, d).map(function (p) { return { l: p.l, a: p.a, o: p.o - (M.midi(p) > 71 ? 1 : 0) }; }); return ps.concat([{ l: ps[0].l, a: 0, o: 3 }]); };
+      return { q: '🔊 聴いて答えよう：最後は 終わった感じ？ 続く感じ？', ear: true, ch: ['終わった感じ（完全終止）', 'まだ続く感じ（半終止）'], a: full ? 0 : 1, ex: '<b>' + prog.map(function (d) { return M.ROMAN[d - 1]; }).join('→') + '</b>。' + (full ? 'Ⅴ→Ⅰ で 帰る場所に もどる → <b>完全終止</b>。' : 'Ⅴ で 止まる → <b>半終止</b>（まだ続く感じ）。'), exFig: { score: { clef: 'treble', notes: prog.map(function (d) { return { k: M.diatonic(0, false, d).map(M.str), d: 'h', lab: M.ROMAN[d - 1] }; }), sp: 50 } }, play: function () { M.play(prog.map(function (d, i) { return [ch(d), i === 3 ? 2.5 : 1]; }), 76); } };
     }
   };
 
@@ -658,54 +833,85 @@
       return { q: 'B♭クラリネットで <b>' + M.keyName(f) + '</b> の音を鳴らしたい。楽譜は 何調で書く？', ch: m.ch, a: m.a, ex: 'B♭管は 書いた音より 長2度低く鳴る → 楽譜は <b>長2度上</b>の <b>' + M.keyName(w) + '</b>。' };
     }
   };
+  T.transInst = {
+    u: 'u12', st: 2, gen: function (R) {
+      var hn = R() < 0.4, w = pick(nat('C4', 'C5'), R), snd = M.up(w, hn ? 5 : 2, hn ? 'P' : 'M', true);
+      var wr = [w, M.up(w, hn ? 5 : 2, hn ? 'P' : 'M'), M.up(w, hn ? 4 : 3, hn ? 'P' : 'm', true), M.up(w, 2, 'm', true), M.up(w, 5, 'P', !hn ? true : false)].filter(function (x) { return Math.abs(x.a) <= 1; }).map(pn);
+      var m = mc(R, pn(snd), wr);
+      return { q: '<b>' + (hn ? 'F管のホルン' : 'B♭管のクラリネット') + '</b> の楽譜で <b>' + N(w) + '</b> と書いてある。実際に 鳴る音は？', fig: one(w, 'treble'), ch: m.ch, a: m.a, ex: (hn ? 'F管は 書いた音より <b>完全5度 低く</b> 鳴る' : 'B♭管は 書いた音より <b>長2度 低く</b> 鳴る') + ' → ' + N(w) + ' は <b>' + N(snd) + '</b>。（だから楽譜は その分 高く書く）', exFig: { score: { clef: 'treble', notes: [{ k: M.str(w), d: 'w', lab: '楽譜：' + N(w) }, { k: M.str(snd), d: 'w', lab: '鳴る：' + N(snd), c: C.red }], sp: 80, ls: 12 } }, play: [[snd, 1.5]] };
+    }
+  };
+  T.transChord = {
+    u: 'u12', st: 2, gen: function (R) {
+      var P = pick([[1, 4, 5, 1], [1, 6, 4, 5], [1, 5, 6, 4], [2, 5, 1, 1], [1, 4, 1, 5]], R), f = pick([2, 1, -1, -2, 3], R);
+      var nm = function (k, d) { return keyChord(k, d).name; }, say = function (k) { return tx(P.map(function (d) { return nm(k, d); }).join('‐')); };
+      var src = P.map(function (d) { return nm(0, d); }).join('‐');
+      var allMaj = tx(P.map(function (d) { return M.name(M.diatonic(f, false, d)[0], 'en'); }).join('‐'));
+      var m = mc(R, say(f), [say(f + 1), say(f - 1), say(-f), allMaj]);
+      var iv = M.interval('C4', (function () { var t = M.keyTonic(f); t = { l: t.l, a: t.a, o: 4 }; if (M.midi(t) < 60) t.o = 5; return t; })());
+      return { q: 'コード進行 <b class="en">' + src + '</b>（ハ長調）を <b>' + M.keyName(f) + '</b> に移調すると？', ch: m.ch, a: m.a, ex: 'ハ長調 → ' + M.keyName(f) + ' は <b>' + iv.name + ' 上</b>。どのコードも 根音を ' + iv.name + ' 上げ、m などの 種類は そのまま → <b>' + P.map(function (d) { return nm(f, d); }).join('‐') + '</b>。' };
+    }
+  };
+  T.transBack = {
+    u: 'u12', st: 2, gen: function (R) {
+      var f = pick([1, 2, 3, -1, -2, -3], R), t = M.keyTonic(f); t = { l: t.l, a: t.a, o: 4 }; if (M.midi(t) < 60) t.o = 5;
+      var iv = M.interval('C4', t), inv = M.ivName(9 - iv.deg, M.invQ[iv.q]), up = iv.deg >= 6; // 近い方へ 動かす
+      var ans = up ? inv + ' 上げる' : iv.name + ' 下げる', alt = up ? iv.name + ' 下げても' : inv + ' 上げても';
+      var others = ['長2度', '短3度', '長3度', '完全4度', '完全5度'].filter(function (x) { return x !== iv.name && x !== inv; });
+      var m = mc(R, tx(ans), [tx(up ? inv + ' 下げる' : iv.name + ' 上げる')].concat(others.map(function (x) { return tx(x + (up ? ' 上げる' : ' 下げる')); })));
+      return { q: '<b>' + M.keyName(f) + '</b> の曲を <b>ハ長調</b> に 移調する。どうする？', ch: m.ch, a: m.a, ex: '主音を ' + M.name(t, 'jp') + '（' + N(t) + '）から ハ（' + N('C4') + '）へ 動かす → <b>' + ans + '</b>（' + alt + ' 同じ調になる）。' };
+    }
+  };
 
   /* =================== 13 楽語と記号 =================== */
   var DYN = [['pp', 'ごく弱く'], ['p', '弱く'], ['mp', 'やや弱く'], ['mf', 'やや強く'], ['f', '強く'], ['ff', 'ごく強く']];
   T.dyn = {
     u: 'u13', st: 1, gen: function (R) {
       var x = pick(DYN, R);
-      var m = mc(R, tx(x[1]), DYN.map(function (y) { return tx(y[1]); }));
-      return { q: 'この強弱記号の 意味は？', fig: { c: 'dyn', a: { list: [x[0]], labs: [''] } }, ch: m.ch, a: m.a, ex: '<b>' + x[0] + '</b>＝' + x[1] + '。p は弱く、f は強く、m は「やや」。', exFig: { c: 'dyn' } };
+      var m = mc(R, tx(x[1]), DYN.map(function (y) { return tw(y[1], '「' + y[1] + '」は ' + en(y[0]) + ' の 意味'); }));
+      return { q: 'この強弱記号の 意味は？', fig: { c: 'dyn', a: { list: [x[0]], labs: [''] } }, ch: m.ch, a: m.a, ex: '<b>' + x[0] + '</b>＝' + x[1] + '。p は弱く、f は強く、m は「やや」。', exFig: { c: 'dyn' }, why: m.why };
     }
   };
   T.dynOrder = {
     u: 'u13', st: 2, gen: function (R) {
-      var s = 'pp＜p＜mp＜mf＜f＜ff';
-      var wr = ['p＜pp＜mp＜mf＜f＜ff', 'pp＜p＜mf＜mp＜f＜ff', 'pp＜mp＜p＜mf＜ff＜f', 'ff＜f＜mf＜mp＜p＜pp'].map(function (x) { return tx(x); });
-      var m = mc(R, tx(s), wr);
-      return { q: '弱い → 強い の順に 正しく並んでいるのは？', ch: m.ch, a: m.a, ex: '<b>' + s + '</b>。', exFig: { c: 'dyn' } };
+      // 6 つから 4 つ えらんで 並べる。となりを入れかえたもの・逆順が まちがい
+      var all = ['pp', 'p', 'mp', 'mf', 'f', 'ff'], L = shuffle(all.slice(), R).slice(0, 4).sort(function (x, y) { return all.indexOf(x) - all.indexOf(y); }), up = R() < 0.6;
+      if (!up) L.reverse();
+      var j = function (a) { return a.join(up ? '＜' : '＞'); }, sw = function (i) { var c = L.slice(), t = c[i]; c[i] = c[i + 1]; c[i + 1] = t; return tx(j(c)); };
+      var m = mc(R, tx(j(L)), [sw(0), sw(1), sw(2), tx(j(L.slice().reverse()))]);
+      return { q: (up ? '弱い → 強い' : '強い → 弱い') + ' の順に 正しく並んでいるのは？', ch: m.ch, a: m.a, ex: '<b>' + j(L) + '</b>。全体は pp＜p＜mp＜mf＜f＜ff（m は「やや」なので p と f の あいだ）。', exFig: { c: 'dyn' } };
     }
   };
   var TEMPO = [['Largo', '幅広く ゆるやかに'], ['Adagio', 'ゆるやかに'], ['Andante', '歩くような速さで'], ['Moderato', '中くらいの速さで'], ['Allegro', '速く'], ['Presto', '急速に'], ['Allegretto', 'やや速く'], ['Lento', 'ゆるやかに（おそく）']];
   T.tempo = {
     u: 'u13', st: 1, gen: function (R) {
       var x = pick(TEMPO.slice(0, 6), R);
-      var m = mc(R, tx(x[1]), TEMPO.filter(function (y) { return y[0] !== 'Lento'; }).map(function (y) { return tx(y[1]); }));
-      return { q: '<b class="en" style="font-style:italic">' + x[0] + '</b> の意味は？', ch: m.ch, a: m.a, ex: '<b>' + x[0] + '</b>＝' + x[1] + '。', exFig: { c: 'tempo' } };
+      var m = mc(R, tx(x[1]), TEMPO.filter(function (y) { return y[0] !== 'Lento'; }).map(function (y) { return tw(y[1], '「' + y[1] + '」は ' + en(y[0]) + ' の 意味'); }));
+      return { q: '<b class="en" style="font-style:italic">' + x[0] + '</b> の意味は？', ch: m.ch, a: m.a, ex: '<b>' + x[0] + '</b>＝' + x[1] + '。', exFig: { c: 'tempo' }, why: m.why };
     }
   };
   var TCH = [['rit.', 'だんだん遅く'], ['accel.', 'だんだん速く'], ['a tempo', 'もとの速さで'], ['rall.', 'だんだんゆるやかに'], ['Tempo I', '最初の速さで'], ['cresc.', 'だんだん強く'], ['dim.', 'だんだん弱く'], ['poco a poco', '少しずつ']];
   T.tempoChange = {
     u: 'u13', st: 2, gen: function (R) {
       var x = pick(TCH, R);
-      var m = mc(R, tx(x[1]), TCH.map(function (y) { return tx(y[1]); }));
-      return { q: '<b class="en" style="font-style:italic">' + x[0] + '</b> の意味は？', ch: m.ch, a: m.a, ex: '<b>' + x[0] + '</b>＝' + x[1] + '。' };
+      var m = mc(R, tx(x[1]), TCH.map(function (y) { return tw(y[1], '「' + y[1] + '」は ' + en(y[0]) + ' の 意味'); }));
+      return { q: '<b class="en" style="font-style:italic">' + x[0] + '</b> の意味は？', ch: m.ch, a: m.a, ex: '<b>' + x[0] + '</b>＝' + x[1] + '。', why: m.why };
     }
   };
   var ART = [['a.', 'スタッカート', '音を短く切って'], ['a-', 'テヌート', '音の長さを十分に保って'], ['a>', 'アクセント', 'その音を目立たせて強く'], ['a@a', 'フェルマータ', 'その音を ほどよく のばす']];
   T.artic = {
     u: 'u13', st: 1, gen: function (R) {
       var x = pick(ART, R), byName = R() < 0.5;
-      var m = byName ? mc(R, tx(x[1]), ART.map(function (y) { return tx(y[1]); }).concat([tx('スラー'), tx('タイ')])) : mc(R, tx(x[2]), ART.map(function (y) { return tx(y[2]); }));
-      return { q: '赤い記号の ' + (byName ? '名前' : '意味') + 'は？', fig: { score: { clef: 'treble', notes: [{ k: 'G4', d: 'q', art: x[0], c: C.red }, { k: 'A4', d: 'q' }], sp: 60, noClef: false } }, ch: m.ch, a: m.a, ex: '<b>' + x[1] + '</b>：' + x[2] + '。' };
+      var m = byName ? mc(R, tx(x[1]), ART.map(function (y) { return tw(y[1], y[1] + ' ＝ ' + y[2]); }).concat([tx('スラー'), tx('タイ')])) : mc(R, tx(x[2]), ART.map(function (y) { return tw(y[2], '「' + y[2] + '」は ' + y[1]); }));
+      return { q: '赤い記号の ' + (byName ? '名前' : '意味') + 'は？', fig: { score: { clef: 'treble', notes: [{ k: 'G4', d: 'q', art: x[0], c: C.red }, { k: 'A4', d: 'q' }], sp: 60, noClef: false } }, ch: m.ch, a: m.a, ex: '<b>' + x[1] + '</b>：' + x[2] + '。', why: m.why };
     }
   };
   var EXP = [['dolce', '甘く やわらかに'], ['cantabile', '歌うように'], ['espressivo', '表情豊かに'], ['legato', 'なめらかに'], ['maestoso', '荘厳に'], ['grazioso', '優雅に'], ['con brio', '生き生きと'], ['leggiero', '軽く'], ['tranquillo', '静かに'], ['agitato', '激しく']];
   T.express = {
     u: 'u13', st: 2, gen: function (R) {
       var x = pick(EXP, R);
-      var m = mc(R, tx(x[1]), EXP.map(function (y) { return tx(y[1]); }));
-      return { q: '<b class="en" style="font-style:italic">' + x[0] + '</b> の意味は？', ch: m.ch, a: m.a, ex: '<b>' + x[0] + '</b>＝' + x[1] + '。' };
+      var m = mc(R, tx(x[1]), EXP.map(function (y) { return tw(y[1], '「' + y[1] + '」は ' + en(y[0]) + ' の 意味'); }));
+      return { q: '<b class="en" style="font-style:italic">' + x[0] + '</b> の意味は？', ch: m.ch, a: m.a, ex: '<b>' + x[0] + '</b>＝' + x[1] + '。', why: m.why };
     }
   };
   T.repeatOrder = {
@@ -732,6 +938,7 @@
   var en = function (t) { return '<i class="en" style="font-weight:700">' + t + '</i>'; };
   var tq = function (t) { return '<b class="en" style="font-style:italic">' + t.t + '</b>'; };
   var tex = function (t) { return '<b class="en" style="font-style:italic">' + t.t + '</b> <small>［' + t.r + '］</small>＝ ' + t.m + '。'; };
+  var wt = function (x) { return '「' + x.m + '」は ' + en(x.t) + ' の 意味'; }, wm = function (x) { return en(x.t) + ' ＝ ' + x.m; };
   var inCats = function (cats) { return function (t) { return cats.indexOf(t.c) >= 0; }; };
   function tPool(cats, st) { var lv = Math.max(1, Math.min(3, st || 1)); return TM.filter(inCats(cats)).filter(function (t) { return t.lv <= lv; }); }
   // まちがいの選択肢：なるべく 同じ種類から（速さには速さ）
@@ -745,15 +952,15 @@
     return function (R, st) {
       var t = pick(tPool(cats, st), R), o = tOthers(t, cats), m;
       if (mode === 'rev') {
-        m = mc(R, tx(en(t.t), t.t), o.map(function (x) { return tx(en(x.t), x.t); }));
-        return { q: '「<b>' + t.m + '</b>」を表す 楽語は？', ch: m.ch, a: m.a, ex: tex(t) };
+        m = mc(R, tx(en(t.t), t.t), o.map(function (x) { return tw(en(x.t), wm(x), x.t); }));
+        return { q: '「<b>' + t.m + '</b>」を表す 楽語は？', ch: m.ch, a: m.a, ex: tex(t), why: m.why };
       }
       if (mode === 'read') {
-        m = mc(R, tx(t.r), TM.filter(inCats(cats)).filter(function (x) { return x.r !== t.r; }).map(function (x) { return tx(x.r); }));
-        return { q: tq(t) + ' の 読み方は？', ch: m.ch, a: m.a, ex: tex(t) };
+        m = mc(R, tx(t.r), TM.filter(inCats(cats)).filter(function (x) { return x.r !== t.r; }).map(function (x) { return tw(x.r, '「' + x.r + '」は ' + en(x.t) + ' の 読み方'); }));
+        return { q: tq(t) + ' の 読み方は？', ch: m.ch, a: m.a, ex: tex(t), why: m.why };
       }
-      m = mc(R, tx(t.m), o.map(function (x) { return tx(x.m); }));
-      return { q: tq(t) + ' の 意味は？', ch: m.ch, a: m.a, ex: tex(t) };
+      m = mc(R, tx(t.m), o.map(function (x) { return tw(x.m, wt(x)); }));
+      return { q: tq(t) + ' の 意味は？', ch: m.ch, a: m.a, ex: tex(t), why: m.why };
     };
   }
   var C14 = ['tempo', 'tchg', 'dyn', 'aux'], C15 = ['expr', 'art', 'form'];
@@ -790,8 +997,8 @@
     u: 'u14', st: 2, gen: function (R) {
       var L = [['ppp', 'ppp（pianississimo）'], ['fff', 'fff（fortississimo）'], ['sf', 'sforzando（sf・sfz）'], ['sfz', 'sforzando（sf・sfz）'], ['fp', 'fp（forte piano）'], ['rfz', 'rinforzando（rf・rfz）']];
       var x = pick(L, R), t = GK.termByName(x[1]);
-      var m = mc(R, tx(t.m), tOthers(t, ['dyn']).map(function (y) { return tx(y.m); }));
-      return { q: 'この強弱記号の 意味は？', fig: { c: 'dyn', a: { list: [x[0]], labs: [''] } }, ch: m.ch, a: m.a, ex: '<b class="en" style="font-style:italic">' + x[0] + '</b> ＝ ' + t.t + '（' + t.r + '）＝ ' + t.m + '。' };
+      var m = mc(R, tx(t.m), tOthers(t, ['dyn']).map(function (y) { return tw(y.m, wt(y)); }));
+      return { q: 'この強弱記号の 意味は？', fig: { c: 'dyn', a: { list: [x[0]], labs: [''] } }, ch: m.ch, a: m.a, ex: '<b class="en" style="font-style:italic">' + x[0] + '</b> ＝ ' + t.t + '（' + t.r + '）＝ ' + t.m + '。', why: m.why };
     }
   };
   // 組み合わせの言葉
@@ -809,8 +1016,8 @@
   T.phrase = {
     u: 'u14', st: 2, gen: function (R) {
       var x = pick(GK.TERM_PHRASE, R);
-      var m = mc(R, tx(x[1]), GK.TERM_PHRASE.map(function (y) { return tx(y[1]); }));
-      return { q: tq({ t: x[0] }) + ' の 意味は？', ch: m.ch, a: m.a, ex: gloss(x[0]) + ' → <b>' + x[1] + '</b>。' };
+      var m = mc(R, tx(x[1]), GK.TERM_PHRASE.map(function (y) { return tw(y[1], '「' + y[1] + '」は ' + en(y[0])); }));
+      return { q: tq({ t: x[0] }) + ' の 意味は？', ch: m.ch, a: m.a, ex: gloss(x[0]) + ' → <b>' + x[1] + '</b>。', why: m.why };
     }
   };
   // 何を表す言葉？
@@ -833,8 +1040,8 @@
     return function (R) {
       var pr = pick(pairs, R), k = R() < 0.5 ? 0 : 1, a = GK.termByName(pr[k]), b = GK.termByName(pr[1 - k]);
       var wr = TM.filter(inCats(cats)).filter(function (x) { return inPair.indexOf(x.t) < 0 && !syn(x.t, a.t) && !syn(x.t, b.t); });
-      var m = mc(R, tx(en(b.t), b.t), wr.map(function (x) { return tx(en(x.t), x.t); }));
-      return { q: tq(a) + '（' + a.m + '）と <b>反対</b>の意味の言葉は？', ch: m.ch, a: m.a, ex: tex(a) + '<br>' + tex(b) };
+      var m = mc(R, tx(en(b.t), b.t), wr.map(function (x) { return tw(en(x.t), wm(x), x.t); }));
+      return { q: tq(a) + '（' + a.m + '）と <b>反対</b>の意味の言葉は？', ch: m.ch, a: m.a, ex: tex(a) + '<br>' + tex(b), why: m.why };
     };
   }
   T.opp14 = { u: 'u14', st: 2, gen: oppGen(C14) };
@@ -846,9 +1053,9 @@
       var gi = ri(0, 2, R), ok = function (n) { return MOOD_NG.indexOf(n) < 0; };
       var right = pick(GK.TERM_MOOD[gi][1].filter(ok), R), t = GK.termByName(right);
       var wr = []; GK.TERM_MOOD.forEach(function (g, i) { if (i !== gi) wr = wr.concat(g[1].filter(ok)); });
-      var m = mc(R, tx(en(right), right), wr.map(function (n) { return tx(en(n), n); }));
+      var m = mc(R, tx(en(right), right), wr.map(function (n) { return tw(en(n), wm(GK.termByName(n)), n); }));
       var ws = m.ch.filter(function (_, i) { return i !== m.a; }).map(function (c) { var x = GK.termByName(c.replace(/<[^>]+>/g, '')); return '<i class="en">' + x.t + '</i>＝' + x.m; });
-      return { q: '「<b>' + GK.TERM_MOOD[gi][0] + '</b>」感じの曲に 合う言葉は？', ch: m.ch, a: m.a, ex: tex(t) + '<br><small>ほか：' + ws.join('、') + '</small>' };
+      return { q: '「<b>' + GK.TERM_MOOD[gi][0] + '</b>」感じの曲に 合う言葉は？', ch: m.ch, a: m.a, ex: tex(t) + '<br><small>ほか：' + ws.join('、') + '</small>', why: m.why };
     }
   };
   // 奏法・装飾の記号
@@ -856,9 +1063,9 @@
   T.artSym = {
     u: 'u15', st: 2, gen: function (R, st) {
       var pool = ASYM.filter(function (x) { return st >= 3 || !x[3] || x[0] === 'tr'; }), x = pick(pool, R), t = GK.termByName(x[1]);
-      var m = mc(R, tx(x[2]), ASYM.map(function (y) { return tx(y[2]); }));
+      var m = mc(R, tx(x[2]), ASYM.map(function (y) { return tw(y[2], y[2] + ' ＝ ' + GK.termByName(y[1]).m); }));
       var n = { k: x[3] ? 'D5' : 'G4', d: 'q', c: C.red }; if (x[3]) n.orn = x[0]; else n.art = x[0];
-      return { q: '赤い音符の 記号の 名前は？', fig: { score: { clef: 'treble', notes: [n, { k: 'C5', d: 'q' }], sp: 60 } }, ch: m.ch, a: m.a, ex: '<b>' + x[2] + '</b>（<i class="en">' + GK.termShort(t.t) + '</i>）＝ ' + t.m + '。' };
+      return { q: '赤い音符の 記号の 名前は？', fig: { score: { clef: 'treble', notes: [n, { k: 'C5', d: 'q' }], sp: 60 } }, ch: m.ch, a: m.a, ex: '<b>' + x[2] + '</b>（<i class="en">' + GK.termShort(t.t) + '</i>）＝ ' + t.m + '。', why: m.why };
     }
   };
 
@@ -874,6 +1081,14 @@
     q.t = id; q.u = t.u; q.st = Math.max(t.st, Math.min(3, s)); q.ear = !!(t.ear || q.ear);
     return q;
   };
+  // 同じ問題（問題文と答えが同じ）が 続けて出ないように 作り直す。seen：これまでに出した問題
+  GK.Q.sig = function (q) { var c = q.ch[q.a]; return q.t + '|' + q.q + '|' + (c && c.fig ? JSON.stringify(c.k) : c) + '|' + (q.fig ? JSON.stringify(q.fig) : '') + '|' + (q.ear && q.exFig ? JSON.stringify(q.exFig) : ''); };
+  GK.Q.fresh = function (id, R, st, seen) {
+    var q;
+    for (var k = 0; k < 6; k++) { q = GK.Q.make(id, R, st); if (!seen[GK.Q.sig(q)]) break; }
+    seen[GK.Q.sig(q)] = 1;
+    return q;
+  };
   GK.Q.typesOf = function (uids, noEar) {
     var r = [];
     uids.forEach(function (u) { (GK.UNIT[u].types || []).forEach(function (id) { if (T[id] && !(noEar && T[id].ear)) r.push(id); }); });
@@ -882,14 +1097,14 @@
   // n 問：種類を まんべんなく、だんだん むずかしく
   GK.Q.set = function (uids, n, R, o) {
     o = o || {};
-    var types = GK.Q.typesOf(uids, o.noEar), bag = [], out = [], last = null, err = 0;
+    var types = GK.Q.typesOf(uids, o.noEar), bag = [], out = [], last = null, err = 0, seen = {};
     if (o.types) types = o.types.slice();
     for (var i = 0; i < n; i++) {
       if (!bag.length) bag = shuffle(types.slice(), R);
       var id = bag.pop(); if (id === last && bag.length) { bag.unshift(id); id = bag.pop(); }
       last = id;
       var st = o.stFn ? o.stFn(i) : o.st || (o.ramp ? Math.min(3, 1 + Math.floor(i * 3 / n)) : T[id].st);
-      try { out.push(GK.Q.make(id, R, Math.max(T[id].st, st))); } catch (e) { console.error(id, e); if (++err < 50) i--; }
+      try { out.push(GK.Q.fresh(id, R, Math.max(T[id].st, st), seen)); } catch (e) { console.error(id, e); if (++err < 50) i--; }
     }
     return out;
   };
