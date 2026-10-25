@@ -38,11 +38,11 @@
   var noteFig = function (d, o) { o = o || {}; return { score: { clef: 'treble', notes: [{ k: o.k || 'B4', d: d, c: o.c, st: 1 }], minBar: o.w || 56, sp: 30, noClef: true, rhythm: true, above: 30, below: 22 } }; };
   // 足し算の図：音符 ＋ 音符
   function sumFig(ds, op) {
-    var items = [], texts = [], x = 30, W = 70 + ds.length * 90;
+    var gap = op && op.length > 1 ? 150 : 90, items = [], texts = [], x = 30, W = 70 + ds.length * gap;
     ds.forEach(function (d, i) {
       items.push({ s: 0, x: x, k: 'B4', d: d, st: 1 });
-      if (i < ds.length - 1) texts.push({ x: x + 58, y: 64, t: op || '＋', size: 26 });
-      x += 90;
+      if (i < ds.length - 1) texts.push({ x: x + gap / 2 + 14, y: 64, t: op || '＋', size: 26 });
+      x += gap;
     });
     return { free: { w: W - 30, h: 110, staves: [{ x: 0, y: -10, w: W, hide: true }], items: items, texts: texts } };
   }
@@ -73,7 +73,7 @@
       var p = { l: ri(0, 6, R), a: 0, o: 4 };
       var wr = [1, 2, 3, 4, 5, 6].map(function (k) { var x = M.P(p.l + k, 0, 4); return tx(M.name(x, b[0]), M.str(x)); });
       var m = mc(R, tx(M.name(p, b[0]), M.str(p)), wr);
-      return { q: a[1] + 'の「<b>' + M.name(p, a[0]) + '</b>」は ' + b[1] + 'で？', fig: { html: '<table style="border-collapse:collapse;font-size:15px"><tr>' + ['ド', 'レ', 'ミ', 'ファ', 'ソ', 'ラ', 'シ'].map(function (x, i) { return '<td style="padding:3px 9px;border:1px solid var(--line);' + (i === p.l && a[0] === 'doremi' ? 'background:var(--gold-soft)' : '') + '">' + (a[0] === 'doremi' ? x : '?') + '</td>'; }).join('') + '</tr></table>' }, ch: m.ch, a: m.a, ex: M.name(p, 'doremi') + '＝' + M.name(p, 'jp') + '＝' + M.name(p, 'en') + '（ド・レ・ミ… ＝ ハ・ニ・ホ・ヘ・ト・イ・ロ ＝ C・D・E・F・G・A・B）' };
+      return { q: a[1] + 'の「<b>' + M.name(p, a[0]) + '</b>」は ' + b[1] + 'で？', fig: { html: '<table style="border-collapse:collapse;font-size:18px"><tr>' + [0, 1, 2, 3, 4, 5, 6].map(function (i) { return '<td style="padding:4px 10px;border:1px solid var(--line);text-align:center;' + (i === p.l ? 'background:var(--gold-soft);font-weight:700' : '') + '">' + M.name({ l: i, a: 0, o: 4 }, a[0]) + '</td>'; }).join('') + '</tr></table>', cap: a[1] + 'の ならび' }, ch: m.ch, a: m.a, ex: M.name(p, 'doremi') + '＝' + M.name(p, 'jp') + '＝' + M.name(p, 'en') + '（ド・レ・ミ… ＝ ハ・ニ・ホ・ヘ・ト・イ・ロ ＝ C・D・E・F・G・A・B）' };
     }
   };
   T.grandSame = {
@@ -154,7 +154,7 @@
       var all = ['h', 'q', '8', 'qd', 'hd', 'w', 'hr', 'qr', '8r'];
       var m = mc(R, { k: ans, fig: noteFig(ans) }, all.filter(function (d) { return M.len(d.replace('r', '')) !== M.len(last); }).map(function (d) { return { k: d, fig: noteFig(d) }; }));
       var have = f.reduce(function (a, d) { return a + M.len(d); }, 0), need = parseInt(t, 10);
-      return { q: t + '拍子。<b>？</b> に入れると ちょうど1小節になるのは？', fig: { score: { clef: 'treble', time: t, notes: f.map(function (d) { return { k: melk(R), d: d }; }).concat([{ k: 'B4', d: ans, c: 'transparent', lab: '？', lc: C.red }]), end: 'end', sp: 44 } }, ch: m.ch, a: m.a, ex: '1小節は ' + need + ' 拍。いまは ' + lens(have) + ' 拍なので あと <b>' + lens(need - have) + ' 拍</b>（' + (rest ? RN[ans] : DN[ans]) + '）。' };
+      return { q: t + '拍子。<b>？</b> に入れると ちょうど1小節になるのは？', fig: { score: { clef: 'treble', time: t, notes: f.map(function (d) { return { k: melk(R), d: d }; }).concat([{ k: 'B4', d: ans, c: 'transparent' }]), end: 'end', sp: 44, after: function (o) { var n = o.notes[o.notes.length - 1]; M.svgText(o.svg, n.x, o.staves[0].getYForLine(2) + 9, '？', { size: 26, c: C.red }); } } }, ch: m.ch, a: m.a, ex: '1小節は ' + need + ' 拍。いまは ' + lens(have) + ' 拍なので あと <b>' + lens(need - have) + ' 拍</b>（' + (rest ? RN[ans] : DN[ans]) + '）。' };
     }
   };
   T.timeKind = {
@@ -514,7 +514,8 @@
   var CNT = ['maj', 'min', 'dom7', 'maj7', 'min7', 'dim', 'aug', 'sus4'];
   T.chordName = {
     u: 'u11', st: 2, gen: function (R, st) {
-      var root = pick(nat('C4', 'A4'), R); if (st >= 3) root.a = pick([0, 1, -1], R);
+      var root = pick(nat('C4', 'A4'), R);
+      if (st >= 3) { root = M.p(pick(['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B3', 'F#4', 'C#4', 'Bb3', 'Eb4', 'Ab4', 'Db4'], R)); }
       var ty = pick(st >= 3 ? CNT : ['maj', 'min', 'dom7', 'maj7', 'min7'], R), ps = M.chord(root, ty);
       var wr = CNT.map(function (t) { return tx(M.chordName(root, t)); }).concat([tx(M.chordName(M.P(root.l + 2, 0, 4), ty)), tx(M.chordName(M.P(root.l + 5, 0, 4), ty))]);
       var m = mc(R, tx(M.chordName(root, ty)), wr);
@@ -651,8 +652,8 @@
     u: 'u13', st: 3, gen: function (R) {
       var L = [['basic', 'A B C B C D', ['A B C D', 'A B C A B C D', 'A B B C C D', 'A B C D B C']], ['volta', 'A B A C D', ['A B C D', 'A B A B C D', 'A B C A C D', 'A A B C D']], ['dc', 'A B C D A B', ['A B C D A B C D', 'A B C D', 'A B A B C D', 'A B C D C D']], ['ds', 'A B C D B C D', ['A B C D A B C D', 'A B C D', 'A B C D C D', 'A B C B C D']]];
       var x = pick(L, R);
-      var m = mc(R, tx(x[1].split(' ').join('→')), x[2].map(function (s) { return tx(s.split(' ').join('→')); }));
-      return { q: 'この楽譜を 演奏する順は？', fig: { c: 'repeatQ', a: { kind: x[0] } }, ch: m.ch, a: m.a, ex: { basic: '𝄆〜𝄇 の間（B・C）を くり返す。', volta: '2回目は 1番カッコ（B）をとばして 2番カッコ（C）へ。', dc: 'D.C. で 始めにもどり、Fine で終わる。', ds: 'D.S. で 𝄋 にもどる。' }[x[0]] + ' → <b>' + x[1].split(' ').join('→') + '</b>。' };
+      var m = mc(R, tx(x[1]), x[2].map(function (s) { return tx(s); }));
+      return { q: 'この楽譜を 演奏する順は？（左から順に）', fig: { c: 'repeatQ', a: { kind: x[0] } }, ch: m.ch, a: m.a, ex: { basic: '𝄆〜𝄇 の間（B・C）を くり返す。', volta: '2回目は 1番カッコ（B）をとばして 2番カッコ（C）へ。', dc: 'D.C. で 始めにもどり、Fine で終わる。', ds: 'D.S. で 𝄋 にもどる。' }[x[0]] + ' → <b>' + x[1].split(' ').join('→') + '</b>。' };
     }
   };
   // 問題用：順番を書かない 反復の図

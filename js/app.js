@@ -20,7 +20,7 @@
   GK.drawQ = function (el, q, o) {
     o = o || {};
     el.innerHTML = '<div class="qtop">' + (o.top || '') + '<span class="stars">' + '★★★'.slice(0, q.st) + '<span style="opacity:.25">' + '★★★'.slice(q.st) + '</span></span><span class="cat">' + esc(GK.UNIT[q.u].title) + '</span><span class="r">' + (q.play && !q.ear ? '<button type="button" class="btn sm" data-qa="play">🔊</button>' : '') + '</span></div>' +
-      '<p class="qq">' + GK.symfix(q.q) + '</p><div class="qfig"></div><div class="ch n' + q.ch.length + '"></div><div class="fb" hidden></div>';
+      '<p class="qq"><span>' + GK.symfix(q.q) + '</span></p><div class="qfig"></div><div class="ch n' + q.ch.length + '"></div><div class="fb" hidden></div>';
     var fig = $('.qfig', el), ch = $('.ch', el);
     el.q = q;
     el.classList.toggle('nofig', !q.fig && !q.ear);
@@ -32,7 +32,11 @@
       var b = document.createElement('button'); b.type = 'button'; b.dataset.i = i;
       b.innerHTML = '<span class="kn">' + (i + 1) + '</span>';
       if (c && c.fig) { b.className = 'fg'; var d = document.createElement('div'); b.appendChild(d); ch.appendChild(b); F.render(d, c.fig); }
-      else { b.insertAdjacentHTML('beforeend', '<span>' + c + '</span>'); ch.appendChild(b); }
+      else {
+        var len = String(c).replace(/<[^>]+>/g, '').length;
+        if (len > 16) b.className = 'xl'; else if (len > 9) b.className = 'lg';
+        b.insertAdjacentHTML('beforeend', '<span>' + c + '</span>'); ch.appendChild(b);
+      }
     });
     var done = false;
     el.onclick = function (e) {

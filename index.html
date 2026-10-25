@@ -244,6 +244,8 @@ svg.dia .en { font-family: var(--font-en); }
 }
 .qz .ch button:hover:not(:disabled) { background: var(--chip); }
 .qz .ch button:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.qz .ch button.lg { font-size: calc(15px * var(--k)); padding-left: 16px; }
+.qz .ch button.xl { font-size: calc(13px * var(--k)); padding-left: 16px; letter-spacing: -.02em; }
 .qz .ch button .kn { position: absolute; left: 6px; top: 3px; font-size: 11px; color: var(--muted); font-family: var(--font-en); }
 .qz .ch button.fg { padding: 4px; height: clamp(70px, 15vh, 120px); }
 .qz .ch button.fg > div { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
@@ -460,6 +462,8 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
   .qz .ch { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
   .qz .ch.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .qz .ch button { min-height: 46px; font-size: calc(15.5px * var(--k)); padding: 6px; }
+  .qz .ch button.lg { font-size: calc(13px * var(--k)); padding-left: 14px; }
+  .qz .ch button.xl { font-size: calc(11.5px * var(--k)); padding-left: 14px; }
   .qz .ch button.fg { height: clamp(60px, 11vh, 96px); }
   .qz .fb .mk { font-size: 24px; }
   .qz .fb .ex { font-size: 13.5px; }
