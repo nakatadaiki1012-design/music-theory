@@ -802,7 +802,7 @@
       var rn = M.ROMAN[d - 1] + (sev ? '7' : '');
       var wr = [1, 2, 3, 4, 5, 6, 7].filter(function (x) { return x !== d; }).map(function (x) { return tx(keyChord(f, x).name); }).concat([tx(M.chordName(c.ps[0], sev ? 'maj' : M.chordType(c.ps) === 'maj' ? 'min' : 'maj'))]);
       var m = mc(R, tx(c.name), wr);
-      return { q: '<b>' + M.keyName(f) + '</b> の <b>' + rn + '</b> の和音の コードネームは？', ch: m.ch, a: m.a, ex: M.keyName(f) + 'の ' + d + ' 番目の音は ' + M.name(c.ps[0], 'en') + '。' + (d === 1 || d === 4 || d === 5 ? (sev ? '属七の和音 → ' : 'Ⅰ・Ⅳ・Ⅴ は 長三和音 → ') : d === 7 ? 'Ⅶ は 減三和音 → ' : 'Ⅱ・Ⅲ・Ⅵ は 短三和音 → ') + '<b>' + c.name + '</b>（' + c.ps.map(N).join('・') + '）。', exFig: { score: { clef: 'treble', key: f, notes: [1, 2, 3, 4, 5, 6, 7].map(function (x) { var k = keyChord(f, x); return { k: k.ps.map(function (p) { return M.str({ l: p.l, a: p.a, o: p.o - (M.midi(k.ps[0]) > 69 ? 1 : 0) }); }), d: 'w', lab: k.name, c: x === d ? C.red : null }; }), sp: 40, ls: 11 } }, play: [[c.ps, 2]] };
+      return { q: '<b>' + M.keyName(f) + '</b> の <b>' + rn + '</b> の和音の コードネームは？', ch: m.ch, a: m.a, ex: M.keyName(f) + 'の ' + d + ' 番目の音は ' + M.name(c.ps[0], 'en') + '。' + (d === 1 || d === 4 || d === 5 ? (sev ? '属七の和音 → ' : 'Ⅰ・Ⅳ・Ⅴ は 長三和音 → ') : d === 7 ? 'Ⅶ は 減三和音 → ' : 'Ⅱ・Ⅲ・Ⅵ は 短三和音 → ') + '<b>' + c.name + '</b>（' + c.ps.map(N).join('・') + '）。', exFig: { score: { clef: 'treble', key: f, notes: [1, 2, 3, 4, 5, 6, 7].map(function (x) { var k = keyChord(f, x), lo = M.midi(keyChord(f, 1).ps[0]) > 65 ? 1 : 0; return { k: k.ps.map(function (p) { return M.str({ l: p.l, a: p.a, o: p.o - lo }); }), d: 'w', lab: k.name, c: x === d ? C.red : null }; }), sp: 40, ls: 11 } }, play: [[c.ps, 2]] };
     }
   };
   T.funcName = {
@@ -972,6 +972,13 @@
   var tex = function (t) { return '<b class="en" style="font-style:italic">' + t.t + '</b> <small>［' + t.r + '］</small>＝ ' + t.m + '。'; };
   var wt = function (x) { return '「' + x.m + '」は ' + en(x.t) + ' の 意味'; }, wm = function (x) { return en(x.t) + ' ＝ ' + x.m; };
   var inCats = function (cats) { return function (t) { return cats.indexOf(t.c) >= 0; }; };
+  // 演習では まちがえた楽語（weakT）を 半分くらいの確率で 出す。クラス対戦では使わない（全員 同じ問題にするため）
+  // （一度まちがえた言葉なので むずかしさの★に関係なく 出す）
+  function pickTerm(cats, st, R) {
+    var pool = tPool(cats, st);
+    if (GK.Q.useWeak) { var w = GK.store.get('weakT', {}), wp = TM.filter(inCats(cats)).filter(function (t) { return w[t.t]; }); if (wp.length && R() < 0.5) pool = wp; }
+    return pick(pool, R);
+  }
   function tPool(cats, st) { var lv = Math.max(1, Math.min(3, st || 1)); return TM.filter(inCats(cats)).filter(function (t) { return t.lv <= lv; }); }
   // まちがいの選択肢：なるべく 同じ種類から（速さには速さ）
   function tOthers(t, cats) {
@@ -982,17 +989,17 @@
   // mode：mean（楽語 → 意味）／rev（意味 → 楽語）／read（読み方）
   function termGen(cats, mode) {
     return function (R, st) {
-      var t = pick(tPool(cats, st), R), o = tOthers(t, cats), m;
+      var t = pickTerm(cats, st, R), o = tOthers(t, cats), m;
       if (mode === 'rev') {
         m = mc(R, tx(en(t.t), t.t), o.map(function (x) { return tw(en(x.t), wm(x), x.t); }));
-        return { q: '「<b>' + t.m + '</b>」を表す 楽語は？', ch: m.ch, a: m.a, ex: tex(t), why: m.why };
+        return { q: '「<b>' + t.m + '</b>」を表す 楽語は？', ch: m.ch, a: m.a, ex: tex(t), why: m.why, term: t.t };
       }
       if (mode === 'read') {
         m = mc(R, tx(t.r), TM.filter(inCats(cats)).filter(function (x) { return x.r !== t.r; }).map(function (x) { return tw(x.r, '「' + x.r + '」は ' + en(x.t) + ' の 読み方'); }));
-        return { q: tq(t) + ' の 読み方は？', ch: m.ch, a: m.a, ex: tex(t), why: m.why };
+        return { q: tq(t) + ' の 読み方は？', ch: m.ch, a: m.a, ex: tex(t), why: m.why, term: t.t };
       }
       m = mc(R, tx(t.m), o.map(function (x) { return tw(x.m, wt(x)); }));
-      return { q: tq(t) + ' の 意味は？', ch: m.ch, a: m.a, ex: tex(t), why: m.why };
+      return { q: tq(t) + ' の 意味は？', ch: m.ch, a: m.a, ex: tex(t), why: m.why, term: t.t };
     };
   }
   var C14 = ['tempo', 'tchg', 'dyn', 'aux'], C15 = ['expr', 'art', 'form'];
@@ -1030,7 +1037,7 @@
       var L = [['ppp', 'ppp（pianississimo）'], ['fff', 'fff（fortississimo）'], ['sf', 'sforzando（sf・sfz）'], ['sfz', 'sforzando（sf・sfz）'], ['fp', 'fp（forte piano）'], ['rfz', 'rinforzando（rf・rfz）']];
       var x = pick(L, R), t = GK.termByName(x[1]);
       var m = mc(R, tx(t.m), tOthers(t, ['dyn']).map(function (y) { return tw(y.m, wt(y)); }));
-      return { q: 'この強弱記号の 意味は？', fig: { c: 'dyn', a: { list: [x[0]], labs: [''] } }, ch: m.ch, a: m.a, ex: '<b class="en" style="font-style:italic">' + x[0] + '</b> ＝ ' + t.t + '（' + t.r + '）＝ ' + t.m + '。', why: m.why };
+      return { q: 'この強弱記号の 意味は？', fig: { c: 'dyn', a: { list: [x[0]], labs: [''] } }, ch: m.ch, a: m.a, ex: '<b class="en" style="font-style:italic">' + x[0] + '</b> ＝ ' + t.t + '（' + t.r + '）＝ ' + t.m + '。', why: m.why, term: t.t };
     }
   };
   // 組み合わせの言葉
@@ -1073,7 +1080,7 @@
       var pr = pick(pairs, R), k = R() < 0.5 ? 0 : 1, a = GK.termByName(pr[k]), b = GK.termByName(pr[1 - k]);
       var wr = TM.filter(inCats(cats)).filter(function (x) { return inPair.indexOf(x.t) < 0 && !syn(x.t, a.t) && !syn(x.t, b.t); });
       var m = mc(R, tx(en(b.t), b.t), wr.map(function (x) { return tw(en(x.t), wm(x), x.t); }));
-      return { q: tq(a) + '（' + a.m + '）と <b>反対</b>の意味の言葉は？', ch: m.ch, a: m.a, ex: tex(a) + '<br>' + tex(b), why: m.why };
+      return { q: tq(a) + '（' + a.m + '）と <b>反対</b>の意味の言葉は？', ch: m.ch, a: m.a, ex: tex(a) + '<br>' + tex(b), why: m.why, term: a.t };
     };
   }
   T.opp14 = { u: 'u14', st: 2, gen: oppGen(C14) };
@@ -1087,7 +1094,7 @@
       var wr = []; GK.TERM_MOOD.forEach(function (g, i) { if (i !== gi) wr = wr.concat(g[1].filter(ok)); });
       var m = mc(R, tx(en(right), right), wr.map(function (n) { return tw(en(n), wm(GK.termByName(n)), n); }));
       var ws = m.ch.filter(function (_, i) { return i !== m.a; }).map(function (c) { var x = GK.termByName(c.replace(/<[^>]+>/g, '')); return '<i class="en">' + x.t + '</i>＝' + x.m; });
-      return { q: '「<b>' + GK.TERM_MOOD[gi][0] + '</b>」感じの曲に 合う言葉は？', ch: m.ch, a: m.a, ex: tex(t) + '<br><small>ほか：' + ws.join('、') + '</small>', why: m.why };
+      return { q: '「<b>' + GK.TERM_MOOD[gi][0] + '</b>」感じの曲に 合う言葉は？', ch: m.ch, a: m.a, ex: tex(t) + '<br><small>ほか：' + ws.join('、') + '</small>', why: m.why, term: right };
     }
   };
   // 奏法・装飾の記号
@@ -1097,7 +1104,7 @@
       var pool = ASYM.filter(function (x) { return st >= 3 || !x[3] || x[0] === 'tr'; }), x = pick(pool, R), t = GK.termByName(x[1]);
       var m = mc(R, tx(x[2]), ASYM.map(function (y) { return tw(y[2], y[2] + ' ＝ ' + GK.termByName(y[1]).m); }));
       var n = { k: x[3] ? 'D5' : 'G4', d: 'q', c: C.red }; if (x[3]) n.orn = x[0]; else n.art = x[0];
-      return { q: '赤い音符の 記号の 名前は？', fig: { score: { clef: 'treble', notes: [n, { k: 'C5', d: 'q' }], sp: 60 } }, ch: m.ch, a: m.a, ex: '<b>' + x[2] + '</b>（<i class="en">' + GK.termShort(t.t) + '</i>）＝ ' + t.m + '。', why: m.why };
+      return { q: '赤い音符の 記号の 名前は？', fig: { score: { clef: 'treble', notes: [n, { k: 'C5', d: 'q' }], sp: 60 } }, ch: m.ch, a: m.a, ex: '<b>' + x[2] + '</b>（<i class="en">' + GK.termShort(t.t) + '</i>）＝ ' + t.m + '。', why: m.why, term: t.t };
     }
   };
 
@@ -1131,6 +1138,7 @@
     o = o || {};
     var types = GK.Q.typesOf(uids, o.noEar), bag = [], out = [], last = null, err = 0, seen = {};
     if (o.types) types = o.types.slice();
+    GK.Q.useWeak = !!o.weak;
     for (var i = 0; i < n; i++) {
       if (!bag.length) bag = shuffle(types.slice(), R);
       var id = bag.pop(); if (id === last && bag.length) { bag.unshift(id); id = bag.pop(); }
@@ -1138,6 +1146,7 @@
       var st = o.stFn ? o.stFn(i) : o.st || (o.ramp ? Math.min(3, 1 + Math.floor(i * 3 / n)) : T[id].st);
       try { out.push(GK.Q.fresh(id, R, Math.max(T[id].st, st), seen)); } catch (e) { console.error(id, e); if (++err < 50) i--; }
     }
+    GK.Q.useWeak = false;
     return out;
   };
 })();

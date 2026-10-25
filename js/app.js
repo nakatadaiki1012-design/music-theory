@@ -93,6 +93,14 @@
     GK.store.set('weak', w);
   }
 
+  // まちがえた楽語（楽語じてんの「⚠ 苦手」と 演習の出題に使う）
+  function noteTerm(t, ok) {
+    var w = GK.store.get('weakT', {});
+    w[t] = Math.max(0, (w[t] || 0) + (ok ? -1 : 2));
+    if (!w[t]) delete w[t];
+    GK.store.set('weakT', w);
+  }
+
   /* =========================================================
      いくつかの問題を 順に解く（演習・テスト）
      o = { qs, mode: 'prac' | 'test', title, onEnd(res), back }
@@ -113,10 +121,10 @@
         onPick: function (k, ok) {
           res.push({ q: q, pick: k, ok: ok });
           if (o.mode === 'prac') {
-            noteMiss(q.t, ok); if (ok) { RW.drillOk++; if (q.ear) RW.earOk++; GK.earn(5); }
+            noteMiss(q.t, ok); if (q.term) noteTerm(q.term, ok); if (ok) { RW.drillOk++; if (q.ear) RW.earOk++; GK.earn(5); }
             // まちがえたら 同じ種類の 新しい問題を 3 問あとに（1 セット 3 回まで）
             if (!ok && retries < 3) {
-              try { var sn = {}; o.qs.forEach(function (x) { sn[GK.Q.sig(x)] = 1; }); var nq = GK.Q.fresh(q.t, RR, q.st, sn); nq.retry = true; o.qs.splice(Math.min(o.qs.length, i + 3), 0, nq); retries++; } catch (e) { }
+              try { var sn = {}; o.qs.forEach(function (x) { sn[GK.Q.sig(x)] = 1; }); GK.Q.useWeak = true; var nq = GK.Q.fresh(q.t, RR, q.st, sn); GK.Q.useWeak = false; nq.retry = true; o.qs.splice(Math.min(o.qs.length, i + 3), 0, nq); retries++; } catch (e) { }
             }
           }
           var p = $('.prog', el); if (p) p.outerHTML = prog().replace(/<span>.*$/, '');
@@ -259,7 +267,7 @@
 
   function practice(u, st) {
     var R = GK.rng(Math.floor(Math.random() * 1e9));
-    var qs = GK.Q.set([u.id], 10, R, { ramp: true });
+    var qs = GK.Q.set([u.id], 10, R, { ramp: true, weak: true });
     GK.runSet(st, {
       qs: qs, mode: 'prac', onEnd: function (res, n) {
         var p = GK.prog(u.id); GK.setProg(u.id, { prac: Math.max(p.prac, n), pracN: (p.pracN || 0) + 1 });
@@ -341,7 +349,7 @@
       draw();
     };
     function start() {
-      var R = GK.rng(Math.floor(Math.random() * 1e9)), us = GK.UNITS.map(function (u) { return u.id; }), o = { ramp: !DR.st, st: DR.st || null };
+      var R = GK.rng(Math.floor(Math.random() * 1e9)), us = GK.UNITS.map(function (u) { return u.id; }), o = { ramp: !DR.st, st: DR.st || null, weak: true };
       if (DR.mode === 'mix') us = DR.us.slice();
       if (DR.mode === 'weak') o.types = wk.slice(0, 8);
       if (DR.mode === 'ear') o.types = Object.keys(GK.Q.T).filter(function (k) { return GK.Q.T[k].ear; });
@@ -378,15 +386,17 @@
   // 📚 楽語じてん：種類でしぼる・さがす
   function termsTool(body) {
     var cat = 'all', qs = '';
-    var cats = [['all', 'すべて']].concat(['tempo', 'tchg', 'dyn', 'expr', 'art', 'aux', 'form'].map(function (c) { return [c, GK.TERM_CAT[c].replace(/（.*）/, '')]; }));
+    var weak = GK.store.get('weakT', {}), nW = Object.keys(weak).length;
+    var cats = [['all', 'すべて']].concat(nW ? [['weak', '⚠ 苦手 ' + nW]] : []).concat(['tempo', 'tchg', 'dyn', 'expr', 'art', 'aux', 'form'].map(function (c) { return [c, GK.TERM_CAT[c].replace(/（.*）/, '')]; }));
+    if (nW) cat = 'weak';
     body.innerHTML = '<div class="toolw"><div class="ctl"><div class="seg">' + cats.map(function (c) { return '<button type="button" data-tc="' + c[0] + '" aria-pressed="' + (c[0] === cat) + '">' + c[1] + '</button>'; }).join('') + '</div>' +
       '<input id="tq" type="search" placeholder="さがす（例：allegro・だんだん）" style="flex:1 1 160px;min-width:0;font:inherit;padding:6px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)"></div>' +
       '<div id="tl" style="flex:1 1 0;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;align-content:start;padding:2px"></div></div>';
     function draw() {
       var q = qs.trim().toLowerCase();
-      var L = GK.TERMS.filter(function (t) { return (cat === 'all' || t.c === cat) && (!q || (t.t + ' ' + t.r + ' ' + t.m).toLowerCase().indexOf(q) >= 0); });
+      var L = GK.TERMS.filter(function (t) { return (cat === 'all' || t.c === cat || (cat === 'weak' && weak[t.t])) && (!q || (t.t + ' ' + t.r + ' ' + t.m).toLowerCase().indexOf(q) >= 0); });
       $('#tl').innerHTML = L.length ? L.map(function (t) {
-        return '<div style="border:1.5px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--panel)"><b class="en" style="font-style:italic;font-size:1.15em">' + esc(t.t) + '</b> <small style="color:var(--muted)">' + esc(t.r) + '</small><br><span>' + esc(t.m) + '</span><small style="display:block;color:var(--muted);font-size:11px">' + '★★★'.slice(0, t.lv) + '・' + GK.TERM_CAT[t.c].replace(/（.*）/, '') + '</small></div>';
+        return '<div style="border:1.5px solid ' + (weak[t.t] ? 'var(--warm)' : 'var(--line)') + ';border-radius:10px;padding:6px 10px;background:var(--panel)">' + (weak[t.t] ? '<small style="float:right;color:var(--warm)">⚠ 苦手</small>' : '') + '<b class="en" style="font-style:italic;font-size:1.15em">' + esc(t.t) + '</b> <small style="color:var(--muted)">' + esc(t.r) + '</small><br><span>' + esc(t.m) + '</span><small style="display:block;color:var(--muted);font-size:11px">' + '★★★'.slice(0, t.lv) + '・' + GK.TERM_CAT[t.c].replace(/（.*）/, '') + '</small></div>';
       }).join('') : '<p class="note">見つかりません</p>';
     }
     body.onclick = function (e) {
