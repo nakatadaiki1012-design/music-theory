@@ -28,9 +28,21 @@
   var mult = function (k) { return k >= 40 ? 3 : k >= 30 ? 2.5 : k >= 20 ? 2 : k >= 10 ? 1.5 : 1; };
   var RULER = [[0, 'ウォーミングアップ中'], [5, '小テスト 1 回分'], [10, '楽典ドリル 1 ページ分'], [20, '定期テストの楽典 1 回分'], [30, '楽典検定 1 回分'], [45, '音大入試の楽典 1 回分'], [60, '楽典の問題集 1 冊分']];
   var ruler = function (n) { var r = RULER[0][1]; RULER.forEach(function (x) { if (n >= x[0]) r = x[1]; }); return r; };
+  // 時間が たつほど 時計が速く進む（60 秒から だんだん、3 分で 3 倍）。上手な人も いつかは 終わる
+  var DRAIN0 = 60, DRAINK = 60, DRAINMAX = 3;
+  var drainRate = function (sec) { return Math.min(DRAINMAX, 1 + Math.max(0, sec - DRAIN0) / DRAINK); };
+  // 問題：はじめの 8 問は ★1 の種類だけ、22 問目までは ★2 まで、そのあとは 全部（だんだん むずかしく）
   function makeQs(cfg, seed) {
-    var R = GK.rng(seed);
-    return GK.Q.set(unitsOf(cfg), 120, R, { noEar: true, stFn: function (i) { return i < 8 ? 1 : i < 22 ? 2 : 3; } });
+    var R = GK.rng(seed), T = GK.Q.T, all = GK.Q.typesOf(unitsOf(cfg), true), out = [], bag = [], last = null;
+    for (var i = 0; i < 160; i++) {
+      var tr = i < 8 ? 1 : i < 22 ? 2 : 3;
+      var pool = all.filter(function (id) { return T[id].st <= tr; }); if (!pool.length) pool = all;
+      bag = bag.filter(function (id) { return pool.indexOf(id) >= 0; });
+      if (!bag.length) bag = GK.shuffle(pool.slice(), R);
+      var id = bag.pop(); if (id === last && bag.length) { bag.unshift(id); id = bag.pop(); } last = id;
+      try { out.push(GK.Q.make(id, R, Math.max(T[id].st, tr))); } catch (e) { console.error(id, e); }
+    }
+    return out;
   }
 
   /* =========================================================
@@ -83,7 +95,9 @@
   GK.onLeave(function () { stopGame(); G = null; });
   function timeLeft() {
     if (G.mode === 'battle') return Math.max(0, G.startAt + G.cfg.t * 1000 - now());
-    return Math.max(0, G.left - Math.max(0, now() - G.last));
+    var t = now();
+    if (G.started && t > G.last) { G.left -= (t - G.last) * drainRate((t - G.startAt) / 1000); G.last = t; }
+    return Math.max(0, G.left);
   }
   function tick() {
     if (!G || G.dead) return;
@@ -97,7 +111,8 @@
     if (!G.started) { G.started = true; G.last = now(); GK.fx('go'); showQ(); }
     var left = timeLeft(), max = G.mode === 'battle' ? G.cfg.t * 1000 : Math.max(G.cfg.t * 1000, 1);
     var bar = $('#gbar', G.box); if (bar) { bar.firstChild.style.width = Math.min(100, left / max * 100) + '%'; bar.classList.toggle('low', left < 10000); }
-    var tm = $('#gtm', G.box); if (tm) tm.textContent = Math.ceil(left / 1000) + '秒';
+    var tm = $('#gtm', G.box), dr = G.mode === 'battle' ? 1 : drainRate((now() - G.startAt) / 1000);
+    if (tm) tm.innerHTML = Math.ceil(left / 1000) + '秒' + (dr > 1.05 ? '<small style="color:var(--warm);font-size:13px;margin-left:4px">⏩×' + dr.toFixed(1) + '</small>' : '');
     if (left <= 0 && !G.over) { G.over = true; clearInterval(G.timer); G.dur = (now() - G.startAt) / 1000; GK.fx('whistle'); G.hooks.end && G.hooks.end(G); }
   }
   function showQ() {
@@ -138,7 +153,7 @@
   function popup(t, ng) {
     var p = document.createElement('div'); p.className = 'pop' + (ng ? ' ng' : ''); p.textContent = t;
     var sc = $('#gsc', G.box); if (!sc) return;
-    p.style.right = '16px'; p.style.top = '44px';
+    p.style.right = '16px'; p.style.top = '78px';
     G.box.firstChild.appendChild(p); setTimeout(function () { p.remove(); }, 800);
   }
 

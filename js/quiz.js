@@ -54,17 +54,27 @@
   }
 
   /* =================== 01 五線と音名 =================== */
-  function readGen(clef, poolE, poolH, refTxt) {
+  // 音部記号の「目じるし」の音から 線・間を 1 つずつ数える（いちばん近い目じるしを使う）
+  var MARKS = {
+    treble: [['G4', 'ト音記号の 第2線は ソ'], ['C5', 'ト音記号の 第3間は ド'], ['C4', '下第1線は 中央のド'], ['G5', 'ト音記号の 第5線の上は ソ']],
+    bass: [['F3', 'ヘ音記号の 第4線は ファ'], ['C3', 'ヘ音記号の 第2間は ド'], ['C4', '上第1線は 中央のド'], ['G2', 'ヘ音記号の 第1線は ソ']],
+    alto: [['C4', 'ハ音記号の 第3線は 中央のド'], ['F3', 'ハ音記号の 第1線は ファ'], ['G4', 'ハ音記号の 第5線は ソ']]
+  };
+  function readGen(clef, poolE, poolH) {
     return function (R, st) {
       var p = pick(st >= 2 ? poolH : poolE, R);
       var wr = [-1, 1, -2, 2, 3, -3].map(function (k) { return pn(M.P(p.l + k, 0, p.o)); });
       var m = mc(R, pn(p), wr);
-      return { q: 'この音の音名は？', fig: one(p, clef), ch: m.ch, a: m.a, ex: refTxt + '。この音は <b>' + posTxt(p, clef) + '</b> なので <b>' + N(p) + '</b>。', exFig: { score: F.one(M.str(p), { clef: clef, lab: N(p), c: C.red }) }, play: [[p, 1.5]] };
+      var mk = MARKS[clef].slice().sort(function (a, b) { return Math.abs(M.dia(p) - M.dia(a[0])) - Math.abs(M.dia(p) - M.dia(b[0])); })[0];
+      var ref = M.p(mk[0]), d = M.dia(p) - M.dia(ref), sg = d < 0 ? -1 : 1, path = [];
+      for (var j = 0; sg * j <= sg * d; j += sg) path.push(M.P(ref.l + j, 0, ref.o));
+      var how = d === 0 ? 'この音が ちょうど その音' : 'そこから ' + (d > 0 ? '上へ ' : '下へ ') + Math.abs(d) + ' つ（' + path.map(N).join('→') + '）';
+      return { q: 'この音の音名は？', fig: one(p, clef), ch: m.ch, a: m.a, ex: mk[1].replace(/ソ$|ド$|ファ$/, function (x) { return N(ref); }) + '。' + how + ' → <b>' + N(p) + '</b>。', exFig: { score: { clef: clef, notes: path.map(function (x, j) { var last = j === path.length - 1; return { k: M.str(x), d: 'q', c: last ? C.red : j === 0 ? C.blue : C.gray, lab: j === 0 || last ? N(x) : '', lc: last ? C.red : C.blue }; }), sp: 34, beam: false } }, play: [[p, 1.5]] };
     };
   }
-  T.readT = { u: 'u01', st: 1, gen: readGen('treble', nat('C4', 'A5'), nat('G3', 'C6'), 'ト音記号は 第2線が ソ') };
-  T.readB = { u: 'u01', st: 2, gen: readGen('bass', nat('E2', 'C4'), nat('C2', 'E4'), 'ヘ音記号は 第4線が ファ') };
-  T.readA = { u: 'u01', st: 3, gen: readGen('alto', nat('E3', 'C5'), nat('C3', 'E5'), 'ハ音記号（アルト）は 第3線が ド') };
+  T.readT = { u: 'u01', st: 1, gen: readGen('treble', nat('C4', 'A5'), nat('G3', 'C6')) };
+  T.readB = { u: 'u01', st: 2, gen: readGen('bass', nat('E2', 'C4'), nat('C2', 'E4')) };
+  T.readA = { u: 'u01', st: 3, gen: readGen('alto', nat('E3', 'C5'), nat('C3', 'E5')) };
   T.findNote = {
     u: 'u01', st: 1, gen: function (R) {
       var pool = nat('C4', 'G5'), p = pick(pool, R);
@@ -146,7 +156,8 @@
   T.timeFit = {
     u: 'u03', st: 2, gen: function (R) {
       var ts = ['2/4', '3/4', '4/4', '5/4', '6/8'], t = pick(ts, R), f = pick(FILL[t], R);
-      var opts = t === '6/8' ? ['2/4', '6/8', '4/4', '5/4'] : ['2/4', '3/4', '4/4', '5/4'];
+      // 3/4 と 6/8 は 同じ長さなので いっしょには出さない。6/8 は 正解でないときも ときどき出す（「6/8 があれば正解」に ならないように）
+      var opts = t === '6/8' ? ['2/4', '6/8', '4/4', '5/4'] : t === '3/4' ? ['2/4', '3/4', '4/4', '5/4'] : ['2/4', R() < 0.5 ? '6/8' : '3/4', '4/4', '5/4'];
       var m = mc(R, tx(t), opts.map(function (o) { return tx(o); }));
       var beats = f.reduce(function (a, d) { return a + M.len(d); }, 0);
       return { q: 'この小節に合う 拍子記号は？', fig: { score: { clef: 'treble', notes: f.map(function (d) { return { k: melk(R), d: d }; }), end: 'end', sp: 40, bg: t === '6/8' ? '3/8' : null } }, ch: m.ch, a: m.a, ex: '音符をたすと 4分音符 <b>' + lens(beats) + ' 拍</b> 分。' + (t === '6/8' ? '8分音符6つ分で、3つずつ まとまっているので <b>6/8</b>。' : '→ <b>' + t + '</b>。'), play: function () { M.playSpec({ notes: f.map(function (d) { return { k: 'A4', d: d }; }) }, 100); } };

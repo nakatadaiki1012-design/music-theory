@@ -105,13 +105,20 @@
     function prog() {
       return '<span class="prog">' + o.qs.map(function (_, j) { return '<i class="' + (j < res.length ? (res[j].ok ? 'ok' : 'ng') : j === i ? 'cur' : '') + '"></i>'; }).join('') + '</span><span>' + (i + 1) + ' / ' + o.qs.length + '</span>';
     }
+    var retries = 0, RR = GK.rng(Math.floor(Math.random() * 1e9));
     function show() {
       var q = o.qs[i];
       GK.drawQ(el, q, {
-        top: prog(), noEx: o.mode === 'test',
+        top: prog() + (q.retry ? '<span class="cat" style="color:var(--warm);border-color:var(--warm)">🔁 もう一度</span>' : ''), noEx: o.mode === 'test',
         onPick: function (k, ok) {
           res.push({ q: q, pick: k, ok: ok });
-          if (o.mode === 'prac') { noteMiss(q.t, ok); if (ok) { RW.drillOk++; if (q.ear) RW.earOk++; GK.earn(5); } }
+          if (o.mode === 'prac') {
+            noteMiss(q.t, ok); if (ok) { RW.drillOk++; if (q.ear) RW.earOk++; GK.earn(5); }
+            // まちがえたら 同じ種類の 新しい問題を 3 問あとに（1 セット 3 回まで）
+            if (!ok && retries < 3) {
+              try { var nq = GK.Q.make(q.t, RR, q.st); nq.retry = true; o.qs.splice(Math.min(o.qs.length, i + 3), 0, nq); retries++; } catch (e) { }
+            }
+          }
           var p = $('.prog', el); if (p) p.outerHTML = prog().replace(/<span>.*$/, '');
         },
         next: function () { i++; if (i < o.qs.length) show(); else end(); },
@@ -119,7 +126,7 @@
       });
     }
     function end() {
-      var n = res.filter(function (r) { return r.ok; }).length;
+      var n = res.filter(function (r) { return r.ok && !r.q.retry; }).length;
       GK.onKey(null);
       o.onEnd(res, n);
     }
@@ -154,7 +161,7 @@
       '<div class="stats"><div class="stat"><b>' + pass + '<small>/' + GK.UNITS.length + '</small></b><small>合格した単元</small></div><div class="stat"><b>' + GK.fmtN(RW.drillOk) + '</b><small>演習の正解</small></div><div class="stat"><b>' + GK.levelOf(RW.coins).name + '</b><small>段位</small></div></div>' +
       (task ? '<div class="taskbox">📮 <span>課題 <b>' + task.units.filter(function (u) { return GK.prog(u).pass; }).length + '/' + task.units.length + '</b> 合格</span><button type="button" class="btn" data-go="#task">見る</button></div>' : '') +
       '<div class="acts"><button type="button" class="btn main" data-go="#' + next.id + '">▶ ' + (seen ? 'つづき' : 'はじめる') + '：' + esc(next.title) + '</button>' +
-      '<button type="button" class="btn" data-go="#drill">💪 まとめて演習・苦手</button>' +
+      '<button type="button" class="btn" data-go="#drill">💪 まとめて演習' + (Object.keys(GK.store.get('weak', {})).length ? '・🔁 苦手 ' + Object.keys(GK.store.get('weak', {})).length : '') + '</button>' +
       '<button type="button" class="btn" data-go="#game">🎮 タイムアタック・クラス対戦</button></div>' +
       '<div class="heromini"><h3>1 単元 ＝ 3 ステップ</h3><div class="cycle"><ol><li><b>💡</b><b>ポイント</b><span>図と音で わかる</span></li><li><b>💪</b><b>演習</b><span>10 問。毎回ちがう問題</span></li><li><b>🏁</b><b>テスト</b><span>5 問中 4 問で 合格</span></li></ol></div>' +
       '<h3 style="margin-top:10px">🎹 さわって確かめる</h3><div class="cycle"><ol><li><b>🎹</b><b>鍵盤と五線</b><span>おすと 楽譜に出る</span></li><li><b>⭕</b><b>五度圏</b><span>調と調号</span></li><li><b>🎶</b><b>和音・音程</b><span>組み立てて 鳴らす</span></li></ol></div></div>' +
@@ -185,16 +192,19 @@
   });
 
   function lesson(u, st, idx) {
-    var cards = u.cards.concat([{ sum: true }]);
+    var cards = u.cards.concat([{ check: true }, { sum: true }]);
     idx = Math.max(0, Math.min(cards.length - 1, idx));
     st.innerHTML = '<section class="panel card" id="card"></section><div class="foot"><button type="button" class="btn ghost" id="prev" aria-label="前へ">◀</button><div class="dots">' + cards.map(function (_, i) { return '<i data-i="' + i + '"></i>'; }).join('') + '</div><span class="kh">← → で移動</span><button type="button" class="btn main" id="next">次へ ▶</button></div>';
     function show(i) {
       idx = i; GK.setProg(u.id, { card: i });
       if (i === cards.length - 1) GK.setProg(u.id, { seen: true });
       var c = cards[i], el = $('#card');
+      el.style.cssText = '';
+      if (!c.check) lessonKeys();
       $$('.dots i', st).forEach(function (d, j) { d.classList.toggle('on', j === i); });
       $('#prev').disabled = i === 0;
       $('#next').textContent = i === cards.length - 1 ? '💪 演習へ ▶' : '次へ ▶';
+      if (c.check) { quickCheck(u, el); return; }
       if (c.sum) {
         el.className = 'panel card wide';
         el.innerHTML = '<div class="txt"><div class="kick"><span>📌 まとめ</span>' + esc(u.title) + '</div><h3>🎯 ' + esc(u.goal) + '</h3></div>' +
@@ -211,12 +221,39 @@
       else if (e.target.closest('#next')) { if (idx === cards.length - 1) GK.go('#' + u.id + '/x'); else show(idx + 1); }
       else if (e.target.closest('.dots i')) show(+e.target.closest('.dots i').dataset.i);
     });
-    GK.onKey(function (e) { if (e.key === 'ArrowRight') { $('#next').click(); } else if (e.key === 'ArrowLeft') { $('#prev').click(); } });
+    function lessonKeys() { GK.onKey(function (e) { if (e.key === 'ArrowRight') { $('#next').click(); } else if (e.key === 'ArrowLeft') { $('#prev').click(); } }); }
     // スワイプでめくる
     var sx = null;
     st.addEventListener('touchstart', function (e) { if (e.target.closest('svg.kbd,.cof,button')) { sx = null; return; } sx = e.touches[0].clientX; }, { passive: true });
     st.addEventListener('touchend', function (e) { if (sx == null) return; var dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 60) show(Math.max(0, Math.min(cards.length - 1, idx + (dx < 0 ? 1 : -1)))); sx = null; }, { passive: true });
     show(idx);
+  }
+
+  // ✋ たしかめよう：習った直後に 自分で思い出す（記録には入れない）
+  function quickCheck(u, el) {
+    var R = GK.rng(Math.floor(Math.random() * 1e9)), T = GK.Q.T;
+    var types = GK.Q.typesOf([u.id], true).filter(function (id) { return T[id].st === 1; });
+    if (types.length < 2) types = GK.Q.typesOf([u.id], true);
+    types = GK.shuffle(types.slice(), R).slice(0, 2);
+    var qs = types.map(function (id) { return GK.Q.make(id, R, T[id].st); }), k = 0, okN = 0;
+    el.className = 'panel'; el.style.cssText = 'flex:1;min-height:0;display:flex;flex-direction:column';
+    el.innerHTML = '<div style="flex:none;padding:12px 18px 0"><div class="card" style="padding:0;display:block"><div class="kick"><span>✋ たしかめよう</span>いま習ったことを 2 問。見返さずに 答えてみよう</div></div></div><section class="qz" id="qc"></section>';
+    var box = $('#qc', el);
+    quizKeys(function () { return box; });
+    function show() {
+      GK.drawQ(box, qs[k], {
+        top: '<span>' + (k + 1) + ' / ' + qs.length + '</span>',
+        onPick: function (i, ok) { if (ok) okN++; },
+        next: function () {
+          k++;
+          if (k < qs.length) { show(); return; }
+          box.innerHTML = '<div class="res"><div class="big">' + okN + '<small> / ' + qs.length + '</small></div><p class="msg">' + (okN === qs.length ? '🎉 ばっちり！ まとめに進もう' : '⚠ もう一度 カードを見返すと 確実です') + '</p><div class="acts"><button type="button" class="btn" data-go="#' + u.id + '/p/0">◀ はじめから見返す</button><button type="button" class="btn main" id="qcNext">📌 まとめへ ▶</button></div></div>';
+          $('#qcNext', box).onclick = function () { $('#next').click(); };
+        },
+        nextLabel: k === qs.length - 1 ? '結果 ▶' : '次へ ▶'
+      });
+    }
+    show();
   }
 
   function practice(u, st) {
@@ -226,8 +263,10 @@
       qs: qs, mode: 'prac', onEnd: function (res, n) {
         var p = GK.prog(u.id); GK.setProg(u.id, { prac: Math.max(p.prac, n), pracN: (p.pracN || 0) + 1 });
         GK.checkBadges();
-        st.innerHTML = '<section class="panel res"><div class="big">' + n + '<small> / ' + qs.length + '</small></div><p class="msg">' + (n >= 9 ? '🎉 すばらしい！ テストに進もう' : n >= 7 ? '👍 よくできました' : 'もう 1 セットで 定着させよう') + '</p>' +
-          '<div class="acts"><button type="button" class="btn" id="rv">📖 ' + (n < qs.length ? 'まちがえた ' + (qs.length - n) + ' 問の解説' : '解説を見る') + '</button><button type="button" class="btn main" id="again">💪 もう 1 セット</button><button type="button" class="btn warm" data-go="#' + u.id + '/t">🏁 確認テストへ</button></div>' +
+        var first = res.filter(function (r) { return !r.q.retry; }).length, rt = res.filter(function (r) { return r.q.retry; }), rok = rt.filter(function (r) { return r.ok; }).length;
+        st.innerHTML = '<section class="panel res"><div class="big">' + n + '<small> / ' + first + '</small></div><p class="msg">' + (n >= 9 ? '🎉 すばらしい！ テストに進もう' : n >= 7 ? '👍 よくできました' : 'もう 1 セットで 定着させよう') + '</p>' +
+          (rt.length ? '<p class="note">🔁 もう一度の問題：' + rok + ' / ' + rt.length + ' 問 正解' + (rok === rt.length ? '（まちがいを 直せました！）' : '') + '</p>' : '') +
+          '<div class="acts"><button type="button" class="btn" id="rv">📖 ' + (res.some(function (r) { return !r.ok; }) ? 'まちがえた問題の解説' : '解説を見る') + '</button><button type="button" class="btn main" id="again">💪 もう 1 セット</button><button type="button" class="btn warm" data-go="#' + u.id + '/t">🏁 確認テストへ</button></div>' +
           '<p class="note">演習の問題は 毎回 ちがいます（数字・音・調が かわる）</p></section>';
         $('#again').onclick = function () { practice(u, st); };
         $('#rv').onclick = function () { GK.review(st, res, function () { practice(u, st); }); };
@@ -252,7 +291,7 @@
           if (pass && first) GK.setProg(u.id, { pass: GK.today() });
           if (pass) { GK.earn(first ? 150 : 50); GK.confetti(first ? 80 : 30); GK.fx('fanfare'); }
           st.innerHTML = '<section class="panel res">' + (pass ? '<div class="stampbig">合格</div>' : '') + '<div class="big">' + n + '<small> / 5</small></div><p class="msg">' + (pass ? (first ? '🎉 はじめての合格！ +150 コイン' : '合格！ +50 コイン') : 'あと ' + (GK.PASS - n) + ' 問。解説を見て もう一度') + '</p>' +
-            '<div class="acts"><button type="button" class="btn" id="rv">📖 ' + (n < 5 ? 'まちがえた問題の解説' : '解説を見る') + '</button><button type="button" class="btn ' + (pass ? '' : 'main') + '" id="again">🔁 もう一度（新しい問題）</button>' + (pass ? nextBtn(u) : '') + '</div></section>';
+            '<div class="acts"><button type="button" class="btn" id="rv">📖 ' + (n < 5 ? 'まちがえた問題の解説' : '解説を見る') + '</button><button type="button" class="btn ' + (pass ? '' : 'main') + '" id="again">🔁 もう一度（新しい問題）</button>' + (pass ? nextBtn(u) : '<button type="button" class="btn main" data-go="#' + u.id + '/p/0">💡 ポイントを見直す</button>') + '</div></section>';
           $('#again').onclick = run;
           $('#rv').onclick = function () { GK.review(st, res, function () { testU(u, st); }); };
         }
