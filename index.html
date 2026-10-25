@@ -170,7 +170,8 @@ h2.ttl { font-family: var(--font-display); font-size: 22px; margin: 0; line-heig
 .card { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 18px; padding: 22px 26px; }
 .card.wide { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
 .card .txt { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: hidden; }
-.card .kick { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted); letter-spacing: .06em; }
+.card .kick { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: 12.5px; color: var(--muted); letter-spacing: .06em; }
+.card .kick span { white-space: nowrap; }
 .card .kick span { border: 1px solid var(--line); border-radius: 3px; padding: 1px 7px; color: var(--ink); }
 .card h3 { font-family: var(--font-display); font-size: calc(27px * var(--k)); line-height: 1.3; margin: 0; color: var(--warm); }
 .card h3 .sym { color: var(--ink); }
@@ -244,6 +245,7 @@ svg.dia .en { font-family: var(--font-en); }
 }
 .qz .ch button:hover:not(:disabled) { background: var(--chip); }
 .qz .ch button:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.qz .ch button { padding-left: 18px; padding-right: 22px; }
 .qz .ch button.lg { font-size: calc(15px * var(--k)); padding-left: 16px; }
 .qz .ch button.xl { font-size: calc(13px * var(--k)); padding-left: 16px; letter-spacing: -.02em; }
 .qz .ch button .kn { position: absolute; left: 6px; top: 3px; font-size: 11px; color: var(--muted); font-family: var(--font-en); }
@@ -408,7 +410,8 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
   .hero .cname { font-size: 22px; }
   .hero .cdesc, .hero .heromini { display: none; }
   .hero .stats { flex: 1; min-width: 220px; }
-  .hero .acts { flex-direction: row; width: 100%; }
+  .hero .acts { flex-direction: row; flex-wrap: wrap; width: 100%; }
+  .hero .acts .btn.main { flex-basis: 100%; }
   .hero .acts .btn { flex: 1; padding: 6px 8px; font-size: 13px; text-align: center; }
   .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); gap: 6px; }
   .tile { padding: 6px 9px; }
@@ -460,8 +463,9 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
   .toolw .ctl { gap: 6px; }
   .toolw .out b { font-size: 21px; }
   .qz .ch { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-  .qz .ch.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .qz .ch button { min-height: 46px; font-size: calc(15.5px * var(--k)); padding: 6px; }
+  .qz .ch.n3 { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+  .qz .ch.n3 button { min-height: 40px; }
+  .qz .ch button { min-height: 46px; font-size: calc(15.5px * var(--k)); padding: 6px 20px 6px 14px; }
   .qz .ch button.lg { font-size: calc(13px * var(--k)); padding-left: 14px; }
   .qz .ch button.xl { font-size: calc(11.5px * var(--k)); padding-left: 14px; }
   .qz .ch button.fg { height: clamp(60px, 11vh, 96px); }

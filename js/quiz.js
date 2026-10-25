@@ -209,7 +209,7 @@
   };
   T.synco = {
     u: 'u04', st: 2, gen: function (R) {
-      var good = pick([[['8', 'q', '8'], '2/4'], [['16', '8', '16', 'q'], '2/4'], [['8', 'q', 'q', 'q', '8'], '4/4']], R);
+      var good = pick([[['8', 'q', '8'], '2/4'], [['16', '8', '16', 'q'], '2/4'], [['16', '8', '16', '16', '8', '16'], '2/4']], R);
       var bad = shuffle([[['q', 'q'], '2/4'], [['8', '8', 'q'], '2/4'], [['q', '8', '8'], '2/4'], [['qd', '8'], '2/4'], [['16', '16', '8', 'q'], '2/4']], R).slice(0, 3);
       var fig = function (x) { return { score: { clef: 'treble', notes: x[0].map(function (d) { return { k: 'B4', d: d, st: 1 }; }), noClef: true, sp: 26, minBar: 60, rhythm: true, above: 30, below: 22 } }; };
       var m = mc(R, { k: 'g', fig: fig(good) }, bad.map(function (b, i) { return { k: 'b' + i, fig: fig(b) }; }));
@@ -552,7 +552,7 @@
       var x = pick(L, R), d = function (r) { return M.ROMAN.indexOf(r) + 1; };
       var c1 = M.diatonic(0, false, d(x[0])), c2 = M.diatonic(0, false, d(x[1]));
       var m = mc(R, tx(x[2]), L.map(function (y) { return tx(y[2]); }));
-      return { q: '和音が <b>' + x[0] + ' → ' + x[1] + '</b> と進む 終わり方は？', fig: { score: { clef: 'treble', notes: [{ k: c1.map(M.str), d: 'h', lab: x[0] }, { k: c2.map(M.str), d: 'h', lab: x[1] }], sp: 60 }, play: [[c1, 1.5], [c2, 2.5]] }, ch: m.ch, a: m.a, ex: x[0] + '→' + x[1] + ' は <b>' + x[2] + '</b>：' + x[3] + '。', play: [[c1, 1.5], [c2, 2.5]] };
+      return { q: '和音が <b>' + x[0] + ' → ' + x[1] + '</b> と進む 終わり方は？', fig: { score: { clef: 'treble', notes: [{ k: c1.map(M.str), d: 'h', lab: x[0] }, { k: c2.map(M.str), d: 'h', lab: x[1] }], sp: 60 } }, ch: m.ch, a: m.a, ex: x[0] + '→' + x[1] + ' は <b>' + x[2] + '</b>：' + x[3] + '。', play: [[c1, 1.5], [c2, 2.5]] };
     }
   };
   T.nameToChord = {
@@ -616,8 +616,8 @@
   };
   T.dynOrder = {
     u: 'u13', st: 2, gen: function (R) {
-      var s = 'pp ＜ p ＜ mp ＜ mf ＜ f ＜ ff';
-      var wr = ['p ＜ pp ＜ mp ＜ mf ＜ f ＜ ff', 'pp ＜ p ＜ mf ＜ mp ＜ f ＜ ff', 'pp ＜ mp ＜ p ＜ mf ＜ ff ＜ f', 'ff ＜ f ＜ mf ＜ mp ＜ p ＜ pp'].map(function (x) { return tx(x); });
+      var s = 'pp＜p＜mp＜mf＜f＜ff';
+      var wr = ['p＜pp＜mp＜mf＜f＜ff', 'pp＜p＜mf＜mp＜f＜ff', 'pp＜mp＜p＜mf＜ff＜f', 'ff＜f＜mf＜mp＜p＜pp'].map(function (x) { return tx(x); });
       var m = mc(R, tx(s), wr);
       return { q: '弱い → 強い の順に 正しく並んでいるのは？', ch: m.ch, a: m.a, ex: '<b>' + s + '</b>。', exFig: { c: 'dyn' } };
     }

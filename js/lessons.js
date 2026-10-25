@@ -15,43 +15,34 @@
   // 強弱記号（Bravura の文字で）
   F.CUSTOM.dyn = function (box, a) {
     var list = a.list || ['pp', 'p', 'mp', 'mf', 'f', 'ff'], labs = a.labs || ['ごく弱く', '弱く', 'やや弱く', 'やや強く', '強く', 'ごく強く'];
-    var GW = { p: 22, m: 30, f: 18, s: 16, z: 18 }, W = list.length * 86 + 20, glyphs = [], texts = [];
+    var GW = { p: 22, m: 30, f: 18, s: 16, z: 18 }, CODE = { p: 'dynamicPiano', m: 'dynamicMezzo', f: 'dynamicForte', s: 'dynamicSforzando', z: 'dynamicZ' };
+    var narrow = window.innerWidth < 640, cols = list.length === 1 ? 1 : narrow ? 3 : list.length;
+    box.style.cssText += ';flex-direction:column;align-items:stretch;gap:6px';
+    var g = document.createElement('div');
+    g.style.cssText = 'flex:1 1 0;min-height:0;display:grid;gap:6px;grid-template-columns:repeat(' + cols + ',minmax(0,1fr));align-content:center';
+    box.appendChild(g);
     list.forEach(function (d, i) {
+      var c = document.createElement('div'); c.style.cssText = 'display:flex;flex-direction:column;align-items:center;min-width:0';
+      var gl = document.createElement('div'); gl.style.cssText = 'width:100%;height:' + (list.length === 1 ? 120 : narrow ? 56 : 90) + 'px;display:flex;justify-content:center';
+      c.appendChild(gl); g.appendChild(c);
       var tw = 0; d.split('').forEach(function (ch) { tw += GW[ch]; });
-      var x = 20 + i * 86 + (86 - tw) / 2;
-      d.split('').forEach(function (ch) {
-        glyphs.push({ x: x, y: 52, code: { p: 'dynamicPiano', m: 'dynamicMezzo', f: 'dynamicForte', s: 'dynamicSforzando', z: 'dynamicZ' }[ch], size: 44 });
-        x += GW[ch];
-      });
-      texts.push({ x: 20 + i * 86 + 43, y: 88, t: labs[i], size: 13 });
-      if (a.read) texts.push({ x: 20 + i * 86 + 43, y: 106, t: a.read[i], size: 11, c: 'var(--muted)', bold: false });
+      var x = 6, glyphs = d.split('').map(function (ch) { var o = { x: x, y: 44, code: CODE[ch], size: 44 }; x += GW[ch]; return o; });
+      M.free(gl, { w: tw + 14, h: 58, glyphs: glyphs, zoom: list.length === 1 ? 2.6 : narrow ? 1.3 : 2.1 });
+      if (labs[i]) c.insertAdjacentHTML('beforeend', '<b style="font-size:' + (narrow ? 14 : 17) + 'px">' + labs[i] + '</b>' + (a.read ? '<small style="color:var(--muted);font-size:' + (narrow ? 11 : 13) + 'px">' + a.read[i] + '</small>' : ''));
     });
-    var r = M.free(box, { w: W, h: 116, glyphs: glyphs, texts: texts });
-    if (r && a.hair) {
-      var y = 20;
-      M.svgEl(r.svg, 'path', { d: 'M' + (W * 0.15) + ' ' + y + ' L' + (W * 0.45) + ' ' + (y - 9) + ' M' + (W * 0.15) + ' ' + y + ' L' + (W * 0.45) + ' ' + (y + 9), stroke: 'currentColor', fill: 'none', 'stroke-width': 1.6 });
-      M.svgEl(r.svg, 'path', { d: 'M' + (W * 0.55) + ' ' + (y - 9) + ' L' + (W * 0.85) + ' ' + y + ' L' + (W * 0.55) + ' ' + (y + 9), stroke: 'currentColor', fill: 'none', 'stroke-width': 1.6 });
-      M.svgText(r.svg, W * 0.3, y - 14, 'cresc.（だんだん強く）', { size: 12, italic: true });
-      M.svgText(r.svg, W * 0.7, y - 14, 'dim.（だんだん弱く）', { size: 12, italic: true });
-      M.fit(r.svg, W, 0, 110);
-    }
+    if (a.hair) box.insertAdjacentHTML('beforeend', '<div style="display:flex;justify-content:center;gap:18px;flex-wrap:wrap;font-size:14px">' +
+      '<span><svg width="54" height="18" style="vertical-align:middle"><path d="M2 9 L52 2 M2 9 L52 16" stroke="currentColor" fill="none" stroke-width="1.6"/></svg> <i class="en">cresc.</i> だんだん強く</span>' +
+      '<span><svg width="54" height="18" style="vertical-align:middle"><path d="M2 2 L52 9 L2 16" stroke="currentColor" fill="none" stroke-width="1.6"/></svg> <i class="en">dim.</i> だんだん弱く</span></div>');
   };
   // 速さのものさし
   F.CUSTOM.tempo = function (box) {
     var L = [['Largo', 'ラルゴ', '幅広く ゆるやかに', 46], ['Adagio', 'アダージョ', 'ゆるやかに', 60], ['Andante', 'アンダンテ', '歩くような速さで', 76], ['Moderato', 'モデラート', '中くらいの速さで', 96], ['Allegro', 'アレグロ', '速く', 132], ['Presto', 'プレスト', '急速に', 180]];
-    var W = 560, s = '<svg class="dia" viewBox="0 0 ' + W + ' 170" style="width:100%;height:100%;max-width:720px">';
-    s += '<defs><linearGradient id="tg" x1="0" x2="1"><stop offset="0" stop-color="var(--blue)"/><stop offset="1" stop-color="var(--warm)"/></linearGradient></defs>';
-    s += '<rect x="20" y="70" width="' + (W - 40) + '" height="10" rx="5" fill="url(#tg)"/>';
-    s += '<text x="20" y="104" font-size="12" fill="var(--blue)" font-weight="700">← おそい</text><text x="' + (W - 20) + '" y="104" text-anchor="end" font-size="12" fill="var(--warm)" font-weight="700">はやい →</text>';
-    L.forEach(function (t, i) {
-      var x = 50 + i * (W - 100) / 5;
-      s += '<circle cx="' + x + '" cy="75" r="7" fill="var(--panel)" stroke="currentColor" stroke-width="2"/>';
-      s += '<text x="' + x + '" y="' + (i % 2 ? 48 : 30) + '" text-anchor="middle" font-size="15" font-weight="700" class="en" font-style="italic" fill="currentColor">' + t[0] + '</text>';
-      s += '<text x="' + x + '" y="' + (i % 2 ? 62 : 44) + '" text-anchor="middle" font-size="10" fill="var(--muted)">' + t[1] + '</text>';
-      s += '<text x="' + x + '" y="' + (i % 2 ? 140 : 124) + '" text-anchor="middle" font-size="12" fill="currentColor">' + t[2] + '</text>';
-      s += '<text x="' + x + '" y="' + (i % 2 ? 156 : 140) + '" text-anchor="middle" font-size="10" fill="var(--muted)">♩≒' + t[3] + '</text>';
-    });
-    box.innerHTML = s + '</svg>';
+    box.innerHTML = '<div style="display:grid;grid-template-columns:14px auto auto 1fr;column-gap:10px;row-gap:2px;align-items:center;width:100%;max-width:560px;font-size:' + (window.innerWidth < 640 ? 14 : 17) + 'px">' +
+      '<div style="grid-row:1 / span ' + L.length + ';align-self:stretch;border-radius:7px;background:linear-gradient(var(--blue),var(--warm))"></div>' +
+      L.map(function (t) {
+        return '<b class="en" style="font-style:italic;font-size:1.3em">' + t[0] + '</b><small style="color:var(--muted)">' + t[1] + '</small><span>' + t[2] + ' <small style="color:var(--muted)">♩≒' + t[3] + '</small></span>';
+      }).join('') + '</div>';
+    box.insertAdjacentHTML('afterbegin', '');
   };
   // 表（HTML）
   function table(head, rows, o) {
@@ -83,7 +74,7 @@
       id: 'u02', title: '音符と休符', en: 'Notes & Rests', sym: '♩', goal: '音符・休符の名前と 長さ（何拍）がわかる',
       cards: [
         { k: '✨ ひとことで言うと', h: '音符は「半分、半分」で できている', b: '<b>全音符</b>を半分にすると<b>2分音符</b>、さらに半分で<b>4分音符</b>…。4分音符を 1拍 とすると、全音符は 4拍。', fig: { c: 'noteTree' }, wide: true },
-        { k: 'ポイント 1', h: '音符の 3 つの部分', b: '<b>たま</b>（符頭）・<b>ぼう</b>（符尾）・<b>はた</b>（符鉤）。<em>はたが 1本ふえるたびに 長さは半分</em>。8分音符がならぶと はたが つながって<b>連桁</b>になる。', pts: ['ぼうは 第3線より上の音なら 下向き', '連桁（れんこう）は 拍のまとまりを 見やすくする'], fig: { score: { clef: 'treble', time: '2/4', bars: [[{ k: 'A4', d: 'q', lab: '4分' }, { k: 'A4', d: '8', lab: '8分', nb: true }, { k: 'A4', d: '16', lab: '16分', nb: true }, { k: 'A4', d: '16', nb: true }], [{ k: 'A4', d: '8', lab: '連桁' }, { k: 'B4', d: '8' }, { k: 'C5', d: '16' }, { k: 'D5', d: '16' }, { k: 'E5', d: '16' }, { k: 'F5', d: '16' }]], end: 'end', sp: 44 }, play: true } },
+        { k: 'ポイント 1', h: '音符の 3 つの部分', b: '<b>たま</b>（符頭）・<b>ぼう</b>（符尾）・<b>はた</b>（符鉤）。<em>はたが 1本ふえるたびに 長さは半分</em>。8分音符がならぶと はたが つながって<b>連桁</b>になる。', pts: ['ぼうは 第3線より上の音なら 下向き', '連桁（れんこう）は 拍のまとまりを 見やすくする'], fig: { col: [{ c: 'noteParts' }, { score: { clef: 'treble', notes: [{ k: 'A4', d: '8', lab: 'はた', nb: true }, { k: 'A4', d: '8', nb: true }, { k: 'A4', d: '8', lab: '連桁' }, { k: 'B4', d: '8' }], noClef: true, sp: 50, end: 'none' }, cap: '8分音符がならぶと はたが つながって 連桁に' }] } },
         { k: 'ポイント 2', h: '休符は「音を出さない長さ」', b: '音符と同じ長さの休符がある。<b>全休符</b>は線から<em>ぶら下がり</em>、<b>2分休符</b>は線の上に<em>のる</em>（帽子のよう）。', fig: { c: 'noteTree', a: { rest: true } }, wide: true },
         { k: 'ポイント 3', h: '付点は「半分を たす」', b: '音符の右の点＝<b>付点</b>。もとの長さの<em>半分</em>が たされる。付点2分音符＝2＋1＝3拍、付点4分音符＝1＋0.5＝1.5拍。', pts: ['点が2つ（複付点）なら さらに その半分も たす', '休符にも 付点がつく'], fig: { c: 'dotted' } }
       ],
@@ -95,7 +86,7 @@
       id: 'u03', title: '拍子と小節', en: 'Meter & Measures', sym: '𝄴', goal: '拍子記号を読み、1小節の長さを 計算できる',
       cards: [
         { k: '✨ ひとことで言うと', h: '拍子記号は「何分音符が いくつ」', b: '<b>下の数</b>＝1拍になる音符（4なら4分音符）。<b>上の数</b>＝1小節に いくつ入るか。<em>3/4 は「4分音符が3つ」</em>で 1小節。', fig: { score: { clef: 'treble', time: '3/4', bars: [[{ k: 'C5', d: 'q', lab: '1' }, { k: 'E5', d: 'q', lab: '2' }, { k: 'G5', d: 'q', lab: '3' }], [{ k: 'E5', d: 'h', lab: '1・2' }, { k: 'C5', d: 'q', lab: '3' }], [{ k: 'C5', d: 'hd', lab: '1・2・3' }]], end: 'end', sp: 48 }, play: true, cap: 'どの小節も 4分音符 3つ分' } },
-        { k: 'ポイント 1', h: '小節線・複縦線・終止線', b: '拍子のまとまりで区切る線が<b>小節線</b>、区切りの間が<b>小節</b>。曲の区切りは2本線の<b>複縦線</b>、終わりは右が太い<b>終止線</b>。', fig: { score: { clef: 'treble', time: '4/4', bars: [[{ k: 'G4', d: 'h', top: '小節' }, { k: 'A4', d: 'h' }], Object.assign([{ k: 'B4', d: 'w', top: '' }], { endBar: 'double' }), [{ k: 'C5', d: 'w', top: '' }]], end: 'end', sp: 46, after: function (o) { var s = o.staves; M.svgText(o.svg, s[0].getX() + s[0].getWidth(), 112, '小節線', { size: 12 }); M.svgText(o.svg, s[1].getX() + s[1].getWidth(), 112, '複縦線', { size: 12 }); M.svgText(o.svg, s[2].getX() + s[2].getWidth() - 4, 112, '終止線', { size: 12 }); } } } },
+        { k: 'ポイント 1', h: '小節線・複縦線・終止線', b: '拍子のまとまりで区切る線が<b>小節線</b>、区切りの間が<b>小節</b>。曲の区切りは2本線の<b>複縦線</b>、終わりは右が太い<b>終止線</b>。', fig: { score: { clef: 'treble', time: '4/4', bars: [[{ k: 'G4', d: 'h' }, { k: 'A4', d: 'h' }], Object.assign([{ k: 'B4', d: 'w', top: '' }], { endBar: 'double' }), [{ k: 'C5', d: 'w', top: '' }]], end: 'end', sp: 46, after: function (o) { var s = o.staves; var x0 = s[0].getNoteStartX() - 4, x1 = s[0].getX() + s[0].getWidth() - 3; M.svgEl(o.svg, 'path', { d: 'M' + x0 + ' 26 L' + x0 + ' 20 L' + x1 + ' 20 L' + x1 + ' 26', stroke: C.red, fill: 'none', 'stroke-width': 1.5 }); M.svgText(o.svg, (x0 + x1) / 2, 14, '1 小節', { size: 13, c: C.red }); M.svgText(o.svg, s[0].getX() + s[0].getWidth(), 112, '小節線', { size: 12 }); M.svgText(o.svg, s[1].getX() + s[1].getWidth(), 112, '複縦線', { size: 12 }); M.svgText(o.svg, s[2].getX() + s[2].getWidth() - 4, 112, '終止線', { size: 12 }); } } } },
         { k: 'ポイント 2', h: '強い拍と 弱い拍', b: '小節の<b>1拍目</b>がいちばん強い（強拍）。2拍子は 強・弱、3拍子は 強・弱・弱、4拍子は 強・弱・<b>中強</b>・弱。', fig: { c: 'beats', a: { time: '4/4' } }, wide: true },
         { k: 'ポイント 3', h: '6/8 は「2拍子」に感じる', b: '6/8 は 8分音符が6つ。でも <em>3つずつ まとまって</em> 付点4分音符×2 の<b>2拍子</b>に感じる。これを<b>複合拍子</b>という（2/4・3/4・4/4 は 単純拍子）。', pts: ['6/8＝複合2拍子、9/8＝複合3拍子、12/8＝複合4拍子'], fig: { c: 'beats', a: { time: '6/8' } }, wide: true },
         { k: 'ポイント 4', h: 'C と ¢ という 拍子記号', b: '<b>C</b> は 4/4（コモンタイム）。たて線の入った <b>¢</b> は 2/2（アラ・ブレーヴェ）で、2分音符を1拍として 2つで数える。', fig: { row: [{ score: { clef: 'treble', time: 'C', notes: [{ k: 'C5', d: 'q' }, { k: 'D5', d: 'q' }, { k: 'E5', d: 'q' }, { k: 'C5', d: 'q' }], end: 'end', sp: 34 }, cap: '<b>C</b> ＝ 4/4' }, { score: { clef: 'treble', time: 'C|', notes: [{ k: 'C5', d: 'h' }, { k: 'G4', d: 'h' }], end: 'end', sp: 40 }, cap: '<b>¢</b> ＝ 2/2' }] } }
@@ -160,7 +151,7 @@
       cards: [
         { k: '✨ ひとことで言うと', h: '短音階は「全 半 全 全 半 全 全」', b: 'ラから白鍵だけで ラまで弾くと<b>イ短調</b>の<b>自然短音階</b>。2〜3番目、5〜6番目が半音。少し暗く、さみしい響き。', fig: function () { var a = M.scale('A4', 'natural').map(M.str); return { col: [{ score: F.melody(a, { labs: nms(a), d: 'q' }), play: true }, { kbd: { from: 'A4', to: 'A5', steps: [[69, 71, '全'], [71, 72, '半', C.red], [72, 74, '全'], [74, 76, '全'], [76, 77, '半', C.red], [77, 79, '全'], [79, 81, '全']], h: 70 } }] }; } },
         { k: 'ポイント 1', h: '和声短音階：第7音を 半音上げる', b: '自然短音階には 導音（主音の半音下）がない。そこで <em>第7音を半音上げて</em> 導音を作ったものが<b>和声短音階</b>。イ短調なら ソ♯。', fig: function () { var a = M.scale('A4', 'harmonic').map(M.str); return { score: { clef: 'treble', notes: a.map(function (k, i) { return { k: k, d: 'q', lab: N(k), c: i === 6 ? C.red : null }; }), sp: 42 }, play: true, cap: '6〜7番目は 半音3つ分（増2度）に広がる' }; } },
-        { k: 'ポイント 2', h: '旋律短音階：上りと下りで ちがう', b: '和声短音階の 増2度を なめらかにするため、<b>上がるとき</b>は 第6・第7音を半音上げる。<b>下がるとき</b>は 自然短音階にもどる。', fig: function () { var up = M.scale('A4', 'melodic').map(M.str), dn = M.scale('A4', 'natural').map(M.str).reverse(); return { score: { clef: 'treble', bars: [up.map(function (k, i) { return { k: k, d: '8', c: i === 5 || i === 6 ? C.red : null, lab: i === 5 || i === 6 ? N(k) : null }; }), dn.map(function (k, i) { return { k: k, d: '8', c: i === 1 || i === 2 ? C.blue : null, lab: i === 1 || i === 2 ? N(k) : null }; })], end: 'end', sp: 30 }, play: true, bpm: 120, cap: '<b style="color:#c4452a">上り</b>：ファ♯・ソ♯　<b style="color:#2f6bb8">下り</b>：ソ♮・ファ♮' }; } },
+        { k: 'ポイント 2', h: '旋律短音階：上りと下りで ちがう', b: '和声短音階の 増2度を なめらかにするため、<b>上がるとき</b>は 第6・第7音を半音上げる。<b>下がるとき</b>は 自然短音階にもどる。', fig: function () { var up = M.scale('A4', 'melodic').map(M.str), dn = M.scale('A4', 'natural').map(M.str).reverse(); return { col: [{ ttl: '<span style="color:#c4452a">上り</span>：ファ♯・ソ♯', score: { clef: 'treble', notes: up.map(function (k, i) { return { k: k, d: 'q', c: i === 5 || i === 6 ? C.red : null, lab: N(k), lc: i === 5 || i === 6 ? C.red : null }; }), sp: 46, beam: false }, play: true, bpm: 120 }, { ttl: '<span style="color:#2f6bb8">下り</span>：ソ♮・ファ♮（自然短音階）', score: { clef: 'treble', notes: dn.map(function (k, i) { return { k: k, d: 'q', c: i === 1 || i === 2 ? C.blue : null, lab: N(k), lc: i === 1 || i === 2 ? C.blue : null, acc: i === 1 || i === 2 ? 'show' : null }; }), sp: 46, beam: false }, play: true, bpm: 120 }] }; } },
         { k: 'ポイント 3', h: '長調と短調を 聴きくらべ', b: '同じ<b>ド</b>から始めても、ハ長調は明るく、ハ短調は暗い。ちがいは <em>3番目の音</em>（ミ と ミ♭）が いちばん大きい。', fig: function () { var a = M.scale('C4', 'major').map(M.str), b = M.scale('C4', 'harmonic').map(M.str); return { col: [{ score: { clef: 'treble', notes: a.map(function (k, i) { return { k: k, d: '8', c: i === 2 ? C.red : null }; }), sp: 30 }, play: true, bpm: 120, ttl: 'ハ長調' }, { score: { clef: 'treble', notes: b.map(function (k, i) { return { k: k, d: '8', c: i === 2 || i === 5 ? C.blue : null }; }), sp: 30 }, play: true, bpm: 120, ttl: 'ハ短調（和声短音階）' }] }; } }
       ],
       sum: ['自然短音階は 全・半・全・全・半・全・全', '和声短音階は 第7音を半音上げる（導音）', '旋律短音階は 上り 6・7を上げ、下りは自然'],
@@ -208,7 +199,7 @@
       id: 'u12', title: '移調', en: 'Transposition', sym: '⇅', goal: 'メロディーを ほかの調に 書きかえられる',
       cards: [
         { k: '✨ ひとことで言うと', h: '移調は 高さの「引っこし」', b: 'メロディーの形はそのままに、<em>全部の音を 同じだけ</em> 上げたり下げたりすること。歌いやすい高さにしたり、楽器に合わせたりする。', fig: function () { var mel = ['C4', 'E4', 'G4', 'E4', 'C5', 'G4', 'C4'], d = mel.map(function (k) { return M.str(M.up(k, 2, 'M')); }); var mk = function (ks, key) { return { clef: 'treble', key: key, time: '4/4', bars: [ks.slice(0, 4).map(function (k) { return { k: k, d: 'q' }; }), [{ k: ks[4], d: 'q' }, { k: ks[5], d: 'q' }, { k: ks[6], d: 'h' }]], end: 'end', sp: 36 }; }; return { col: [{ score: mk(mel, 0), play: true, ttl: 'ハ長調' }, { score: mk(d, 2), play: true, ttl: 'ニ長調（長2度上へ）' }] }; } },
-        { k: 'ポイント 1', h: '移調の 3 ステップ', b: '<b>①</b> 何度 上げる（下げる）か決める　<b>②</b> 新しい調の<b>調号</b>を書く　<b>③</b> 全部の音を <em>同じ度数だけ</em> ずらして書く。', pts: ['ハ長調 → ト長調：完全5度上（または完全4度下）', '臨時記号は「半音上げた・下げた」関係を 保って書く'], fig: function () { var mel = ['E4', 'F4', 'G4', 'C5'], g = mel.map(function (k) { return M.str(M.up(k, 5, 'P')); }); return { row: [{ score: { clef: 'treble', notes: mel.map(function (k) { return { k: k, d: 'q', lab: N(k) }; }), sp: 40 }, ttl: 'ハ長調', play: true }, { score: { clef: 'treble', key: 1, notes: g.map(function (k) { return { k: k, d: 'q', lab: N(k), c: /#/.test(k) ? C.red : null }; }), sp: 40 }, ttl: 'ト長調（5度上）', play: true }] }; } },
+        { k: 'ポイント 1', h: '移調の 3 ステップ', b: '<b>①</b> 何度 上げる（下げる）か決める　<b>②</b> 新しい調の<b>調号</b>を書く　<b>③</b> 全部の音を <em>同じ度数だけ</em> ずらして書く。', pts: ['ハ長調 → ト長調：完全5度上（または完全4度下）', '臨時記号は「半音上げた・下げた」関係を 保って書く'], fig: function () { var mel = ['E4', 'F4', 'G4', 'C5'], g = mel.map(function (k) { return M.str(M.up(k, 5, 'P')); }); return { col: [{ score: { clef: 'treble', notes: mel.map(function (k) { return { k: k, d: 'q', lab: N(k) }; }), sp: 40 }, ttl: 'ハ長調', play: true }, { score: { clef: 'treble', key: 1, notes: g.map(function (k) { return { k: k, d: 'q', lab: N(k), c: /#/.test(k) ? C.red : null }; }), sp: 40 }, ttl: 'ト長調（5度上）', play: true }] }; } },
         { k: 'ポイント 2', h: '移調楽器', b: '<b>B♭管</b>のクラリネットやトランペットは、書いた音より<em>長2度低く</em>鳴る。だから楽譜は 長2度高く書く。<b>F管</b>のホルンは 完全5度低く鳴る。', fig: function () { return { row: [{ score: { clef: 'treble', key: 2, notes: [{ k: 'D5', d: 'w', lab: '楽譜：' + N('D5') }], minBar: 80 }, ttl: 'B♭クラリネットの楽譜' }, { score: { clef: 'treble', notes: [{ k: 'C5', d: 'w', lab: '実際：' + N('C5') }], minBar: 80 }, ttl: '鳴る音（ピアノと同じ）', play: [['C5', 2]] }] }; } }
       ],
       sum: ['移調＝全部の音を同じ度数ずらす', '先に新しい調号、次に音', 'B♭管は 長2度高く書く'],

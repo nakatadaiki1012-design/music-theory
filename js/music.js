@@ -226,8 +226,11 @@ window.GK = window.GK || {};
     svg.querySelectorAll('[fill="black"],[fill="#000"],[fill="#000000"],[fill="#999999"]').forEach(function (e) { e.setAttribute('fill', INK); });
     svg.querySelectorAll('[stroke="black"],[stroke="#000"],[stroke="#000000"],[stroke="#999999"]').forEach(function (e) { e.setAttribute('stroke', INK); });
   }
+  // スマホでは 図が小さく表示されるので、図の中の文字を 少し大きく
+  M.tk = function () { return window.innerWidth < 640 ? 1.3 : 1; };
   function svgText(svg, x, y, t, o) {
     o = o || {};
+    o = Object.assign({}, o, { size: Math.round((o.size || 14) * (o.fixed ? 1 : M.tk())) });
     var e = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     e.setAttribute('x', x); e.setAttribute('y', y); e.setAttribute('text-anchor', o.anchor || 'middle');
     e.setAttribute('font-size', o.size || 14); e.setAttribute('font-weight', o.bold === false ? 400 : 700);

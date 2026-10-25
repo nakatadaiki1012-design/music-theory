@@ -33,8 +33,9 @@
       b.innerHTML = '<span class="kn">' + (i + 1) + '</span>';
       if (c && c.fig) { b.className = 'fg'; var d = document.createElement('div'); b.appendChild(d); ch.appendChild(b); F.render(d, c.fig); }
       else {
-        var len = String(c).replace(/<[^>]+>/g, '').length;
-        if (len > 16) b.className = 'xl'; else if (len > 9) b.className = 'lg';
+        // 列が多いほど 1 つのボタンは せまいので、短い文字でも 小さくする
+        var len = String(c).replace(/<[^>]+>/g, '').length, k = q.ch.length === 3 && window.innerWidth >= 640 ? 0.6 : 1;
+        if (len > 16 * k) b.className = 'xl'; else if (len > 8 * k) b.className = 'lg';
         b.insertAdjacentHTML('beforeend', '<span>' + c + '</span>'); ch.appendChild(b);
       }
     });
