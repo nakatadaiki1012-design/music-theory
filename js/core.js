@@ -195,7 +195,7 @@
     leaveFns.splice(0).concat(always).forEach(function (f) { try { f(); } catch (e) { } });
     GK.view.onclick = null;
     var h = decodeURIComponent(location.hash.slice(1)) || 'home';
-    var tab = /^(drill)/.test(h) ? '#drill' : /^(tools)/.test(h) ? '#tools' : /^(game|ta$|host|join|battle)/.test(h) ? '#game' : '#home';
+    var tab = /^(drill)/.test(h) ? '#drill' : /^(tools)/.test(h) ? '#tools' : /^(game|ta$|host|join|battle|ens)/.test(h) ? '#game' : '#home';
     GK.$$('#cnav button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.go === tab ? 'true' : 'false'); });
     for (var i = 0; i < routes.length; i++) {
       var m = routes[i][0].exec(h);

@@ -59,13 +59,13 @@
       '<div class="frow" id="tus"' + (TA.m === 'units' ? '' : ' hidden') + '><div class="upick" style="width:100%">' + GK.UNITS.map(function (u) { return '<button type="button" data-tu="' + u.id + '" aria-pressed="' + (TA.us.split(',').indexOf(u.id) >= 0) + '"><i>' + u.no + '</i>' + esc(u.title) + '</button>'; }).join('') + '</div></div>' +
       '<div class="frow"><span>持ち時間</span><div class="seg">' + [60, 90, 120, 180].map(function (t) { return '<button type="button" data-tt="' + t + '" aria-pressed="' + (TA.t === t) + '">' + t + ' 秒</button>'; }).join('') + '</div></div>' +
       '<div class="frow" style="margin-top:auto"><button type="button" class="btn main big" id="taGo">▶ スタート</button><span class="note">ベスト <b style="font-family:var(--font-en);font-size:20px;color:var(--ink)">' + GK.fmtN(RW.best[TA.m] || 0) + '</b> 点</span></div></section>' +
-      '<section class="panel gcard"><h3>🏆 クラス対戦</h3><p class="note">先生の合図で 全員いっせいにスタート。先生の画面で ランキングが リアルタイムに動きます。</p>' +
+      '<section class="panel gcard"><h3>🏆 クラス対戦</h3><p class="note">先生の部屋に 番号で参加。<b>タイムアタック型</b>（決めた時間で 何問とけるか）と <b>🎼 アンサンブル・クイズ</b>（1 問ずつ 全員で答えて、クラスで 曲を完成させる）が あります。</p>' +
       '<input class="in" id="jcode" inputmode="numeric" maxlength="4" placeholder="部屋番号" value="' + esc(code || '') + '">' +
       '<input class="in" id="jnick" maxlength="12" placeholder="ニックネーム" value="' + esc(S.nick || '') + '">' +
       '<div class="frow"><button type="button" class="btn main" id="jGo">参加する ▶</button></div>' +
-      '<div class="frow" style="margin-top:auto;border-top:1px dashed var(--line);padding-top:10px"><span>先生</span><button type="button" class="btn" id="mkRoom">🏫 部屋をつくる</button><button type="button" class="btn ghost" id="rwB">🏅 ' + lv.name + '・バッジ ' + Object.keys(RW.badges).length + '/' + GK.BADGES.length + '</button></div></section></div>';
+      '<div class="frow" style="margin-top:auto;border-top:1px dashed var(--line);padding-top:10px"><span>先生</span><button type="button" class="btn" id="mkRoom">🏫 タイムアタック型</button><button type="button" class="btn" id="mkEns">🎼 アンサンブル・クイズ</button><button type="button" class="btn ghost" id="rwB">🏅 ' + lv.name + '・バッジ ' + Object.keys(RW.badges).length + '/' + GK.BADGES.length + '</button></div></section></div>';
     V.onclick = function (e) {
-      var b = e.target.closest('[data-tm],[data-tt],[data-tu],#taGo,#jGo,#mkRoom,#rwB'); if (!b) return;
+      var b = e.target.closest('[data-tm],[data-tt],[data-tu],#taGo,#jGo,#mkRoom,#mkEns,#rwB'); if (!b) return;
       if (b.dataset.tm) { TA.m = b.dataset.tm; $$('[data-tm]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); $('#tus').hidden = TA.m !== 'units'; }
       if (b.dataset.tt) { TA.t = +b.dataset.tt; $$('[data-tt]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); }
       if (b.dataset.tu) { var us = TA.us ? TA.us.split(',') : [], i = us.indexOf(b.dataset.tu); if (i >= 0) us.splice(i, 1); else us.push(b.dataset.tu); TA.us = us.join(','); b.setAttribute('aria-pressed', i < 0); }
@@ -73,6 +73,7 @@
       if (b.id === 'taGo') { if (TA.m === 'units' && !TA.us) { GK.toast('単元をえらんでください'); return; } GK.go('#ta'); }
       if (b.id === 'jGo') join($('#jcode').value.trim(), $('#jnick').value.trim());
       if (b.id === 'mkRoom') makeRoom();
+      if (b.id === 'mkEns') makeEnsRoom();
       if (b.id === 'rwB') GK.openDlg('<h3>🏅 段位・バッジ<button type="button" class="btn ghost sm x" data-d="close">とじる</button></h3>' + GK.rewardsHTML());
     };
     if (code) setTimeout(function () { $('#jnick') && $('#jnick').focus(); }, 50);
@@ -324,15 +325,15 @@
       if (b.id === 'again') podium(H.room);
     };
   }
-  function podium(r) {
+  function podium(r, onClose, title) {
     var el = $('#board'); if (!el) return;
     var lst = playersOf(r, r.round).slice(0, 3);
     var d = document.createElement('div'); d.className = 'podium';
-    d.innerHTML = '<h2 class="ttl" style="font-size:30px">🎉 第' + r.round + '回戦 表彰式</h2><div class="pods">' + [1, 0, 2].map(function (i) { var p = lst[i]; return p ? '<div class="pod p' + (i + 1) + '" data-i="' + i + '"><b>' + esc(p.n) + '</b><span class="pt">' + GK.fmtN(p.s || 0) + ' 点</span><div class="blk">' + (i + 1) + '</div></div>' : ''; }).join('') + '</div><button type="button" class="btn" id="pclose">ランキングを見る</button>';
+    d.innerHTML = '<h2 class="ttl" style="font-size:30px">' + (title || '🎉 第' + r.round + '回戦 表彰式') + '</h2><div class="pods">' + [1, 0, 2].map(function (i) { var p = lst[i]; return p ? '<div class="pod p' + (i + 1) + '" data-i="' + i + '"><b>' + esc(p.n) + '</b><span class="pt">' + GK.fmtN(p.s || 0) + ' 点</span><div class="blk">' + (i + 1) + '</div></div>' : ''; }).join('') + '</div><button type="button" class="btn" id="pclose">ランキングを見る</button>';
     el.appendChild(d);
     GK.fx('drum');
     [2, 1, 0].forEach(function (i, k) { setTimeout(function () { var p = $('.pod[data-i="' + i + '"]', d); if (p) { p.classList.add('on'); GK.fx(i === 0 ? 'fanfare' : 'ok'); if (i === 0) GK.confetti(90); } }, 1300 + k * 1100); });
-    $('#pclose', d).onclick = function () { d.remove(); H.bkey = null; drawBoard(); };
+    $('#pclose', d).onclick = function () { d.remove(); if (onClose) onClose(); else { H.bkey = null; drawBoard(); } };
   }
 
   /* ---------- 生徒：参加 ---------- */
@@ -342,14 +343,16 @@
     if (!name) { GK.toast('ニックネームを入れてください'); return; }
     S.nick = name; GK.saveS();
     var me = ROOM(code) + '/players/' + pid();
-    api('GET', ROOM(code) + '/state').then(function (st) {
-      if (st == null) throw new Error('部屋が見つかりません');
+    var kind = '';
+    api('GET', ROOM(code) + '/cfg').then(function (cfg) {
+      if (cfg == null) throw new Error('部屋が見つかりません');
+      kind = cfg.kind || '';
       return api('GET', me);
     }).then(function (old) {
       return api('PATCH', me, { n: name, s: old && old.s || 0, b: old && old.b || 0, r: old && old.r || 0, k: 0 });
     }).then(function () {
       RW.battles++; GK.rwSave(); GK.earn(20);
-      GK.go('#battle/' + code);
+      GK.go((kind === 'ens' ? '#ens/' : '#battle/') + code);
     }).catch(function (e) { GK.toast('参加できませんでした（' + e.message + '）'); });
   }
   GK.route(/^battle\/(\d{4})$/, function (m) {
@@ -415,5 +418,295 @@
       '<p class="msg">' + (rank === 1 ? '👑 優勝！' : rank === 2 ? '🥈 2 位！' : rank === 3 ? '🥉 3 位！' : 'おつかれさま！') + '　' + GK.fmtN(g ? g.score : 0) + ' 点' + (g ? '・正解 ' + g.ok + ' 問' : '') + '</p>' +
       '<div class="acts">' + (g && g.res.length ? '<button type="button" class="btn" id="rv">📖 ' + (g.ng ? 'まちがえた ' + g.ng + ' 問の解説' : '解説を見る') + '</button>' : '') + '</div><p class="note">次の回が始まると 自動で切りかわります</p></section>';
     var rv = $('#rv'); if (rv) rv.onclick = function () { GK.review(V, g.res, function () { showBattleEnd(room, rank, n); }); };
+  }
+
+  /* =========================================================
+     🎼 アンサンブル・クイズ（1 問ずつ、全員で同時に答える）
+     ・問題・楽譜・選択肢は 先生の画面にも 生徒の手元にも出る
+     ・点数：正解 100 ＋ 速さ（最大 200）＋ 連続正解。速さは テンポの名前で表示（Presto〜Andante）
+     ・クラスの 60% 以上が正解すると「きらきら星」の音が 1 つ ふえ、最後に クラスで完成した曲を演奏する
+     rooms/g{code} = { cfg: { kind: 'ens', m, us, n: 7|14, sec, ear }, state: lobby|q|rev|end, round, seed, qi, qAt, h: '1011…',
+                       players: { pid: { n, s, k, r, a: { qi: { c, t, ok, p } } } } }
+     ========================================================= */
+  var MEL = ['C5', 'C5', 'G5', 'G5', 'A5', 'A5', 'G5', 'F5', 'F5', 'E5', 'E5', 'D5', 'D5', 'C5'];
+  var MELD = function (i) { return i === 6 || i === 13 ? 'h' : 'q'; };
+  var ENS_OK = 0.6; // クラスの正解率が これ以上で 音が 1 つ ふえる
+  var TEMPO = [[0.25, 'Presto!'], [0.5, 'Allegro!'], [0.75, 'Moderato'], [1.01, 'Andante']];
+  var tempoName = function (frac) { for (var i = 0; i < TEMPO.length; i++) if (frac < TEMPO[i][0]) return TEMPO[i][1]; return 'Andante'; };
+  var ensPoints = function (ok, frac, k) { return ok ? 100 + Math.round(200 * Math.max(0, 1 - frac)) + Math.min(100, Math.max(0, k - 1) * 20) : 0; };
+  function ensQs(cfg, seed) { return GK.Q.set(unitsOf(cfg), cfg.n, GK.rng(seed), { noEar: !cfg.ear, ramp: true }); }
+  var ansOf = function (p, qi) { return p && p.a ? p.a[qi] : null; };
+  // クラスで集めた音（h：'1' ＝ 音、'0' ＝ 休符）の楽譜
+  function melodySpec(h, n, upto) {
+    var notes = [];
+    for (var i = 0; i < n; i++) {
+      var d = MELD(i), done = i < h.length, ok = h.charAt(i) === '1';
+      if (done && !ok) notes.push({ d: d + 'r', c: C.gray });
+      else notes.push({ k: MEL[i], d: d, c: done ? C.green : 'var(--line)', st: -1 });
+    }
+    var bars = [[]], beats = 0;
+    notes.forEach(function (x) { bars[bars.length - 1].push(x); beats += x.d.charAt(0) === 'h' ? 2 : 1; if (beats >= 4) { bars.push([]); beats = 0; } });
+    if (!bars[bars.length - 1].length) bars.pop();
+    return { clef: 'treble', time: '4/4', bars: bars, end: 'end', sp: 26, beam: false, below: 20, above: 30 };
+  }
+  function playMelody(h, upto) {
+    var seq = [];
+    for (var i = 0; i < upto; i++) seq.push([h.charAt(i) === '1' ? MEL[i] : null, MELD(i) === 'h' ? 2 : 1]);
+    return M.play(seq, 132);
+  }
+  var C = M.COL, F = GK.F;
+
+  /* ---------- 先生 ---------- */
+  var ENS = GK.store.get('ensSel', { m: 'all', us: '', n: 7, sec: 20, ear: false });
+  function makeEnsRoom() {
+    var cfg = { kind: 'ens', m: TA.m === 'units' && !TA.us ? 'all' : TA.m, us: TA.us || '', n: ENS.n, sec: ENS.sec, ear: !!ENS.ear };
+    var tryOne = function (n) {
+      var code = String(1000 + Math.floor(Math.random() * 9000));
+      return api('GET', ROOM(code)).then(function (v) {
+        if (v && n < 6) return tryOne(n + 1);
+        return api('PUT', ROOM(code), { cfg: cfg, state: 'lobby', round: 0, seed: 0, qi: 0, qAt: 0, h: '', host: pid(), created: { '.sv': 'timestamp' } })
+          .then(function () { GK.go('#ensh/' + code); });
+      });
+    };
+    tryOne(0).catch(function (e) { GK.toast('部屋をつくれませんでした（' + e.message + '）。⚙ 設定を確認してください'); });
+  }
+  var EH = null;
+  GK.route(/^ensh\/(\d{4})$/, function (m) {
+    var code = m[1];
+    EH = { code: code, room: null, key: '', qs: null, qsKey: '', busy: false };
+    V.innerHTML = '<div class="host"><aside class="panel hostL" id="hostL"></aside><section class="panel board ens" id="board"><div class="count" style="font-size:30px">つないでいます…</div></section></div>';
+    syncClock(code).then(function () {
+      if (!EH || EH.code !== code) return;
+      EH.stop = listen(ROOM(code), function (room) {
+        if (!EH) return;
+        if (!room) { GK.toast('この部屋は閉じられました'); GK.go('#game'); return; }
+        var prev = EH.room && EH.room.state; EH.room = room;
+        if (prev === 'rev' && room.state === 'end') setTimeout(function () { if (EH) podium(room, function () { EH.key = ''; ensBoard(); }, '🎉 アンサンブル・クイズ 表彰式'); }, 400);
+        ensHostL(); ensBoard();
+      });
+      EH.timer = setInterval(function () { if (EH && EH.room) ensTick(); }, 250);
+    });
+  });
+  GK.onLeave(function () { if (EH) { EH.stop && EH.stop(); clearInterval(EH.timer); EH = null; } });
+  function ensQsFor(r) { var k = r.round + ':' + r.seed; if (EH.qsKey !== k) { EH.qs = ensQs(r.cfg, r.seed); EH.qsKey = k; } return EH.qs; }
+  function ensHostL() {
+    var r = EH.room, el = $('#hostL'); if (!el) return;
+    var cfg = r.cfg, busy = r.state === 'q' || r.state === 'rev', n = playersOf(r).length;
+    var key = JSON.stringify(cfg) + busy + n + r.round + r.state; if (EH.lkey === key) return; EH.lkey = key;
+    var hadQR = $('#qr', el) && $('#qr', el).innerHTML;
+    var seg = function (k, opts) { return '<div class="seg">' + opts.map(function (o) { return '<button type="button" data-ec="' + k + ':' + o[0] + '" aria-pressed="' + (String(cfg[k]) === String(o[0])) + '"' + (busy ? ' disabled' : '') + '>' + o[1] + '</button>'; }).join('') + '</div>'; };
+    el.innerHTML = '<div class="roomhd"><small>🎼 アンサンブル・クイズ　部屋番号</small><div class="code">' + EH.code + '</div></div><div class="qr" id="qr">' + (hadQR || '') + '</div>' +
+      '<p class="note joinhow" style="text-align:center">楽典ラボ → 🎮 → 部屋番号を入力<br>または QR を読みとる</p>' +
+      '<div class="hsum"><p><span>📚</span><b>' + esc(rangeName(cfg)) + '</b>　' + cfg.n + ' 問・' + cfg.sec + ' 秒' + (cfg.ear ? '・👂' : '') + '</p>' +
+      (busy ? '' : seg('m', GR.filter(function (g) { return g[0] !== 'units'; })) +
+      seg('n', [[7, '7 問（1 フレーズ）'], [14, '14 問（2 フレーズ）']]) +
+      seg('sec', [[10, '10 秒'], [20, '20 秒'], [30, '30 秒']]) +
+      seg('ear', [[false, '👂 聴く問題なし'], [true, '👂 聴く問題あり']])) + '</div>' +
+      '<div class="hbtns"><span class="ppl">👥 <b>' + n + '</b> 人</span><button type="button" class="btn main big" id="eGo"' + (busy ? ' disabled' : '') + '>' + (r.round ? '▶ もう一度（新しい問題）' : '▶ スタート') + '</button></div>' +
+      '<div class="hbtns"><button type="button" class="btn ghost sm" id="hCopy">🔗 参加リンク</button><button type="button" class="btn ghost sm" id="hClose">部屋を閉じる</button></div>';
+    if (!hadQR) drawQR($('#qr', el), joinUrl(EH.code));
+    el.onclick = function (e) {
+      var b = e.target.closest('[data-ec],#eGo,#hCopy,#hClose'); if (!b) return;
+      if (b.dataset.ec) {
+        var kv = b.dataset.ec.split(':'), v = kv[0] === 'm' ? kv[1] : kv[0] === 'ear' ? kv[1] === 'true' : +kv[1], o = {}; o[kv[0]] = v;
+        ENS[kv[0]] = v; GK.store.set('ensSel', ENS); api('PATCH', ROOM(EH.code) + '/cfg', o);
+      }
+      if (b.id === 'eGo') { M.audio(); api('PATCH', ROOM(EH.code), { state: 'q', round: (r.round || 0) + 1, seed: Math.floor(Math.random() * 1e9), qi: 0, qAt: Math.round(now() + 4000), h: '' }); }
+      if (b.id === 'hCopy') GK.share('【楽典ラボ アンサンブル・クイズ】部屋 ' + EH.code + '\n' + joinUrl(EH.code));
+      if (b.id === 'hClose' && confirm('部屋 ' + EH.code + ' を閉じますか？')) { var c = EH.code; api('DELETE', ROOM(c)).then(function () { GK.go('#game'); }, function () { GK.go('#game'); }); }
+    };
+  }
+  function ensStats(r, qi, q) {
+    var ps = playersOf(r, r.round), cnt = q ? q.ch.map(function () { return 0; }) : [], ok = 0, ans = 0;
+    ps.forEach(function (p) { var a = ansOf(p, qi); if (!a) return; ans++; if (a.ok) ok++; if (cnt[a.c] != null) cnt[a.c]++; });
+    return { n: ps.length, ans: ans, ok: ok, cnt: cnt, ps: ps };
+  }
+  function ensTick() {
+    var r = EH.room, t = now();
+    if (r.state === 'q') {
+      var q = ensQsFor(r)[r.qi], st = ensStats(r, r.qi, q), end = r.qAt + r.cfg.sec * 1000;
+      if (t >= r.qAt && EH.playedQ !== r.round + ':' + r.qi) { EH.playedQ = r.round + ':' + r.qi; GK.fx('go'); if (q.ear) setTimeout(function () { GK.playQ(q); }, 300); }
+      if (!EH.busy && t > r.qAt + 800 && (t > end + 400 || (st.n > 0 && st.ans >= st.n))) {
+        EH.busy = true;
+        var h = (r.h || '') + (st.n && st.ok / st.n >= ENS_OK ? '1' : '0');
+        api('PATCH', ROOM(EH.code), { state: 'rev', h: h }).then(function () { EH.busy = false; }, function () { EH.busy = false; });
+      }
+      var tm = $('#eTm'), an = $('#eAns'), bar = $('#eBar');
+      if (tm) tm.textContent = t < r.qAt ? '' : Math.max(0, Math.ceil((end - t) / 1000));
+      if (an) an.textContent = st.ans + ' / ' + st.n + ' 人が 答えた';
+      if (bar) bar.style.width = Math.max(0, Math.min(100, (end - t) / (r.cfg.sec * 1000) * 100)) + '%';
+      if (t < r.qAt && !$('.count', $('#board'))) { EH.key = ''; ensBoard(); }
+      if (t >= r.qAt && $('.count', $('#board'))) { EH.key = ''; ensBoard(); }
+      var cd = $('#board .count'); if (cd) { var nn = Math.max(1, Math.ceil((r.qAt - t) / 1000)); if (cd.dataset.n !== String(nn)) { cd.dataset.n = nn; cd.textContent = nn; GK.fx('count'); } }
+    }
+  }
+  function choiceBox(c, i, opt) {
+    opt = opt || {};
+    var inner = c && c.fig ? '<div class="efig" data-fi="' + i + '"></div>' : '<span>' + c + '</span>';
+    var w = opt.total ? Math.round(opt.count / opt.total * 100) : 0;
+    return '<div class="ech-i' + (opt.ok ? ' ok' : opt.dim ? ' dim' : '') + '">' + (opt.rev ? '<i class="ebar" style="width:' + w + '%"></i>' : '') + '<span class="kn">' + '①②③④'.charAt(i) + '</span>' + inner + (opt.rev ? '<b class="ecnt">' + opt.count + '人</b>' : '') + '</div>';
+  }
+  function ensBoard() {
+    var r = EH.room, el = $('#board'); if (!el || $('.podium', el)) return;
+    var t = now(), key = r.state + '|' + r.round + '|' + r.qi + '|' + (r.state === 'q' && t < r.qAt ? 'cd' : '') + '|' + (r.state === 'lobby' || r.state === 'end' ? playersOf(r).map(function (p) { return p.n + p.s; }).join(',') : '') + (r.state === 'rev' ? JSON.stringify(ensStats(r, r.qi).cnt) + ensStats(r, r.qi).ans : '');
+    if (EH.key === key) return; EH.key = key;
+    var n = r.cfg.n, h = r.h || '';
+    var strip = '<div class="estrip"><span class="note">🎼 クラスの曲（' + h.split('').filter(function (x) { return x === '1'; }).length + ' / ' + n + ' 音）</span><div class="emel" id="eMel"></div></div>';
+    if (r.state === 'lobby' || !r.round) {
+      var ps = playersOf(r);
+      el.innerHTML = '<div class="bhead"><span class="st">参加者を待っています</span></div>' + (ps.length ? '<div class="names">' + ps.map(function (p) { return '<span>' + esc(p.n) + '</span>'; }).join('') + '</div>' : '<p class="note">生徒が 部屋番号を入れると ここに名前が出ます</p>') +
+        '<div class="ehow"><p><b>🎼 アンサンブル・クイズ</b>：1 問ずつ、全員が 同時に答えます。</p><p>⏱ 早く正解するほど 高得点（<i>Presto!</i> → <i>Allegro!</i> → <i>Moderato</i> → <i>Andante</i>）</p><p>🎶 クラスの <b>' + Math.round(ENS_OK * 100) + '% 以上</b>が正解すると「きらきら星」の音が 1 つ ふえる。全部 そろえて 曲を完成させよう！</p></div>' + strip;
+      M.score($('#eMel'), melodySpec('', n));
+      return;
+    }
+    var qs = ensQsFor(r), q = qs[r.qi];
+    if (r.state === 'end') {
+      var lst = playersOf(r, r.round), got = h.split('').filter(function (x) { return x === '1'; }).length;
+      el.innerHTML = '<div class="bhead"><span class="st">🎉 結果発表</span><button type="button" class="btn sm" id="ePod">🎉 表彰式をもう一度</button></div>' +
+        '<div class="eend"><div class="erank">' + rows(lst) + '</div><div class="esum"><p class="msg">クラスで ' + got + ' / ' + n + ' 音 そろった！' + (got === n ? ' 🎉 曲が完成！' : '') + '</p><button type="button" class="btn main" id="ePlay">🔊 クラスの曲を聴く</button></div></div>' + strip;
+      M.score($('#eMel'), melodySpec(h, n));
+      el.onclick = function (e) {
+        if (e.target.closest('#ePlay')) playMelody(h, n);
+        if (e.target.closest('#ePod')) podium(r, function () { EH.key = ''; ensBoard(); }, '🎉 アンサンブル・クイズ 表彰式');
+      };
+      return;
+    }
+    if (r.state === 'q' && t < r.qAt) {
+      el.innerHTML = '<div class="bhead"><span class="st">第 ' + (r.qi + 1) + ' 問 / ' + n + '</span></div><div class="count" data-n="">' + Math.max(1, Math.ceil((r.qAt - t) / 1000)) + '</div>' + strip;
+      M.score($('#eMel'), melodySpec(h, n));
+      return;
+    }
+    var rev = r.state === 'rev', stt = ensStats(r, r.qi, q);
+    el.innerHTML = '<div class="bhead"><span class="st">第 ' + (r.qi + 1) + ' 問 / ' + n + '</span><span class="stars" style="color:var(--gold)">' + '★★★'.slice(0, q.st) + '</span>' +
+      (rev ? '<span class="ppl">正解 ' + stt.ok + ' / ' + stt.n + ' 人（' + (stt.n ? Math.round(stt.ok / stt.n * 100) : 0) + '%）</span>' + (r.h.charAt(r.qi) === '1' ? '<b class="egood">🎶 音が ふえた！</b>' : '<b class="ebad">… 休符</b>') +
+        '<button type="button" class="btn main" id="eNext">' + (r.qi + 1 >= n ? '🎉 結果発表' : '次の問題 ▶') + '</button>'
+        : '<span class="ppl" id="eAns"></span><button type="button" class="btn sm ghost" id="eStop">⏹ ここで答えを見る</button><span class="tm" id="eTm"></span>') + '</div>' +
+      (rev ? '' : '<div class="tbar ebarw"><i id="eBar"></i></div>') +
+      '<p class="eq">' + GK.symfix(q.q) + '</p><div class="efigq" id="eFig"></div>' +
+      '<div class="ech">' + q.ch.map(function (c, i) { return choiceBox(c, i, rev ? { rev: true, ok: i === q.a, dim: i !== q.a, count: stt.cnt[i] || 0, total: Math.max(1, stt.ans) } : {}); }).join('') + '</div>' +
+      (rev ? '<div class="eex">💡 ' + q.ex + '</div>' + '<div class="etop">' + stt.ps.slice(0, 5).map(function (p, i) { return '<span>' + (i + 1) + '. ' + esc(p.n) + ' <b>' + GK.fmtN(p.s || 0) + '</b></span>'; }).join('') + '</div>' : '') + strip;
+    var figEl = $('#eFig');
+    if (q.ear && !rev) figEl.innerHTML = '<div class="ear"><button type="button" id="eEar">🔊</button><p class="note">先生のスピーカーで 鳴らします（もう一度 おせます）</p></div>';
+    else if (rev && q.exFig) F.render(figEl, q.exFig);
+    else if (q.fig) F.render(figEl, q.fig);
+    else figEl.style.flex = '0 0 0';
+    $$('.efig', el).forEach(function (d) { F.render(d, q.ch[+d.dataset.fi].fig); });
+    M.score($('#eMel'), melodySpec(h, n));
+    if (rev && EH.revPlayed !== r.round + ':' + r.qi) { EH.revPlayed = r.round + ':' + r.qi; if (r.h.charAt(r.qi) === '1') { GK.fx('ok'); setTimeout(function () { playMelody(r.h, r.qi + 1); }, 500); } else GK.fx('ng'); }
+    el.onclick = function (e) {
+      if (e.target.closest('#eEar')) GK.playQ(q);
+      if (e.target.closest('#eStop')) { var hh = (r.h || '') + (stt.n && stt.ok / stt.n >= ENS_OK ? '1' : '0'); api('PATCH', ROOM(EH.code), { state: 'rev', h: hh }); }
+      if (e.target.closest('#eNext')) {
+        if (r.qi + 1 >= n) api('PATCH', ROOM(EH.code), { state: 'end' });
+        else api('PATCH', ROOM(EH.code), { state: 'q', qi: r.qi + 1, qAt: Math.round(now() + 3000) });
+      }
+    };
+  }
+
+  /* ---------- 生徒 ---------- */
+  var EB = null;
+  GK.route(/^ens\/(\d{4})$/, function (m) {
+    var code = m[1];
+    EB = { code: code, round: 0, qs: null, s: 0, k: 0, shown: '', ans: {}, awarded: {} };
+    V.innerHTML = '<section class="panel res"><div class="big" style="font-size:28px">つないでいます…</div></section>';
+    syncClock(code).then(function () { if (EB && EB.code === code) { EB.stop = listen(ROOM(code), ensRoom); EB.timer = setInterval(ensStuTick, 200); } });
+  });
+  GK.onLeave(function () { if (EB) { EB.stop && EB.stop(); clearInterval(EB.timer); EB = null; } });
+  function stuHead(r) {
+    return '<div class="ta-top"><span class="tm">第 ' + (r.qi + 1) + ' / ' + r.cfg.n + ' 問</span><div class="tbar"><i id="sBar"></i></div><span class="cb">' + (EB.k >= 2 ? '🔥 ' + EB.k : '') + '</span><span class="sc">' + GK.fmtN(EB.s) + '<small> 点</small></span></div>';
+  }
+  function ensRoom(r) {
+    if (!EB) return;
+    if (!r) { GK.toast('部屋が閉じられました'); GK.go('#game'); return; }
+    EB.room = r;
+    var meP = ROOM(EB.code) + '/players/' + pid();
+    if (r.round && r.round !== EB.round && (r.state === 'q' || r.state === 'rev')) {
+      EB.round = r.round; EB.qs = ensQs(r.cfg, r.seed); EB.s = 0; EB.k = 0; EB.ans = {}; EB.shown = '';
+      api('PATCH', meP, { r: r.round, s: 0, k: 0, a: null }).catch(function () { });
+    }
+    ensStuDraw();
+  }
+  function ensStuTick() {
+    if (!EB || !EB.room) return;
+    var r = EB.room, t = now();
+    if (r.state === 'q' && r.round === EB.round) {
+      var bar = $('#sBar'); if (bar) bar.style.width = Math.max(0, Math.min(100, (r.qAt + r.cfg.sec * 1000 - t) / (r.cfg.sec * 1000) * 100)) + '%';
+      var want = t < r.qAt ? 'cd' : 'q';
+      if (EB.shown !== r.round + ':' + r.qi + ':' + want && !EB.ans[r.qi]) ensStuDraw();
+      var cd = $('.count', V); if (cd && t < r.qAt) { var nn = Math.max(1, Math.ceil((r.qAt - t) / 1000)); if (cd.textContent !== String(nn)) { cd.textContent = nn; GK.fx('count'); } }
+      if (t > r.qAt + r.cfg.sec * 1000 && !EB.ans[r.qi] && EB.shown === r.round + ':' + r.qi + ':q') { EB.shown += ':late'; var el = $('.qz', V); if (el) { $$('.ch button', el).forEach(function (b) { b.disabled = true; b.classList.add('dim'); }); ensWait('⏰ 時間切れ'); } }
+    }
+  }
+  function ensWait(msg) {
+    var fb = $('.qz .fb', V); if (!fb) return;
+    fb.hidden = false; fb.innerHTML = '<span class="mk">⏳</span><div class="ex">' + msg + '<br><small style="color:var(--muted)">先生の画面で 答えを見よう</small></div>';
+  }
+  function ensStuDraw() {
+    var r = EB.room, t = now(), me = (r.players || {})[pid()] || {};
+    if (r.state === 'lobby' || !r.round || (r.round !== EB.round)) {
+      if (EB.shown === 'lobby') return; EB.shown = 'lobby';
+      V.innerHTML = '<section class="panel res"><p class="note">🎼 アンサンブル・クイズ・部屋 ' + EB.code + '</p><div class="big" style="font-size:34px">' + esc(me.n || S.nick) + '</div><p class="msg">' + (r.state === 'lobby' || !r.round ? '先生のスタートを 待っています' : 'いまの回の 途中です。次の回から参加できます') + '</p><p class="note">1 問ずつ、早く正解するほど 高得点。クラスの ' + Math.round(ENS_OK * 100) + '% 以上が正解すると 曲の音が ふえます</p><div class="acts"><button type="button" class="btn ghost" data-go="#game">ぬける</button></div></section>';
+      return;
+    }
+    var q = EB.qs[r.qi];
+    if (r.state === 'q' && t < r.qAt) {
+      var k1 = r.round + ':' + r.qi + ':cd'; if (EB.shown === k1) return; EB.shown = k1;
+      V.innerHTML = '<section class="panel qz">' + stuHead(r) + '<div class="count">' + Math.max(1, Math.ceil((r.qAt - t) / 1000)) + '</div></section>';
+      return;
+    }
+    if (r.state === 'q') {
+      var k2 = r.round + ':' + r.qi + ':q'; if (EB.shown.indexOf(k2) === 0) return; EB.shown = k2;
+      V.innerHTML = '<section class="panel qz" style="position:relative"></section>';
+      var el = $('.qz', V);
+      // 聴く問題は 先生のスピーカーで鳴らす（手元では 鳴らさない）
+      var qq = q.ear ? Object.assign({}, q, { ear: false, play: null, fig: { html: '<div style="text-align:center;font-size:20px;font-weight:700">🔊 先生のスピーカーの音を 聴いて答えよう</div>' } }) : Object.assign({}, q, { play: null });
+      GK.drawQ(el, qq, {
+        noFb: true, top: '',
+        onPick: function (i, ok) {
+          var tt = Math.max(0, now() - r.qAt), frac = tt / (r.cfg.sec * 1000);
+          if (frac > 1) return;
+          EB.k = ok ? EB.k + 1 : 0;
+          var pts = ensPoints(ok, frac, EB.k); EB.s += pts; EB.ans[r.qi] = { c: i, ok: ok, p: pts, tn: tempoName(frac) };
+          var o = { s: EB.s, k: EB.k, r: r.round }; o['a/' + r.qi] = { c: i, t: Math.round(tt), ok: ok, p: pts };
+          api('PATCH', ROOM(EB.code) + '/players/' + pid(), o).catch(function () { });
+          $$('.ch button', el).forEach(function (b, j) { b.classList.remove('ok', 'ng', 'dim'); if (j === i) b.classList.add('picked'); else b.classList.add('dim'); });
+          ensWait('答えました！' + (ok ? '' : '') + ' 結果を 待っています…');
+        }
+      });
+      $('.qtop', el).outerHTML = stuHead(r);
+      return;
+    }
+    if (r.state === 'rev') {
+      var k3 = r.round + ':' + r.qi + ':rev'; if (EB.shown === k3) return; EB.shown = k3;
+      var a = EB.ans[r.qi];
+      if (!EB.qsel || EB.shown.indexOf(r.round + ':' + r.qi) !== 0 || !$('.qz', V)) { V.innerHTML = '<section class="panel qz"></section>'; GK.drawQ($('.qz', V), Object.assign({}, q, { play: null, ear: false, fig: q.ear ? null : q.fig }), { noFb: true }); $('.qtop', V).outerHTML = stuHead(r); }
+      var el2 = $('.qz', V);
+      $$('.ch button', el2).forEach(function (b, j) { b.disabled = true; b.classList.remove('picked', 'dim', 'ok', 'ng'); if (j === q.a) b.classList.add('ok'); else if (a && j === a.c) b.classList.add('ng'); else b.classList.add('dim'); });
+      GK.showFb(el2, q, a ? a.ok : false, {});
+      var ex = $('.fb .ex', el2), mk = $('.fb .mk', el2);
+      var late = now() > r.qAt + r.cfg.sec * 1000;
+      if (!a) { mk.textContent = late ? '⏰' : '—'; mk.className = 'mk ng'; }
+      var ps = playersOf(r, r.round), rk = ps.map(function (p) { return p.id; }).indexOf(pid()) + 1;
+      ex.insertAdjacentHTML('afterbegin', '<b style="font-size:1.15em">' + (a && a.ok ? '+' + a.p + ' 点 <i class="en">' + a.tn + '</i>' : a ? '0 点' : late ? '時間切れ' : '答えなし') + '</b>　' + (rk ? rk + ' 位 / ' + ps.length + ' 人' : '') + (r.h && r.h.charAt(r.qi) === '1' ? '　🎶 クラスの音が ふえた！' : '') + '<br>');
+      $('.sc', el2).innerHTML = GK.fmtN(EB.s) + '<small> 点</small>';
+      return;
+    }
+    if (r.state === 'end') {
+      if (EB.shown === 'end:' + r.round) return; EB.shown = 'end:' + r.round;
+      var ps2 = playersOf(r, r.round), rk2 = ps2.map(function (p) { return p.id; }).indexOf(pid()) + 1, okN = Object.keys(EB.ans).filter(function (k) { return EB.ans[k].ok; }).length;
+      if (!EB.awarded[r.round]) {
+        EB.awarded[r.round] = 1; GK.earn(Math.floor(EB.s / 50));
+        if (rk2 >= 1 && rk2 <= 3) { RW.top3++; GK.rwSave(); GK.earn(50); GK.confetti(rk2 === 1 ? 90 : 40); }
+        GK.checkBadges();
+      }
+      var got = (r.h || '').split('').filter(function (x) { return x === '1'; }).length;
+      V.innerHTML = '<section class="panel res">' + (rk2 === 1 ? '<div class="stampbig">優勝</div>' : '') + '<div class="big">' + (rk2 ? rk2 + '<small> 位 / ' + ps2.length + ' 人</small>' : '−') + '</div>' +
+        '<p class="msg">' + GK.fmtN(EB.s) + ' 点・正解 ' + okN + ' / ' + r.cfg.n + ' 問</p><p>🎼 クラスで ' + got + ' / ' + r.cfg.n + ' 音 そろえた' + (got === r.cfg.n ? '！ 曲が完成 🎉' : '') + '</p>' +
+        '<div class="acts"><button type="button" class="btn" id="eRv">📖 解説を見る</button></div><p class="note">先生が もう一度 始めると 自動で切りかわります</p></section>';
+      $('#eRv').onclick = function () {
+        var res = EB.qs.map(function (qq2, i) { var aa = EB.ans[i]; return { q: qq2, pick: aa ? aa.c : -1, ok: !!(aa && aa.ok) }; });
+        GK.review(V, res, function () { EB.shown = ''; ensStuDraw(); });
+      };
+    }
   }
 })();

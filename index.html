@@ -371,6 +371,47 @@ svg.dia .en { font-family: var(--font-en); }
 .podium .pod.p3 .blk { height: 90px; }
 .podium .pod .pt { font-family: var(--font-en); font-size: 20px; }
 
+/* アンサンブル・クイズ（先生の画面） */
+.board.ens { gap: 8px; }
+.board.ens .bhead { flex-wrap: wrap; margin-bottom: 0; }
+.board.ens .bhead .btn.main { margin-left: auto; }
+.board.ens .ppl { font-weight: 700; }
+.ebarw { flex: none; height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+.ebarw i { display: block; height: 100%; background: var(--accent); transition: width .25s linear; }
+.eq { flex: none; margin: 0; font-size: calc(26px * var(--k)); font-weight: 700; line-height: 1.4; }
+.eq b { color: var(--warm); }
+.efigq { flex: 1 1 0; min-height: 60px; display: flex; flex-direction: column; }
+.ech { flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ech-i { position: relative; overflow: hidden; border: 1.5px solid var(--ink); border-radius: 6px; padding: 8px 60px 8px 40px; min-height: 52px; display: flex; align-items: center; font-size: calc(21px * var(--k)); font-weight: 700; background: var(--panel); }
+.ech-i .kn { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 22px; color: var(--muted); }
+.ech-i .efig { flex: 1; height: 70px; display: flex; }
+.ech-i > span:not(.kn) { position: relative; }
+.ech-i .ebar { position: absolute; left: 0; top: 0; bottom: 0; background: var(--line); opacity: .55; transition: width .6s ease-out; }
+.ech-i.ok { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok); }
+.ech-i.ok .ebar { background: var(--accent-soft); opacity: 1; }
+.ech-i.dim { opacity: .55; }
+.ech-i .ecnt { position: absolute; right: 12px; font-family: var(--font-en); font-size: 20px; }
+.eex { flex: none; font-size: calc(16px * var(--k)); line-height: 1.55; border-top: 1px dashed var(--line); padding-top: 6px; }
+.eex b { color: var(--warm); }
+.etop { flex: none; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 15px; }
+.etop b { font-family: var(--font-en); }
+.egood { color: var(--ok); }
+.ebad { color: var(--muted); }
+.estrip { flex: none; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding-top: 4px; }
+.estrip .note { flex: none; }
+.emel { flex: 1; min-width: 0; height: 104px; display: flex; }
+.ehow { border: 1px dashed var(--line); border-radius: 6px; padding: 8px 14px; font-size: 15px; margin-top: auto; }
+.ehow p { margin: 4px 0; }
+.eend { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.eend .esum { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.qz .ch button.picked { border-color: var(--blue); background: var(--blue-soft); box-shadow: 2px 2px 0 var(--blue); opacity: 1; }
+@media (max-width: 900px) {
+  .eq { font-size: 18px; }
+  .ech-i { font-size: 16px; min-height: 44px; padding: 6px 44px 6px 32px; }
+  .eend { grid-template-columns: minmax(0, 1fr); }
+  .emel { height: 64px; }
+}
+
 /* ダイアログ */
 dialog { border: 1.5px solid var(--ink); border-radius: 8px; background: var(--panel); color: var(--ink); padding: 0; width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); box-shadow: 4px 4px 0 var(--ink); }
 dialog::backdrop { background: rgba(20, 22, 20, .45); }
