@@ -23,13 +23,13 @@
     return (GR.filter(function (x) { return x[0] === cfg.m; })[0] || GR[0])[1];
   };
   /* ---------- ルール（数学Aラボと同じ） ---------- */
-  var BONUS = { 1: 6, 2: 12, 3: 20 }, PENALTY = 2, COMBO_BONUS = 3;
-  var bonusSec = function (st, ok) { return Math.round(BONUS[st] * Math.max(0.15, Math.pow(0.94, ok)) * 10) / 10; };
+  var BONUS = { 1: 2, 2: 4, 3: 6 }, PENALTY = 2, COMBO_BONUS = 1; // 正解で もどる時間は 少しだけ
+  var bonusSec = function (st, ok) { return Math.round(BONUS[st] * Math.max(0.3, Math.pow(0.97, ok)) * 10) / 10; };
   var mult = function (k) { return k >= 40 ? 3 : k >= 30 ? 2.5 : k >= 20 ? 2 : k >= 10 ? 1.5 : 1; };
   var RULER = [[0, 'ウォーミングアップ中'], [5, '小テスト 1 回分'], [10, '楽典ドリル 1 ページ分'], [20, '定期テストの楽典 1 回分'], [30, '楽典検定 1 回分'], [45, '音大入試の楽典 1 回分'], [60, '楽典の問題集 1 冊分']];
   var ruler = function (n) { var r = RULER[0][1]; RULER.forEach(function (x) { if (n >= x[0]) r = x[1]; }); return r; };
-  // 時間が たつほど 時計が速く進む（45 秒から だんだん、上限なし：2 分で 約 2.7 倍、3 分で 4 倍）。上手な人も 必ず 終わる
-  var DRAIN0 = 45, DRAINK = 45, HARD_END = 300; // HARD_END：念のため 5 分で 必ず終わり
+  // 時間が たつほど 時計が速く進む（60 秒から だんだん、上限なし：2 分で 約 1.7 倍、3 分で 2.3 倍）。上手な人も 必ず 終わる
+  var DRAIN0 = 60, DRAINK = 90, HARD_END = 300; // HARD_END：念のため 5 分で 必ず終わり
   var drainRate = function (sec) { return 1 + Math.max(0, sec - DRAIN0) / DRAINK; };
   // 問題：はじめの 8 問は ★1 の種類だけ、22 問目までは ★2 まで、そのあとは 全部（だんだん むずかしく）
   function makeQs(cfg, seed) {
