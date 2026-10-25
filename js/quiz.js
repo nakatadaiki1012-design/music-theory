@@ -37,14 +37,20 @@
   var RN = { wr: '全休符', hr: '2分休符', qr: '4分休符', '8r': '8分休符', '16r': '16分休符', qdr: '付点4分休符' };
   var noteFig = function (d, o) { o = o || {}; return { score: { clef: 'treble', notes: [{ k: o.k || 'B4', d: d, c: o.c, st: 1 }], minBar: o.w || 56, sp: 30, noClef: true, rhythm: true, above: 30, below: 22 } }; };
   // 足し算の図：音符 ＋ 音符
-  function sumFig(ds, op) {
-    var gap = op && op.length > 1 ? 150 : 90, items = [], texts = [], x = 30, W = 70 + ds.length * gap;
-    ds.forEach(function (d, i) {
-      items.push({ s: 0, x: x, k: 'B4', d: d, st: 1 });
-      if (i < ds.length - 1) texts.push({ x: x + gap / 2 + 14, y: 64, t: op || '＋', size: 26 });
-      x += gap;
+  // 式の図：音符と記号を 等間かくで ならべる。記号は 符頭の高さに そろえる
+  // toks: [ '8' などの長さ | { t: '＝', c: 色 } ]
+  function eqFig(toks) {
+    var items = [], texts = [], x = 8, Y = 50, SW = 46; // Y：符頭の線（Stave y=-10 → 中央の線）、SW：1 マスの幅
+    toks.forEach(function (tk) {
+      if (typeof tk === 'string') { items.push({ s: 0, x: x + 14, k: 'B4', d: tk, st: 1 }); x += SW; } // 符頭（はば約 12）を マスの まん中より少し左に（はた・付点の分）
+      else { texts.push({ x: x + SW / 2, y: Y + 10, t: tk.t, size: tk.size || 28, c: tk.c }); x += SW; }
     });
-    return { free: { w: W - 30, h: 110, staves: [{ x: 0, y: -10, w: W, hide: true }], items: items, texts: texts } };
+    return { free: { w: x + 8, h: 80, staves: [{ x: 0, y: -10, w: x + 8, hide: true }], items: items, texts: texts } };
+  }
+  function sumFig(ds) {
+    var toks = [];
+    ds.forEach(function (d, i) { if (i) toks.push({ t: '＋' }); toks.push(d); });
+    return eqFig(toks.concat(ds.length > 1 ? [{ t: '＝' }, { t: '？', c: C.red }] : []));
   }
 
   /* =================== 01 五線と音名 =================== */
@@ -107,7 +113,7 @@
       var pr = pick(pairs, R), n = M.len(pr[0]) / M.len(pr[1]);
       var wr = [n - 1, n + 1, n * 2, n / 2, n + 2, n - 2].filter(function (x) { return x > 0 && x === Math.floor(x); }).map(function (x) { return tx(x + ' つ'); });
       var m = mc(R, tx(n + ' つ'), wr);
-      return { q: '<b>' + DN[pr[0]] + '</b> は <b>' + DN[pr[1]] + '</b> いくつ分？', fig: sumFig([pr[0], pr[1]], '＝ ? ×'), ch: m.ch, a: m.a, ex: DN[pr[0]] + ' ＝ ' + lens(M.len(pr[0])) + ' 拍、' + DN[pr[1]] + ' ＝ ' + lens(M.len(pr[1])) + ' 拍。' + lens(M.len(pr[0])) + ' ÷ ' + lens(M.len(pr[1])) + ' ＝ <b>' + n + '</b>。' };
+      return { q: '<b>' + DN[pr[0]] + '</b> は <b>' + DN[pr[1]] + '</b> いくつ分？', fig: eqFig([pr[0], { t: '＝' }, pr[1], { t: '×' }, { t: '？', c: C.red }]), ch: m.ch, a: m.a, ex: DN[pr[0]] + ' ＝ ' + lens(M.len(pr[0])) + ' 拍、' + DN[pr[1]] + ' ＝ ' + lens(M.len(pr[1])) + ' 拍。' + lens(M.len(pr[0])) + ' ÷ ' + lens(M.len(pr[1])) + ' ＝ <b>' + n + '</b>。' };
     }
   };
   T.durSum = {

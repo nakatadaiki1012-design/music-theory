@@ -140,18 +140,23 @@
 
   // 付点：音符 ＋ その半分
   CUSTOM.dotted = function (box) {
-    var W = 520, H = 170;
-    var r = M.free(box, {
-      w: W, h: H, staves: [{ x: 0, y: -10, w: W, lines: 1, hide: true }],
-      items: [
-        { s: 0, x: 40, k: 'B4', d: 'qd', c: C.red }, { s: 0, x: 170, k: 'B4', d: 'q' }, { s: 0, x: 300, k: 'B4', d: '8', c: C.blue },
-        { s: 0, x: 40, k: 'B4', d: 'hd', c: C.red, y: 1 }
-      ].slice(0, 3),
-      texts: [{ x: 120, y: 60, t: '＝', size: 28 }, { x: 250, y: 60, t: '＋', size: 28 }, { x: 46, y: 110, t: '付点4分音符', size: 14, c: C.red }, { x: 176, y: 110, t: '4分音符（1拍）', size: 14 }, { x: 306, y: 110, t: '8分音符（半拍）', size: 14, c: C.blue },
-        { x: 430, y: 60, t: '＝ 1.5 拍', size: 22, c: C.red }, { x: 260, y: 150, t: '点は「すぐ左の音符の 半分」を たす', size: 15, c: 'var(--muted)' }]
+    // 付点2分音符 ＝ 2分音符 ＋ 4分音符 ／ 付点4分音符 ＝ 4分音符 ＋ 8分音符
+    var SW = 62, RH = 92, items = [], texts = [], staves = [];
+    [[['hd', C.red, '付点2分'], ['h', null, '2分（2拍）'], ['q', C.blue, '4分（1拍）'], '＝ 3 拍'], [['qd', C.red, '付点4分'], ['q', null, '4分（1拍）'], ['8', C.blue, '8分（半拍）'], '＝ 1.5 拍']].forEach(function (row, ri) {
+      var y0 = ri * RH - 10, Y = y0 + 60, x = 8;
+      staves.push({ x: 0, y: y0, w: 400, hide: true });
+      [row[0], '＝', row[1], '＋', row[2]].forEach(function (tk) {
+        if (typeof tk === 'string') texts.push({ x: x + SW / 2, y: Y + 10, t: tk, size: 28 });
+        else { items.push({ s: ri, x: x + 22, k: 'B4', d: tk[0], st: 1, c: tk[1] }); texts.push({ x: x + 28, y: Y + 34, t: tk[2], size: 12, c: tk[1] || 'currentColor' }); }
+        x += SW;
+      });
+      texts.push({ x: x + 6, y: Y + 10, t: row[3], size: 24, c: C.red, anchor: 'start' });
     });
+    var W = 8 + SW * 5 + 110, H = RH * 2 + 4;
+    var r = M.free(box, { w: W, h: H, staves: staves.map(function (s) { s.w = W; return s; }), items: items, texts: texts });
     if (r) M.fit(r.svg, W, 0, H);
   };
+
 
   // 拍子：強拍・弱拍
   CUSTOM.beats = function (box, a) {
