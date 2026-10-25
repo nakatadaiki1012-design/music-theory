@@ -470,6 +470,16 @@
       return { q: '<b>' + M.ivName(x[1], x[0]) + '</b> を 半音 <b>' + (wide ? '広げる' : 'せまくする') + '</b> と？', ch: m.ch, a: m.a, ex: (perf ? '完全グループ：減 ← <b>完全</b> → 増' : '長・短グループ：減 ← 短 ← 長 → 増') + '。度数は 変わらない → <b>' + M.ivName(x[1], q2) + '</b>。', exFig: { c: 'ivLadder' } };
     }
   };
+  T.ivWider = {
+    u: 'u06', st: 2, gen: function (R) {
+      // 同じ度数の 2 つ（長と短・完全と増 など）が 答えの候補に なるように 作る
+      var semis = function (x) { return M.interval('C4', M.up('C4', x[1], x[0])).semis; };
+      var wide = R() < 0.5, d = pick([3, 4, 5, 6], R), pair = d === 4 ? [['P', 4], ['A', 4]] : d === 5 ? [['P', 5], ['d', 5]] : [['M', d], ['m', d]];
+      var others = (wide ? [['M', 2], ['m', 2], ['m', 3], ['M', 3]] : [['m', 7], ['M', 7], ['P', 8], ['M', 6]]).filter(function (x) { return x[1] !== d && (wide ? x[1] < d : x[1] > d); });
+      var L = shuffle(pair.concat(shuffle(others, R).slice(0, 2)), R), srt = L.slice().sort(function (a, b) { return semis(a) - semis(b); }), ans = wide ? srt[3] : srt[0];
+      return { q: 'いちばん <b>' + (wide ? '広い' : 'せまい') + '</b> 音程は？', ch: L.map(function (x) { return M.ivName(x[1], x[0]); }), a: L.indexOf(ans), ex: srt.map(function (x) { return M.ivName(x[1], x[0]) + '（半音 ' + semis(x) + '）'; }).join(' ＜ ') + '。度数が同じなら 減 ＜ 短 ＜ 長 ＜ 増、減 ＜ 完全 ＜ 増。', exFig: { c: 'ivTable' } };
+    }
+  };
   T.ivEar = {
     u: 'u06', st: 2, ear: true, gen: function (R) {
       var set = [['m', 2], ['M', 2], ['m', 3], ['M', 3], ['P', 4], ['P', 5], ['P', 8]];
@@ -731,6 +741,24 @@
       var root = base[0], others = [-1, 1, 3].map(function (k) { return M.P(root.l + k, 0, 4); });
       var m = mc(R, pn(root), base.slice(1).map(pn).concat(others.map(pn)));
       return { q: 'この和音の <b>根音</b> は？', fig: chordFig(ps), ch: m.ch, a: m.a, ex: '3 度ずつ重なるように 並べかえると ' + base.map(N).join('・') + '。いちばん下の <b>' + N(root) + '</b> が 根音。' + (n ? '（この楽譜は' + ['', '第1', '第2'][n] + '転回形）' : '（基本形）'), exFig: chordFig(base.map(function (p) { return { l: p.l, a: p.a, o: p.o }; }), { kc: [C.red] }), play: [[ps, 2]] };
+    }
+  };
+  T.isTriad = {
+    u: 'u10', st: 1, gen: function (R) {
+      var r = M.p(pick(['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], R)), D = function (k) { return M.P(r.l + k, 0, r.o); };
+      var good = [D(0), D(2), D(4)], bads = shuffle([[D(0), D(1), D(2)], [D(0), D(3), D(6)], [D(0), D(2), D(3)], [D(0), D(1), D(4)], [D(0), D(3), D(4)]], R).slice(0, 3);
+      var fig = function (ps) { return chordFig(ps, { w: 50 }); };
+      var m = mc(R, { k: 'ok', fig: fig(good) }, bads.map(function (b, i) { return { k: 'b' + i, fig: fig(b) }; }));
+      return { q: '<b>三和音</b>（1つおきに 3つ重ねた和音）は どれ？', ch: m.ch, a: m.a, ex: '三和音は 根音の上に <b>3度・5度</b>。五線では <b>線・線・線</b> か <b>間・間・間</b> の だんごの形 → ' + good.map(N).join('・') + '。', exFig: chordFig(good, { kc: [C.red, C.red, C.red] }) };
+    }
+  };
+  T.chordTones = {
+    u: 'u10', st: 1, gen: function (R, st) {
+      var root = st >= 2 ? M.p(pick(['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'Bb3', 'Eb4'], R)) : M.p(pick(['C4', 'F4', 'G4', 'D4', 'A4'], R));
+      var ty = st >= 2 ? pick(['maj', 'min'], R) : 'maj', ps = M.chord(root, ty), w = pick([1, 2], R), ans = ps[w];
+      var wr = [ps[3 - w], { l: ans.l, a: ans.a + (ans.a < 1 ? 1 : -1), o: 4 }, M.P(ans.l + 1, 0, 4), M.P(ans.l - 1, 0, 4), root].map(pn);
+      var m = mc(R, pn(ans), wr);
+      return { q: '<b>' + N(root) + '</b> を根音とする <b>' + M.CH_JP[ty] + '</b> の <b>' + (w === 1 ? '第3音' : '第5音') + '</b> は？', ch: m.ch, a: m.a, ex: M.CH_JP[ty] + '＝' + RECIPE[ty] + '。' + N(root) + ' → <b>' + ps.map(N).join('・') + '</b>。' + (w === 1 ? '真ん中' : 'いちばん上') + 'が ' + (w === 1 ? '第3音' : '第5音') + ' → <b>' + N(ans) + '</b>。', exFig: chordFig(ps, { kc: ps.map(function (_, i) { return i === w ? C.red : null; }) }), play: [[ps, 2]] };
     }
   };
   T.seventh = {

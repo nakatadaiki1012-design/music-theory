@@ -146,7 +146,7 @@
         { k: 'ポイント 4', h: '転回音程は「9 から引く」', b: '下の音を1オクターブ上げると<b>転回音程</b>。度数は <em>9 − もとの度数</em>、長と短・増と減が 入れかわり、完全は完全のまま。', pts: ['長3度 → 短6度', '完全4度 → 完全5度', '8度より広い音程は 複音程（9度＝8度＋2度）'], fig: function () { return { score: { clef: 'treble', notes: [{ k: ['C4', 'E4'], d: 'w', lab: '長3度' }, { k: ['E4', 'C5'], d: 'w', lab: '短6度', kc: [null, C.red] }, { k: ['D4', 'G4'], d: 'w', lab: '完全4度' }, { k: ['G4', 'D5'], d: 'w', lab: '完全5度', kc: [null, C.red] }], sp: 58 }, play: [[['C4', 'E4'], 2], [['E4', 'C5'], 2], [['D4', 'G4'], 2], [['G4', 'D5'], 2]] }; } }
       ],
       sum: ['度数は 両はしの音も数える', '1・4・5・8度は完全、2・3・6・7度は長・短', '転回すると 9−度数、長と短が 入れかわる'],
-      types: ['ivDeg', 'ivName', 'ivBuild', 'ivInv', 'ivEar', 'ivSemis', 'ivQual']
+      types: ['ivDeg', 'ivName', 'ivBuild', 'ivInv', 'ivEar', 'ivSemis', 'ivQual', 'ivWider']
     },
     /* ---------------- 07 ---------------- */
     {
@@ -197,7 +197,7 @@
         { k: 'ポイント 3', h: '七の和音', b: '三和音の上に もう1つ3度（根音から7度）を重ねると<b>七の和音</b>。いちばん大事なのは 属音の上の<b>属七の和音</b>（ハ長調では ソ・シ・レ・ファ ＝ G7）。', pts: ['減三和音＋減7度 ＝ 減七の和音（短3度を 3 つ重ねる）'], fig: { c: 'triads', a: { root: 'G4', types: ['dom7', 'maj7', 'min7', 'hdim7'] }, cap: 'タップすると 鳴ります' }, wide: true }
       ],
       sum: ['三和音＝根音＋3度＋5度', '長・短・増・減 は 3度の重ね方で決まる', 'いちばん下の音で 基本形・第1転回・第2転回'],
-      types: ['triadType', 'triadBuild', 'inversion', 'chordRoot', 'seventh', 'chordEar']
+      types: ['isTriad', 'chordTones', 'triadType', 'triadBuild', 'inversion', 'chordRoot', 'seventh', 'chordEar']
     },
     /* ---------------- 11 ---------------- */
     {
