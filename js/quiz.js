@@ -100,6 +100,16 @@
       return { q: 'ヘ音記号の この音と 同じ高さを ト音記号で書いたのは？', fig: one(p, 'bass'), ch: m.ch, a: m.a, ex: 'この音は <b>' + N(p) + '</b>（' + M.str(p) + '）。中央のド（C4）は どちらの記号でも 加線1本。', exFig: { score: { clef: 'grand', notes: [{ k: M.str(p), d: 'w', staff: 2, c: C.red }, { k: M.str(p), d: 'w', staff: 1, c: C.red, lab: N(p) }], sp: 50 } }, play: [[p, 1.5]] };
     }
   };
+  T.ledgerN = {
+    u: 'u01', st: 2, gen: function (R) {
+      var clef = R() < 0.6 ? 'treble' : 'bass';
+      var pool = clef === 'treble' ? ['G3', 'A3', 'B3', 'C4', 'D4', 'G5', 'A5', 'B5', 'C6', 'D6', 'E6'] : ['B1', 'C2', 'D2', 'E2', 'F2', 'B3', 'C4', 'D4', 'E4', 'F4'];
+      var p = M.p(pick(pool, R)), bottom = { treble: 'E4', bass: 'G2' }[clef], d = M.dia(p) - M.dia(bottom);
+      var n = d < 0 ? Math.floor(-d / 2) : d > 8 ? Math.floor((d - 8) / 2) : 0;
+      var m = mc(R, tx(n + ' 本'), [0, 1, 2, 3, 4].map(function (x) { return tx(x + ' 本'); }));
+      return { q: 'この音を書くのに 使っている<b>加線</b>は 何本？', fig: one(p, clef), ch: m.ch, a: m.a, ex: 'この音は <b>' + posTxt(p, clef) + '</b>（' + N(p) + '）。五線から はみ出た分だけ 短い線を足すので 加線は <b>' + n + ' 本</b>。' + (n === 0 ? '第1線の下・第5線の上は 加線なしで書ける。' : '') };
+    }
+  };
 
   /* =================== 02 音符と休符 =================== */
   T.durName = {
@@ -143,6 +153,13 @@
       return { q: 'いちばん 長い音符は？', ch: ch.map(function (x) { return { fig: x.fig, k: x.k }; }), a: all.indexOf(best), ex: all.map(function (d) { return DN[d] + ' ' + lens(M.len(d)) + '拍'; }).join('、') + '。いちばん長いのは <b>' + DN[best] + '</b>。' };
     }
   };
+  T.restBeats = {
+    u: 'u02', st: 2, gen: function (R) {
+      var ds = ['wr', 'hr', 'qr', '8r', '16r'], d = pick(ds, R), b = M.len(d);
+      var m = mc(R, tx(lens(b) + ' 拍'), [4, 3, 2, 1, 0.5, 0.25, 1.5].map(function (x) { return tx(lens(x) + ' 拍'); }));
+      return { q: '4分音符を 1 拍とすると、この休符は 何拍 休む？', fig: { score: { clef: 'treble', notes: [{ d: d }], minBar: 70, noClef: true, zoom: 1.6 } }, ch: m.ch, a: m.a, ex: '<b>' + RN[d] + '</b> は ' + DN[d.replace('r', '')] + 'と同じ長さ → <b>' + lens(b) + ' 拍</b>。休符も 音符と同じく 半分ずつ 短くなる。', exFig: { c: 'noteTree', a: { rest: true } } };
+    }
+  };
 
   /* =================== 03 拍子と小節 =================== */
   var FILL = {
@@ -181,6 +198,15 @@
       var m = mc(R, tx(x[1]), L.map(function (y) { return tx(y[1]); }));
       var comp = /8$/.test(x[0]);
       return { q: '<b>' + x[0] + '</b> 拍子は？', fig: { score: { clef: 'treble', time: x[0], notes: [], minBar: 30 } }, ch: m.ch, a: m.a, ex: comp ? '8分音符が ' + parseInt(x[0], 10) + ' つ。3つずつ まとまって 付点4分音符 ' + parseInt(x[0], 10) / 3 + ' 拍 → <b>' + x[1] + '</b>。' : '4分音符が ' + parseInt(x[0], 10) + ' つ → <b>' + x[1] + '</b>。' };
+    }
+  };
+  T.timeMean = {
+    u: 'u03', st: 1, gen: function (R) {
+      var ts = pick([[2, 4], [3, 4], [4, 4], [3, 8], [6, 8], [2, 2], [9, 8], [5, 4]], R), n = ts[0], d = ts[1];
+      var say = function (a, b) { return tx('1 小節に ' + DN[{ 1: 'w', 2: 'h', 4: 'q', 8: '8', 16: '16' }[b]] + 'が ' + a + ' つ分', a + '/' + b); };
+      var wr = [[n, d === 4 ? 8 : 4], [n, d === 8 ? 2 : d * 2], [n + 1, d], [n - 1, d], [d, n]].filter(function (x) { return x[0] > 0 && { 1: 1, 2: 1, 4: 1, 8: 1, 16: 1 }[x[1]]; }).map(function (x) { return say(x[0], x[1]); });
+      var m = mc(R, say(n, d), wr);
+      return { q: 'この拍子記号の 意味は？', fig: { score: { clef: 'treble', time: n + '/' + d, notes: [], minBar: 20 } }, ch: m.ch, a: m.a, ex: '下の数 <b>' + d + '</b> ＝ ' + DN[{ 2: 'h', 4: 'q', 8: '8' }[d]] + '、上の数 <b>' + n + '</b> ＝ いくつ分。→ <b>1 小節に ' + DN[{ 2: 'h', 4: 'q', 8: '8' }[d]] + 'が ' + n + ' つ分</b>。' };
     }
   };
   T.eighthCount = {
@@ -349,6 +375,15 @@
       return { q: '<b>' + M.ivName(iv[1], iv[0]) + '</b> を 転回すると？', fig: { score: { clef: 'treble', notes: [{ k: [M.str(a), M.str(b)], d: 'w', lab: M.ivName(iv[1], iv[0]) }, { k: [M.str(b), 'C5'], d: 'w', lab: '？', kc: [null, C.red] }], sp: 70 } }, ch: m.ch, a: m.a, ex: '度数は 9 − ' + iv[1] + ' ＝ ' + d2 + '。' + M.QN[iv[0]] + ' は <b>' + M.QN[q2] + '</b> に → <b>' + M.ivName(d2, q2) + '</b>。' };
     }
   };
+  T.ivSemis = {
+    u: 'u06', st: 2, gen: function (R) {
+      var L = [['m', 2], ['M', 2], ['m', 3], ['M', 3], ['P', 4], ['A', 4], ['d', 5], ['P', 5], ['m', 6], ['M', 6], ['m', 7], ['M', 7], ['P', 8]];
+      var x = pick(L, R), a = M.p(pick(['C4', 'D4', 'F4', 'G4'], R)), b = M.up(a, x[1], x[0]), iv = M.interval(a, b), n = iv.semis;
+      var m = mc(R, tx(n + ' 個'), [n - 1, n + 1, n - 2, n + 2, n + 3].filter(function (k) { return k > 0; }).map(function (k) { return tx(k + ' 個'); }));
+      var mk = {}; mk[M.midi(a)] = { c: C.red }; mk[M.midi(b)] = { c: C.red };
+      return { q: '<b>' + iv.name + '</b> は 半音 いくつ分？', ch: m.ch, a: m.a, ex: '例：' + N(a) + '〜' + N(b) + ' を 鍵盤で数えると 半音 <b>' + n + ' 個</b>。' + (x[0] === 'A' || x[0] === 'd' ? '増4度と減5度は どちらも 半音 6 個（異名同音的な音程）。' : ''), exFig: { kbd: { from: 'C4', to: M.midi(b) > 83 ? 'B6' : 'B5', mark: mk, steps: [[M.midi(a), M.midi(b), '半音' + n, C.red]], h: 70 } }, play: [[a, 1], [b, 1.5]] };
+    }
+  };
   T.ivEar = {
     u: 'u06', st: 2, ear: true, gen: function (R) {
       var set = [['m', 2], ['M', 2], ['m', 3], ['M', 3], ['P', 4], ['P', 5], ['P', 8]];
@@ -509,6 +544,14 @@
       var ps = M.inv(base, n);
       var names = ['基本形', '第1転回形', '第2転回形'];
       return { q: 'この和音は？（根音は <b>' + N(base[0]) + '</b>）', fig: chordFig(ps), ch: names, a: n, ex: 'いちばん下が ' + ['根音', '第3音', '第5音'][n] + '（' + N(ps[0]) + '）→ <b>' + names[n] + '</b>。', play: [[ps, 2]] };
+    }
+  };
+  T.chordRoot = {
+    u: 'u10', st: 2, gen: function (R, st) {
+      var d = ri(1, 7, R), base = M.diatonic(0, false, d).map(function (p) { return { l: p.l, a: p.a, o: p.o - (d >= 5 ? 1 : 0) }; }), n = st >= 3 ? ri(1, 2, R) : ri(0, 2, R), ps = M.inv(base, n);
+      var root = base[0], others = [-1, 1, 3].map(function (k) { return M.P(root.l + k, 0, 4); });
+      var m = mc(R, pn(root), base.slice(1).map(pn).concat(others.map(pn)));
+      return { q: 'この和音の <b>根音</b> は？', fig: chordFig(ps), ch: m.ch, a: m.a, ex: '3 度ずつ重なるように 並べかえると ' + base.map(N).join('・') + '。いちばん下の <b>' + N(root) + '</b> が 根音。' + (n ? '（この楽譜は' + ['', '第1', '第2'][n] + '転回形）' : '（基本形）'), exFig: chordFig(base.map(function (p) { return { l: p.l, a: p.a, o: p.o }; }), { kc: [C.red] }), play: [[ps, 2]] };
     }
   };
   T.seventh = {
@@ -682,6 +725,141 @@
     else if (a.kind === 'dc') { bars[1][0].top = 'Fine'; bars[1].endBar = 'double'; bars[3].rep = 'DC_AL_FINE'; }
     else { bars[1].repL = 'SEGNO_LEFT'; bars[3].rep = 'DS'; }
     M.score(box, { clef: 'treble', bars: bars, end: 'end', minBar: 92, sp: 40 });
+  };
+
+  /* =================== 14・15 楽語（楽語じてん terms.js から） =================== */
+  var TM = GK.TERMS, syn = GK.termSyn;
+  var en = function (t) { return '<i class="en" style="font-weight:700">' + t + '</i>'; };
+  var tq = function (t) { return '<b class="en" style="font-style:italic">' + t.t + '</b>'; };
+  var tex = function (t) { return '<b class="en" style="font-style:italic">' + t.t + '</b> <small>［' + t.r + '］</small>＝ ' + t.m + '。'; };
+  var inCats = function (cats) { return function (t) { return cats.indexOf(t.c) >= 0; }; };
+  function tPool(cats, st) { var lv = Math.max(1, Math.min(3, st || 1)); return TM.filter(inCats(cats)).filter(function (t) { return t.lv <= lv; }); }
+  // まちがいの選択肢：なるべく 同じ種類から（速さには速さ）
+  function tOthers(t, cats) {
+    var o = TM.filter(inCats(cats)).filter(function (x) { return x.m !== t.m && !syn(x.t, t.t); }), same = o.filter(function (x) { return x.c === t.c; }), ms = {};
+    same.forEach(function (x) { ms[x.m] = 1; });
+    return Object.keys(ms).length >= 3 ? same : o;
+  }
+  // mode：mean（楽語 → 意味）／rev（意味 → 楽語）／read（読み方）
+  function termGen(cats, mode) {
+    return function (R, st) {
+      var t = pick(tPool(cats, st), R), o = tOthers(t, cats), m;
+      if (mode === 'rev') {
+        m = mc(R, tx(en(t.t), t.t), o.map(function (x) { return tx(en(x.t), x.t); }));
+        return { q: '「<b>' + t.m + '</b>」を表す 楽語は？', ch: m.ch, a: m.a, ex: tex(t) };
+      }
+      if (mode === 'read') {
+        m = mc(R, tx(t.r), TM.filter(inCats(cats)).filter(function (x) { return x.r !== t.r; }).map(function (x) { return tx(x.r); }));
+        return { q: tq(t) + ' の 読み方は？', ch: m.ch, a: m.a, ex: tex(t) };
+      }
+      m = mc(R, tx(t.m), o.map(function (x) { return tx(x.m); }));
+      return { q: tq(t) + ' の 意味は？', ch: m.ch, a: m.a, ex: tex(t) };
+    };
+  }
+  var C14 = ['tempo', 'tchg', 'dyn', 'aux'], C15 = ['expr', 'art', 'form'];
+  T.tmMean = { u: 'u14', st: 1, gen: termGen(['tempo', 'tchg', 'dyn'], 'mean') };
+  T.tmRev = { u: 'u14', st: 1, gen: termGen(['tempo', 'tchg', 'dyn'], 'rev') };
+  T.auxMean = { u: 'u14', st: 1, gen: termGen(['aux'], 'mean') };
+  T.read14 = { u: 'u14', st: 2, gen: termGen(C14, 'read') };
+  T.exMean = { u: 'u15', st: 1, gen: termGen(['expr'], 'mean') };
+  T.exRev = { u: 'u15', st: 2, gen: termGen(['expr'], 'rev') };
+  T.artMean = { u: 'u15', st: 1, gen: termGen(['art', 'form'], 'mean') };
+  T.artRev = { u: 'u15', st: 2, gen: termGen(['art', 'form'], 'rev') };
+  T.read15 = { u: 'u15', st: 2, gen: termGen(C15, 'read') };
+
+  // いちばん速い・遅い（順番が 本によってちがう組は いっしょに出さない）
+  T.tmFast = {
+    u: 'u14', st: 2, gen: function (R) {
+      var slow = ['Grave', 'Largo', 'Lento', 'Adagio'], rest = ['Andante', 'Moderato', 'Allegretto', 'Allegro', 'Vivace', 'Presto', 'Prestissimo'], L;
+      do { L = shuffle([pick(slow, R)].concat(shuffle(rest.slice(), R).slice(0, 3)), R); } while (L.indexOf('Allegro') >= 0 && L.indexOf('Vivace') >= 0);
+      var ts = L.map(GK.termByName), fast = R() < 0.5, srt = ts.slice().sort(function (a, b) { return a.rank - b.rank; }), ans = fast ? srt[3] : srt[0];
+      return { q: 'いちばん <b>' + (fast ? '速い' : '遅い') + '</b> のは？', ch: ts.map(function (t) { return en(t.t); }), a: ts.indexOf(ans), ex: srt.map(function (t) { return '<b class="en" style="font-style:italic">' + t.t + '</b>' + (t === ans ? '（' + t.m + '）' : ''); }).join(' ＜ ') + '（遅い → 速い）。' };
+    }
+  };
+  // 強弱：いちばん強い・弱い
+  var DYN8 = ['ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff'];
+  T.dynLoud = {
+    u: 'u14', st: 1, gen: function (R, st) {
+      var pool = st >= 2 ? DYN8 : DYN8.slice(1, 7), L = shuffle(shuffle(pool.slice(), R).slice(0, 4), R), loud = R() < 0.5;
+      var srt = L.slice().sort(function (a, b) { return DYN8.indexOf(a) - DYN8.indexOf(b); }), ans = loud ? srt[3] : srt[0];
+      return { q: 'いちばん <b>' + (loud ? '強い' : '弱い') + '</b> のは？', ch: L.map(function (d) { return '<b class="en" style="font-style:italic;font-size:1.3em">' + d + '</b>'; }), a: L.indexOf(ans), ex: srt.join(' ＜ ') + '（弱い → 強い）。p が多いほど弱く、f が多いほど強い。m は「やや」。', exFig: { c: 'dyn', a: { list: srt, labs: srt.map(function (d) { return GK.TERMS.filter(function (t) { return t.c === 'dyn' && GK.termShort(t.t) === d; })[0].m; }) } } };
+    }
+  };
+  // 強弱記号（ppp・fff・sf・sfz・fp・rfz）
+  T.dynSym = {
+    u: 'u14', st: 2, gen: function (R) {
+      var L = [['ppp', 'ppp（pianississimo）'], ['fff', 'fff（fortississimo）'], ['sf', 'sforzando（sf・sfz）'], ['sfz', 'sforzando（sf・sfz）'], ['fp', 'fp（forte piano）'], ['rfz', 'rinforzando（rf・rfz）']];
+      var x = pick(L, R), t = GK.termByName(x[1]);
+      var m = mc(R, tx(t.m), tOthers(t, ['dyn']).map(function (y) { return tx(y.m); }));
+      return { q: 'この強弱記号の 意味は？', fig: { c: 'dyn', a: { list: [x[0]], labs: [''] } }, ch: m.ch, a: m.a, ex: '<b class="en" style="font-style:italic">' + x[0] + '</b> ＝ ' + t.t + '（' + t.r + '）＝ ' + t.m + '。' };
+    }
+  };
+  // 組み合わせの言葉
+  var ABBR = {};
+  TM.forEach(function (t) { ABBR[GK.termShort(t.t)] = t; var p = /（(.*)）$/.exec(t.t); if (p) p[1].split('・').forEach(function (a) { ABBR[a] = t; }); });
+  ABBR['cresc.'] = GK.termByName('crescendo（cresc.）'); ABBR['dim.'] = GK.termByName('diminuendo（dim.）');
+  function gloss(ph) {
+    var w = ph.split(' '), out = [];
+    for (var i = 0; i < w.length; i++) {
+      var two = w[i] + ' ' + w[i + 1], three = two + ' ' + w[i + 2];
+      if (ABBR[three]) { out.push([three, ABBR[three]]); i += 2; } else if (ABBR[two]) { out.push([two, ABBR[two]]); i++; } else out.push([w[i], ABBR[w[i]]]);
+    }
+    return out.map(function (x) { return '<b class="en" style="font-style:italic">' + x[0] + '</b>' + (x[1] ? '（' + x[1].m + '）' : ''); }).join(' ＋ ');
+  }
+  T.phrase = {
+    u: 'u14', st: 2, gen: function (R) {
+      var x = pick(GK.TERM_PHRASE, R);
+      var m = mc(R, tx(x[1]), GK.TERM_PHRASE.map(function (y) { return tx(y[1]); }));
+      return { q: tq({ t: x[0] }) + ' の 意味は？', ch: m.ch, a: m.a, ex: gloss(x[0]) + ' → <b>' + x[1] + '</b>。' };
+    }
+  };
+  // 何を表す言葉？
+  var CATN = { tempo: '速さ', tchg: '速さ', dyn: '強弱', expr: '曲の気分（発想）', art: 'ひき方（奏法）', aux: '補助語（組み合わせる言葉）', form: '反復・構成' };
+  var CAT_NG = ['Grave', 'Vivace', 'morendo', 'smorzando', 'calando', 'allargando', 'sostenuto', 'sotto voce', 'con moto', 'leggiero', 'tutti', 'solo', 'divisi（div.）', '8va（ottava）', 'loco', 'simile', 'pesante', 'marziale', 'legato'];
+  function catGen(cats) {
+    return function (R, st) {
+      var t = pick(tPool(cats, st).filter(function (x) { return CAT_NG.indexOf(x.t) < 0; }), R);
+      var all = ['速さ', '強弱', '曲の気分（発想）', 'ひき方（奏法）', '補助語（組み合わせる言葉）', '反復・構成'];
+      var m = mc(R, tx(CATN[t.c]), all.map(function (c) { return tx(c); }));
+      return { q: tq(t) + ' は 何を表す言葉？', ch: m.ch, a: m.a, ex: tex(t) + ' → <b>' + CATN[t.c] + '</b>。' };
+    };
+  }
+  T.cat14 = { u: 'u14', st: 2, gen: catGen(C14) };
+  T.cat15 = { u: 'u15', st: 2, gen: catGen(C15) };
+  // 反対の意味
+  function oppGen(cats) {
+    var pairs = GK.TERM_OPP.filter(function (p) { return p.every(function (n) { return cats.indexOf(GK.termByName(n).c) >= 0; }); });
+    var inPair = [].concat.apply([], GK.TERM_OPP);
+    return function (R) {
+      var pr = pick(pairs, R), k = R() < 0.5 ? 0 : 1, a = GK.termByName(pr[k]), b = GK.termByName(pr[1 - k]);
+      var wr = TM.filter(inCats(cats)).filter(function (x) { return inPair.indexOf(x.t) < 0 && !syn(x.t, a.t) && !syn(x.t, b.t); });
+      var m = mc(R, tx(en(b.t), b.t), wr.map(function (x) { return tx(en(x.t), x.t); }));
+      return { q: tq(a) + '（' + a.m + '）と <b>反対</b>の意味の言葉は？', ch: m.ch, a: m.a, ex: tex(a) + '<br>' + tex(b) };
+    };
+  }
+  T.opp14 = { u: 'u14', st: 2, gen: oppGen(C14) };
+  T.opp15 = { u: 'u15', st: 2, gen: oppGen(C15) };
+  // 曲の気分に合う言葉
+  var MOOD_NG = ['espressivo', 'cantabile', 'con moto', 'misterioso', 'semplice', 'pastorale', 'marziale', 'lamentoso', 'leggiero'];
+  T.mood = {
+    u: 'u15', st: 2, gen: function (R) {
+      var gi = ri(0, 2, R), ok = function (n) { return MOOD_NG.indexOf(n) < 0; };
+      var right = pick(GK.TERM_MOOD[gi][1].filter(ok), R), t = GK.termByName(right);
+      var wr = []; GK.TERM_MOOD.forEach(function (g, i) { if (i !== gi) wr = wr.concat(g[1].filter(ok)); });
+      var m = mc(R, tx(en(right), right), wr.map(function (n) { return tx(en(n), n); }));
+      var ws = m.ch.filter(function (_, i) { return i !== m.a; }).map(function (c) { var x = GK.termByName(c.replace(/<[^>]+>/g, '')); return '<i class="en">' + x.t + '</i>＝' + x.m; });
+      return { q: '「<b>' + GK.TERM_MOOD[gi][0] + '</b>」感じの曲に 合う言葉は？', ch: m.ch, a: m.a, ex: tex(t) + '<br><small>ほか：' + ws.join('、') + '</small>' };
+    }
+  };
+  // 奏法・装飾の記号
+  var ASYM = [['a.', 'staccato', 'スタッカート'], ['av', 'staccatissimo', 'スタッカーティッシモ'], ['a-', 'tenuto', 'テヌート'], ['a>', 'accent', 'アクセント'], ['a^', 'marcato', 'マルカート'], ['a@a', 'fermata', 'フェルマータ'], ['tr', 'tr（trillo）', 'トリル', 1], ['mordent', 'mordent', 'モルデント', 1], ['mordent_inverted', 'pralltriller', 'プラルトリラー', 1], ['turn', 'turn', 'ターン', 1]];
+  T.artSym = {
+    u: 'u15', st: 2, gen: function (R, st) {
+      var pool = ASYM.filter(function (x) { return st >= 3 || !x[3] || x[0] === 'tr'; }), x = pick(pool, R), t = GK.termByName(x[1]);
+      var m = mc(R, tx(x[2]), ASYM.map(function (y) { return tx(y[2]); }));
+      var n = { k: x[3] ? 'D5' : 'G4', d: 'q', c: C.red }; if (x[3]) n.orn = x[0]; else n.art = x[0];
+      return { q: '赤い音符の 記号の 名前は？', fig: { score: { clef: 'treble', notes: [n, { k: 'C5', d: 'q' }], sp: 60 } }, ch: m.ch, a: m.a, ex: '<b>' + x[2] + '</b>（<i class="en">' + GK.termShort(t.t) + '</i>）＝ ' + t.m + '。' };
+    }
   };
 
   /* =========================================================

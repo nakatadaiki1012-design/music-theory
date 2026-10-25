@@ -170,7 +170,7 @@ window.GK = window.GK || {};
        noKeyAcc: true（調号を書かない）
      }
      note = { k: 'C4' | ['C4','E4','G4'], d: 'q' | 'hd' | '8r', c: 色, kc: [色...], lab: '下の文字', top: '上の文字',
-              tie: true（次とタイ）, acc: 'auto' | 'show' | 'none', art: 'a.', t3: true（3連符）, bar: 色帯 }
+              tie: true（次とタイ）, acc: 'auto' | 'show' | 'none', art: 'a.', orn: 'tr' | 'mordent' | 'mordent_inverted' | 'turn'（装飾記号）, t3: true（3連符）, bar: 色帯 }
      ========================================================= */
   var VF = function () { return window.Vex && Vex.Flow; };
   var INK = 'currentColor';
@@ -218,6 +218,7 @@ window.GK = window.GK || {};
       if (a === 'a@a') ar.setPosition(V.Modifier.Position.ABOVE);
       sn.addModifier(ar, 0);
     });
+    if (n.orn) { var on = new V.Ornament(n.orn); if (n.c) on.setStyle({ fillStyle: n.c, strokeStyle: n.c }); sn.addModifier(on, 0); }
     sn._gk = n;
     return sn;
   }

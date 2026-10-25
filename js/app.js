@@ -174,6 +174,7 @@
       '<button type="button" class="tile tool" data-go="#tools/kbd"><span class="no">🎹</span><b>鍵盤と五線</b><small>Keyboard</small><div class="gl">おした鍵盤が 楽譜になる</div></button>' +
       '<button type="button" class="tile tool" data-go="#tools/circle"><span class="no">⭕</span><b>五度圏と調号</b><small>Circle of Fifths</small><div class="gl">調をえらんで 音階を聴く</div></button>' +
       '<button type="button" class="tile tool" data-go="#tools/chord"><span class="no">🎶</span><b>和音・音程ビルダー</b><small>Chord Builder</small><div class="gl">根音と種類で 組み立てる</div></button>' +
+      '<button type="button" class="tile tool" data-go="#tools/terms"><span class="no">📚</span><b>楽語じてん</b><small>Dictionary</small><div class="gl">' + GK.TERMS.length + ' 語を 種類別に 調べる</div></button>' +
       '</section></div>';
   });
 
@@ -320,7 +321,7 @@
       if (DR.mode === 'mix') html += '<div class="frow"><span>単元</span><button type="button" class="btn ghost sm" data-dx="allu">全部</button><button type="button" class="btn ghost sm" data-dx="noneu">はずす</button></div><div class="upick">' + GK.UNITS.map(function (u) { return '<button type="button" data-du="' + u.id + '" aria-pressed="' + (DR.us.indexOf(u.id) >= 0) + '"><i>' + u.no + '</i>' + esc(u.title) + '</button>'; }).join('') + '</div>';
       if (DR.mode === 'weak') html += wk.length ? '<p>まちがえた回数が多い 問題の種類から 出します。正解すると 少しずつ へります。</p><div class="upick">' + wk.slice(0, 12).map(function (k) { return '<button type="button" disabled style="opacity:1"><i>' + GK.UNIT[GK.Q.T[k].u].no + '</i>' + esc(GK.UNIT[GK.Q.T[k].u].title) + ' <small style="color:var(--warm)">×' + weak[k] + '</small></button>'; }).join('') + '</div>' : '<p>まだ 苦手な問題は ありません。演習で まちがえると ここに たまります。</p>';
       if (DR.mode === 'ear') html += '<p>🔊 音を聴いて答える問題だけを出します（音程・長音階／短音階・長調／短調・長三和音／短三和音）。音が出る環境で どうぞ。</p>';
-      if (DR.mode === 'all') html += '<p>13 単元 すべてから 出題します。</p>';
+      if (DR.mode === 'all') html += '<p>' + GK.UNITS.length + ' 単元 すべてから 出題します。</p>';
       html += '<div class="frow"><span>問題の数</span><div class="seg">' + [10, 20, 30].map(function (n) { return '<button type="button" data-dn="' + n + '" aria-pressed="' + (DR.n === n) + '">' + n + ' 問</button>'; }).join('') + '</div></div>' +
         '<div class="frow"><span>むずかしさ</span><div class="seg">' + [[0, 'だんだん'], [1, '★ やさしい'], [2, '★★ ふつう'], [3, '★★★ 挑戦']].map(function (x) { return '<button type="button" data-ds="' + x[0] + '" aria-pressed="' + (DR.st === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div></div>' +
         '<div class="frow" style="margin-top:auto"><button type="button" class="btn main big" id="dgo">▶ スタート</button></div>';
@@ -362,16 +363,39 @@
   /* =========================================================
      🎹 さわって確かめる
      ========================================================= */
-  GK.route(/^tools(?:\/(kbd|circle|chord))?$/, function (m) {
+  GK.route(/^tools(?:\/(kbd|circle|chord|terms))?$/, function (m) {
     var tab = m[1] || 'kbd';
     V.innerHTML = '<div class="split"><aside class="panel side"><h3>さわって確かめる</h3>' +
-      [['kbd', '🎹 鍵盤と五線', 'おした鍵盤が 楽譜に出る'], ['circle', '⭕ 五度圏と調号', '調をえらぶと 調号と音階'], ['chord', '🎶 和音・音程ビルダー', '根音と種類で 組み立てる']].map(function (x) { return '<button type="button" class="it" data-go="#tools/' + x[0] + '" aria-current="' + (tab === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('') +
+      [['kbd', '🎹 鍵盤と五線', 'おした鍵盤が 楽譜に出る'], ['circle', '⭕ 五度圏と調号', '調をえらぶと 調号と音階'], ['chord', '🎶 和音・音程ビルダー', '根音と種類で 組み立てる'], ['terms', '📚 楽語じてん', GK.TERMS.length + ' 語を 調べる']].map(function (x) { return '<button type="button" class="it" data-go="#tools/' + x[0] + '" aria-current="' + (tab === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('') +
       '</aside><section class="panel main"><div class="mbody" id="tbody"></div></section></div>';
     var body = $('#tbody');
     if (tab === 'kbd') { body.innerHTML = '<div class="toolw" id="tw"></div>'; F.render($('#tw'), { c: 'staffKbd', a: { clefs: true }, cap: '鍵盤をタップ（黒鍵は ♯ と ♭ の 2 つの名前を表示）' }); }
     else if (tab === 'circle') circleTool(body);
+    else if (tab === 'terms') termsTool(body);
     else chordTool(body);
   });
+
+  // 📚 楽語じてん：種類でしぼる・さがす
+  function termsTool(body) {
+    var cat = 'all', qs = '';
+    var cats = [['all', 'すべて']].concat(['tempo', 'tchg', 'dyn', 'expr', 'art', 'aux', 'form'].map(function (c) { return [c, GK.TERM_CAT[c].replace(/（.*）/, '')]; }));
+    body.innerHTML = '<div class="toolw"><div class="ctl"><div class="seg">' + cats.map(function (c) { return '<button type="button" data-tc="' + c[0] + '" aria-pressed="' + (c[0] === cat) + '">' + c[1] + '</button>'; }).join('') + '</div>' +
+      '<input id="tq" type="search" placeholder="さがす（例：allegro・だんだん）" style="flex:1 1 160px;min-width:0;font:inherit;padding:6px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)"></div>' +
+      '<div id="tl" style="flex:1 1 0;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;align-content:start;padding:2px"></div></div>';
+    function draw() {
+      var q = qs.trim().toLowerCase();
+      var L = GK.TERMS.filter(function (t) { return (cat === 'all' || t.c === cat) && (!q || (t.t + ' ' + t.r + ' ' + t.m).toLowerCase().indexOf(q) >= 0); });
+      $('#tl').innerHTML = L.length ? L.map(function (t) {
+        return '<div style="border:1.5px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--panel)"><b class="en" style="font-style:italic;font-size:1.15em">' + esc(t.t) + '</b> <small style="color:var(--muted)">' + esc(t.r) + '</small><br><span>' + esc(t.m) + '</span><small style="display:block;color:var(--muted);font-size:11px">' + '★★★'.slice(0, t.lv) + '・' + GK.TERM_CAT[t.c].replace(/（.*）/, '') + '</small></div>';
+      }).join('') : '<p class="note">見つかりません</p>';
+    }
+    body.onclick = function (e) {
+      var b = e.target.closest('[data-tc]'); if (!b) return;
+      cat = b.dataset.tc; $$('[data-tc]', body).forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); draw();
+    };
+    $('#tq').oninput = function () { qs = this.value; draw(); };
+    draw();
+  }
 
   function circleTool(body) {
     var f = 0, minor = false;

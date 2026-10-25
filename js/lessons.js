@@ -1,5 +1,5 @@
 /* =========================================================
-   楽典ラボ：授業の中身（13 単元）
+   楽典ラボ：授業の中身（15 単元）
    unit = { id, title, en, sym, goal, cards: [card...], sum: [3 行], types: [演習の問題の種類] }
    card = { k: 上の小さな見出し, h: 見出し, b: 本文（HTML）, pts: [短い箇条書き], fig: 図 または 図を返す関数, wide: 図を下に大きく }
    本文は 1 枚が スクロールなしで入る量（120 字くらいまで）
@@ -15,7 +15,7 @@
   // 強弱記号（Bravura の文字で）
   F.CUSTOM.dyn = function (box, a) {
     var list = a.list || ['pp', 'p', 'mp', 'mf', 'f', 'ff'], labs = a.labs || ['ごく弱く', '弱く', 'やや弱く', 'やや強く', '強く', 'ごく強く'];
-    var GW = { p: 22, m: 30, f: 18, s: 16, z: 18 }, CODE = { p: 'dynamicPiano', m: 'dynamicMezzo', f: 'dynamicForte', s: 'dynamicSforzando', z: 'dynamicZ' };
+    var GW = { p: 22, m: 30, f: 18, s: 16, z: 18, r: 17 }, CODE = { p: 'dynamicPiano', m: 'dynamicMezzo', f: 'dynamicForte', s: 'dynamicSforzando', z: 'dynamicZ', r: 'dynamicRinforzando' };
     var narrow = window.innerWidth < 640, cols = list.length === 1 ? 1 : narrow ? 3 : list.length;
     box.style.cssText += ';flex-direction:column;align-items:stretch;gap:6px';
     var g = document.createElement('div');
@@ -52,6 +52,20 @@
       rows.map(function (r) { return '<tr>' + r.map(function (c, i) { return '<td style="padding:3px 8px;border-bottom:1px solid var(--line);' + (i === 0 ? 'font-weight:700;' : '') + (o.en && i === 0 ? 'font-family:var(--font-en);font-style:italic;font-size:1.1em;' : '') + '">' + c + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>';
   }
 
+  // 楽語じてん（terms.js）から 表を作る
+  // スマホでは 2 列（読みは 言葉の下に 小さく）にして 行を低くする
+  function termTable(names, fs) {
+    return function () {
+      var ts = names.map(GK.termByName);
+      if (window.innerWidth >= 640) return { html: table(['言葉', '読み', '意味'], ts.map(function (t) { return [t.t, t.r, t.m]; }), { en: true, fs: fs || 13.5 }) };
+      return { html: '<table style="border-collapse:collapse;width:100%;line-height:1.2;font-size:calc(12.5px * var(--k))">' + ts.map(function (t) {
+        var p = /^(.*?)（(.*)）$/.exec(t.t);
+        return '<tr><td style="padding:2px 6px;border-bottom:1px solid var(--line);white-space:nowrap"><b class="en" style="font-style:italic;font-size:1.12em">' + (p ? p[1] : t.t) + '</b>' + (p ? ' <small class="en">' + p[2] + '</small>' : '') + '<br><small style="color:var(--muted)">' + t.r + '</small></td><td style="padding:2px 6px;border-bottom:1px solid var(--line)">' + t.m + '</td></tr>';
+      }).join('') + '</table>' };
+    };
+  }
+  var moodList = function (i) { return GK.TERM_MOOD[i][1]; };
+
   /* =========================================================
      単元
      ========================================================= */
@@ -67,7 +81,7 @@
         { k: '🎹 さわってみよう', h: '鍵盤をおすと 五線に出る', b: '鍵盤をタップすると その音が五線に出て 鳴ります。記号を切りかえて、同じ音が どこに書かれるか くらべよう。', wide: true, fig: { c: 'staffKbd', a: { clefs: true } } }
       ],
       sum: ['線と間に 下から順に 音がならぶ', 'ト音記号＝ソ、ヘ音記号＝ファ、ハ音記号＝ド の線', '中央のドは 大譜表の まん中の加線'],
-      types: ['readT', 'readB', 'findNote', 'nameSys', 'readA', 'grandSame']
+      types: ['readT', 'readB', 'findNote', 'nameSys', 'readA', 'grandSame', 'ledgerN']
     },
     /* ---------------- 02 ---------------- */
     {
@@ -79,7 +93,7 @@
         { k: 'ポイント 3', h: '付点は「半分を たす」', b: '音符の右の点＝<b>付点</b>。もとの長さの<em>半分</em>が たされる。付点2分音符＝2＋1＝3拍、付点4分音符＝1＋0.5＝1.5拍。', pts: ['点が2つ（複付点）なら さらに その半分も たす', '休符にも 付点がつく'], fig: { c: 'dotted' } }
       ],
       sum: ['全 → 2分 → 4分 → 8分 → 16分 で 半分ずつ', 'はたが1本ふえると 半分', '付点は もとの長さの 半分を たす'],
-      types: ['durName', 'restName', 'durCount', 'durSum', 'longest']
+      types: ['durName', 'restName', 'durCount', 'durSum', 'longest', 'restBeats']
     },
     /* ---------------- 03 ---------------- */
     {
@@ -92,7 +106,7 @@
         { k: 'ポイント 4', h: 'C と ¢ という 拍子記号', b: '<b>C</b> は 4/4（コモンタイム）。たて線の入った <b>¢</b> は 2/2（アラ・ブレーヴェ）で、2分音符を1拍として 2つで数える。', fig: { row: [{ score: { clef: 'treble', time: 'C', notes: [{ k: 'C5', d: 'q' }, { k: 'D5', d: 'q' }, { k: 'E5', d: 'q' }, { k: 'C5', d: 'q' }], end: 'end', sp: 34 }, cap: '<b>C</b> ＝ 4/4' }, { score: { clef: 'treble', time: 'C|', notes: [{ k: 'C5', d: 'h' }, { k: 'G4', d: 'h' }], end: 'end', sp: 40 }, cap: '<b>¢</b> ＝ 2/2' }] } }
       ],
       sum: ['下の数＝1拍の音符、上の数＝1小節の拍の数', '1拍目が強拍。4拍子は 強・弱・中強・弱', '6/8 は 3つずつまとまる 複合2拍子'],
-      types: ['timeFit', 'missing', 'timeKind', 'eighthCount', 'strong']
+      types: ['timeFit', 'missing', 'timeKind', 'eighthCount', 'strong', 'timeMean']
     },
     /* ---------------- 04 ---------------- */
     {
@@ -132,7 +146,7 @@
         { k: 'ポイント 4', h: '転回音程は「9 から引く」', b: '下の音を1オクターブ上げると<b>転回音程</b>。度数は <em>9 − もとの度数</em>、長と短・増と減が 入れかわり、完全は完全のまま。', pts: ['長3度 → 短6度', '完全4度 → 完全5度', '8度より広い音程は 複音程（9度＝8度＋2度）'], fig: function () { return { score: { clef: 'treble', notes: [{ k: ['C4', 'E4'], d: 'w', lab: '長3度' }, { k: ['E4', 'C5'], d: 'w', lab: '短6度', kc: [null, C.red] }, { k: ['D4', 'G4'], d: 'w', lab: '完全4度' }, { k: ['G4', 'D5'], d: 'w', lab: '完全5度', kc: [null, C.red] }], sp: 58 }, play: [[['C4', 'E4'], 2], [['E4', 'C5'], 2], [['D4', 'G4'], 2], [['G4', 'D5'], 2]] }; } }
       ],
       sum: ['度数は 両はしの音も数える', '1・4・5・8度は完全、2・3・6・7度は長・短', '転回すると 9−度数、長と短が 入れかわる'],
-      types: ['ivDeg', 'ivName', 'ivBuild', 'ivInv', 'ivEar']
+      types: ['ivDeg', 'ivName', 'ivBuild', 'ivInv', 'ivEar', 'ivSemis']
     },
     /* ---------------- 07 ---------------- */
     {
@@ -183,7 +197,7 @@
         { k: 'ポイント 3', h: '七の和音', b: '三和音の上に もう1つ3度（根音から7度）を重ねると<b>七の和音</b>。いちばん大事なのは 属音の上の<b>属七の和音</b>（ハ長調では ソ・シ・レ・ファ ＝ G7）。', pts: ['減三和音＋減7度 ＝ 減七の和音（短3度を 3 つ重ねる）'], fig: { c: 'triads', a: { root: 'G4', types: ['dom7', 'maj7', 'min7', 'hdim7'] }, cap: 'タップすると 鳴ります' }, wide: true }
       ],
       sum: ['三和音＝根音＋3度＋5度', '長・短・増・減 は 3度の重ね方で決まる', 'いちばん下の音で 基本形・第1転回・第2転回'],
-      types: ['triadType', 'triadBuild', 'inversion', 'seventh', 'chordEar']
+      types: ['triadType', 'triadBuild', 'inversion', 'chordRoot', 'seventh', 'chordEar']
     },
     /* ---------------- 11 ---------------- */
     {
@@ -221,6 +235,36 @@
       ],
       sum: ['p 弱く・f 強く・m やや', 'Largo〈Adagio〈Andante〈Moderato〈Allegro〈Presto', 'D.C. 始めへ・D.S. 𝄋へ・Fine 終わり'],
       types: ['dyn', 'dynOrder', 'tempo', 'tempoChange', 'artic', 'express', 'repeatOrder']
+    },
+    /* ---------------- 14 ---------------- */
+    {
+      id: 'u14', title: '速さと強弱の楽語', en: 'Tempo & Dynamics Terms', sym: '♩=', goal: '速さ・強弱の楽語と 組み合わせの言葉を 読める',
+      cards: [
+        { k: '✨ ひとことで言うと', h: '楽語は イタリア語の組み合わせ', b: '楽譜の言葉は ほとんどが <b>イタリア語</b>。<em>molto</em>（非常に）・<em>poco</em>（少し）などの<b>補助語</b>を 組み合わせて、細かい表情を表す。', pts: ['molto rit. ＝ 非常に だんだん遅く', 'subito p ＝ すぐに弱く'], fig: termTable(['molto', 'poco', 'poco a poco', 'più', 'meno', 'sempre', 'subito']) },
+        { k: 'ポイント 1', h: '速さ：ゆっくり', b: '遅い順に Grave → Largo → Lento・Adagio → Andante。<b>-etto・-ino</b> がつくと「少し軽く」＝ もとの言葉より <em>やや速く</em>。', fig: termTable(['Grave', 'Largo', 'Lento', 'Adagio', 'Larghetto', 'Andante', 'Andantino']) },
+        { k: 'ポイント 2', h: '速さ：中くらい 〜 速い', b: '<b>-issimo</b> は「とても」（pianissimo の -issimo と同じ）。Allegro より速いのが Vivace・Presto。', fig: termTable(['Moderato', 'Allegretto', 'Allegro', 'Vivace', 'Presto', 'Prestissimo']) },
+        { k: 'ポイント 3', h: '速さの変化：遅くする', b: '<b>rit.・rall.</b> は だんだん遅く、<b>riten.</b> は すぐに遅く。<em>morendo・smorzando・calando</em> は 遅く<em>そして弱く</em> 消えていく感じ。', fig: termTable(['ritardando（rit.）', 'rallentando（rall.）', 'ritenuto（riten.）', 'allargando', 'calando', 'morendo', 'smorzando', 'meno mosso']) },
+        { k: 'ポイント 4', h: '速さの変化：速くする・もどす', b: '<b>accel.</b> は だんだん速く。<b>a tempo</b> は 変える前の速さ、<b>Tempo I</b> は <em>曲の最初</em>の速さに もどる。', fig: termTable(['accelerando（accel.）', 'stringendo', 'più mosso', 'a tempo', 'Tempo I（Tempo primo）', "l'istesso tempo", 'rubato']) },
+        { k: 'ポイント 5', h: '強弱：もっと細かく', b: 'p・f を 3 つ重ねると「できるだけ」。<b>sf・sfz</b>（スフォルツァンド）は <em>その音だけ</em> 特に強く。<b>fp</b> は 強く → すぐ弱く。', fig: { c: 'dyn', a: { list: ['ppp', 'fff', 'sf', 'sfz', 'fp', 'rfz'], labs: ['できるだけ弱く', 'できるだけ強く', '特に強く', '特に強く', '強く→すぐ弱く', '急に強く'], read: ['ピアニッシッシモ', 'フォルティッシッシモ', 'スフォルツァンド', 'スフォルツァンド', 'フォルテピアノ', 'リンフォルツァンド'] } } },
+        { k: 'ポイント 6', h: '補助語：つなぐ言葉', b: '<b>ma</b>（しかし）・<b>e</b>（そして）・<b>con</b>（〜で）・<b>senza</b>（〜なしで）で 言葉をつなぐ。', pts: ['Allegro ma non troppo ＝ 速く、しかし はなはだしくなく', 'Andante con moto ＝ 歩くような速さで 動きをつけて'], fig: termTable(['con', 'senza', 'assai', 'non troppo', 'ma', 'e', 'quasi']) }
+      ],
+      sum: ['遅い Grave・Largo・Lento・Adagio → Andante → Moderato → Allegro → Vivace → Presto', 'rit.・rall. だんだん遅く／accel. だんだん速く／a tempo もとの速さ', 'molto 非常に・poco 少し・subito すぐに・sempre つねに'],
+      types: ['tmMean', 'tmRev', 'tmFast', 'dynSym', 'dynLoud', 'auxMean', 'phrase', 'cat14', 'opp14', 'read14']
+    },
+    /* ---------------- 15 ---------------- */
+    {
+      id: 'u15', title: '発想と奏法の楽語', en: 'Expression & Technique', sym: '𝄐', goal: '曲の気分・ひき方を表す楽語を 読める',
+      cards: [
+        { k: '✨ ひとことで言うと', h: '曲の気分は 3 つに分けて覚える', b: '発想の言葉は 曲の気分を表す。<b>やさしい・静か</b>／<b>明るい・元気</b>／<b>激しい・重い</b> に分けると 覚えやすい。まずは「やさしい・静か」。', fig: termTable(moodList(0), 13) },
+        { k: 'ポイント 1', h: '明るい・元気', b: '<b>con</b> は「〜をもって」。<em>con brio</em> ＝ 生気をもって ＝ 生き生きと。<em>giocoso・scherzando</em> は 遊ぶように 楽しく。', fig: termTable(moodList(1)) },
+        { k: 'ポイント 2', h: '激しい・重い', b: '<em>maestoso</em>（荘厳に）は 堂々と大きく。<em>agitato・con fuoco・appassionato</em> は 気持ちが高ぶって 激しく。', fig: termTable(moodList(2)) },
+        { k: 'ポイント 3', h: '音の切り方・のばし方の記号', b: '点 ＝ 短く、くさび ＝ <em>ごく</em>短く、線 ＝ 十分に保つ。<b>＞</b>（アクセント）と <b>∧</b>（マルカート）は 強く はっきり。', pts: ['legato（なめらかに）⇔ staccato（短く切って）', 'portato ＝ スラーの中の スタッカート（やや切りはなして）'], fig: { col: [{ score: { clef: 'treble', notes: [{ k: 'G4', d: 'q', art: 'a.', lab: 'スタッカート' }, { k: 'A4', d: 'q', art: 'av', lab: 'スタッカーティッシモ' }, { k: 'F4', d: 'q', art: 'a-', lab: 'テヌート' }], sp: 92, ls: 11, noClef: true } }, { score: { clef: 'treble', notes: [{ k: 'G4', d: 'q', art: 'a>', lab: 'アクセント' }, { k: 'A4', d: 'q', art: 'a^', lab: 'マルカート' }, { k: 'F4', d: 'q', art: 'a@a', lab: 'フェルマータ' }], sp: 92, ls: 11, noClef: true } }] } },
+        { k: 'ポイント 4', h: '装飾記号', b: '音を 飾る記号。<b>tr</b>（トリル）は 上の音と すばやく くり返す。<b>モルデント</b>は 下の音、<b>プラルトリラー</b>は 上の音を 1 回 はさむ。', fig: { score: { clef: 'treble', notes: [{ k: 'D5', d: 'q', orn: 'tr', lab: 'トリル' }, { k: 'D5', d: 'q', orn: 'mordent', lab: 'モルデント' }, { k: 'D5', d: 'q', orn: 'mordent_inverted', lab: 'プラルトリラー' }, { k: 'D5', d: 'q', orn: 'turn', lab: 'ターン' }], sp: 84, ls: 12 } } },
+        { k: 'ポイント 5', h: '楽器の ひき方', b: '弦楽器は <b>pizz.</b>（指ではじく）⇔ <b>arco</b>（弓でひく）。<b>con sordino</b>（弱音器をつけて）⇔ <b>senza sordino</b>（はずして）。', fig: termTable(['pizzicato（pizz.）', 'arco', 'tremolo', 'glissando（gliss.）', 'arpeggio', 'con sordino', 'senza sordino', 'divisi（div.）', 'una corda']) },
+        { k: 'ポイント 6', h: '合奏と 楽譜の指示', b: '<b>tutti</b>（全員で）⇔ <b>solo</b>（1 人で）。<b>simile</b> は「前と同じように」で、同じ記号を 書くのを 省く。', fig: termTable(['tutti', 'solo', 'simile', '8va（ottava）', 'loco', 'al Fine', 'attacca', 'G.P.（general pause）']) }
+      ],
+      sum: ['やさしい dolce・cantabile／元気 con brio・animato／激しい agitato・con fuoco', 'pizz. 指ではじく ⇔ arco 弓で', 'tutti 全員で ⇔ solo 1 人で、simile 前と同じように'],
+      types: ['exMean', 'exRev', 'mood', 'artMean', 'artRev', 'artSym', 'cat15', 'opp15', 'read15']
     }
   ];
   GK.UNIT = {}; GK.UNITS.forEach(function (u, i) { u.no = ('0' + (i + 1)).slice(-2); GK.UNIT[u.id] = u; });
