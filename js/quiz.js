@@ -217,6 +217,19 @@
       return { q: 'この拍子記号の 意味は？', fig: { score: { clef: 'treble', time: n + '/' + d, notes: [], minBar: 20 } }, ch: m.ch, a: m.a, ex: '下の数 <b>' + d + '</b> ＝ ' + DN[{ 2: 'h', 4: 'q', 8: '8' }[d]] + '、上の数 <b>' + n + '</b> ＝ いくつ分。→ <b>1 小節に ' + DN[{ 2: 'h', 4: 'q', 8: '8' }[d]] + 'が ' + n + ' つ分</b>。' };
     }
   };
+  T.barError = {
+    u: 'u03', st: 3, gen: function (R) {
+      var t = pick(['2/4', '3/4', '4/4', '6/8'], R), need = { '2/4': 2, '3/4': 3, '4/4': 4, '6/8': 3 }[t];
+      var bars = shuffle(FILL[t].slice(), R).slice(0, 3).map(function (b) { return b.slice(); }), bad = ri(0, 2, R), b = bars[bad];
+      var sum = function (x) { return x.reduce(function (a, d) { return a + M.len(d); }, 0); };
+      for (var k = 0; k < 20 && sum(b) === need; k++) { var j = ri(0, b.length - 1, R), alt = pick(['h', 'q', '8', 'qd', 'hd'].filter(function (d) { return d !== b[j]; }), R); var c = b.slice(); c[j] = alt; if (sum(c) !== need && sum(c) <= need + 2) b = c; }
+      if (sum(b) === need) b.push('q');
+      bars[bad] = b;
+      var lab = ['①', '②', '③'];
+      var fig = { score: { clef: 'treble', time: t, bars: bars.map(function (x, i) { return x.map(function (d, j) { return { k: melk(R), d: d, lab: j === 0 ? lab[i] : null }; }); }), end: 'end', sp: 34, beam: true, bg: t === '6/8' ? '3/8' : null } };
+      return { q: '<b>' + t + '</b> 拍子。拍の数が <b>合わない</b> 小節は？', fig: fig, ch: lab, a: bad, ex: '1 小節は ' + (t === '6/8' ? '8分音符 6 つ（4分音符 3 拍分）' : '4分音符 ' + need + ' 拍') + '。' + bars.map(function (x, i) { return lab[i] + ' ' + lens(sum(x)) + ' 拍'; }).join('、') + ' → <b>' + lab[bad] + '</b>。' };
+    }
+  };
   T.eighthCount = {
     u: 'u03', st: 1, gen: function (R) {
       var t = pick(['2/4', '3/4', '4/4', '6/8', '3/8', '2/2'], R), u = pick(['8', '16'], R);
@@ -662,6 +675,18 @@
       return { q: '<b>' + M.keyName(f, true) + '</b> の <b>' + kind + '</b>（長調）は？', ch: m.ch, a: m.a, ex: kind === '平行調' ? '平行調＝調号が同じ。短調の主音の <b>短3度上</b> が 長調の主音 → <b>' + par + '</b>。' : '同主調＝主音が同じ（' + M.name(tn, 'jp') + '）→ <b>' + same + '</b>。', exFig: { c: 'related', a: { f: f } } };
     }
   };
+  T.melKey = {
+    u: 'u09', st: 3, gen: function (R) {
+      var f = ri(-3, 3, R), minor = R() < 0.5, tn = M.keyTonic(f, minor), sc = M.scale({ l: tn.l, a: tn.a, o: 4 }, minor ? 'harmonic' : 'major');
+      if (M.midi(sc[0]) > 67) sc = sc.map(function (p) { return { l: p.l, a: p.a, o: p.o - 1 }; });
+      var degs = [0, ri(1, 4, R), ri(2, 5, R), ri(1, 4, R), ri(3, 5, R), 6, 7], last = sc[7];
+      var ps = degs.map(function (d) { return sc[d]; });
+      var notes = ps.map(function (p, i) { return { k: M.str(p), d: i === 6 ? 'h' : 'q' }; });
+      var sigN = f === 0 ? '調号なし' : '調号 ' + (f > 0 ? '♯ ' : '♭ ') + Math.abs(f) + ' つ';
+      var m = mc(R, tx(M.keyName(f, minor)), [M.keyName(f, !minor), M.keyName(f + 1), M.keyName(f - 1, true), M.keyName(f + 1, true), M.keyName(f - 1)].map(function (x) { return tx(x); }));
+      return { q: 'このメロディーは 何調？', fig: { score: { clef: 'treble', key: f, time: '4/4', bars: [notes.slice(0, 4), notes.slice(4)], end: 'end', sp: 36 } }, ch: m.ch, a: m.a, ex: sigN + ' → <b>' + M.keyName(f) + '</b> か <b>' + M.keyName(f, true) + '</b>。' + (minor ? '短調の導音 ' + N(sc[6]) + ' に 臨時記号（' + M.ACC[sc[6].a === 0 ? '0' : sc[6].a] .replace(/^$/, '♮') + '）がつき、主音 ' + N(last) + ' で終わる → <b>' + M.keyName(f, true) + '</b>。' : '臨時記号がなく、主音 ' + N(last) + ' で終わる → <b>' + M.keyName(f) + '</b>。'), play: function () { M.playSpec({ notes: notes }, 100); } };
+    }
+  };
 
   /* =================== 10 和音 =================== */
   var TRI = ['maj', 'min', 'aug', 'dim'];
@@ -880,6 +905,13 @@
       var j = function (a) { return a.join(up ? '＜' : '＞'); }, sw = function (i) { var c = L.slice(), t = c[i]; c[i] = c[i + 1]; c[i + 1] = t; return tx(j(c)); };
       var m = mc(R, tx(j(L)), [sw(0), sw(1), sw(2), tx(j(L.slice().reverse()))]);
       return { q: (up ? '弱い → 強い' : '強い → 弱い') + ' の順に 正しく並んでいるのは？', ch: m.ch, a: m.a, ex: '<b>' + j(L) + '</b>。全体は pp＜p＜mp＜mf＜f＜ff（m は「やや」なので p と f の あいだ）。', exFig: { c: 'dyn' } };
+    }
+  };
+  T.hairpin = {
+    u: 'u13', st: 1, gen: function (R) {
+      var up = R() < 0.5, svg = '<svg viewBox="0 0 220 44" style="width:min(70%,320px);height:auto;color:var(--ink)"><path d="' + (up ? 'M6 22 L214 6 M6 22 L214 38' : 'M6 6 L214 22 L6 38') + '" stroke="currentColor" fill="none" stroke-width="2.4"/></svg>';
+      var m = mc(R, tx(up ? 'だんだん強く（cresc.）' : 'だんだん弱く（dim.）'), [tx(up ? 'だんだん弱く（dim.）' : 'だんだん強く（cresc.）'), tx('その音を 目立たせて強く（アクセント）'), tx('だんだん速く（accel.）'), tx('だんだん遅く（rit.）')]);
+      return { q: 'この記号の 意味は？', fig: { html: svg }, ch: m.ch, a: m.a, ex: up ? '口が <b>だんだん開いていく</b> → 音が大きくなる → <b>クレシェンド</b>（cresc.）。' : '口が <b>だんだん閉じていく</b> → 音が小さくなる → <b>デクレシェンド・ディミヌエンド</b>（decresc.・dim.）。アクセント（＞）は 1 つの音の上につく 小さな記号。', exFig: { c: 'dyn', a: { list: ['p', 'f'], labs: ['弱く', '強く'], hair: true } } };
     }
   };
   var TEMPO = [['Largo', '幅広く ゆるやかに'], ['Adagio', 'ゆるやかに'], ['Andante', '歩くような速さで'], ['Moderato', '中くらいの速さで'], ['Allegro', '速く'], ['Presto', '急速に'], ['Allegretto', 'やや速く'], ['Lento', 'ゆるやかに（おそく）']];

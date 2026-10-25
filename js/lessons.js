@@ -106,7 +106,7 @@
         { k: 'ポイント 4', h: 'C と ¢ という 拍子記号', b: '<b>C</b> は 4/4（コモンタイム）。たて線の入った <b>¢</b> は 2/2（アラ・ブレーヴェ）で、2分音符を1拍として 2つで数える。', fig: { row: [{ score: { clef: 'treble', time: 'C', notes: [{ k: 'C5', d: 'q' }, { k: 'D5', d: 'q' }, { k: 'E5', d: 'q' }, { k: 'C5', d: 'q' }], end: 'end', sp: 34 }, cap: '<b>C</b> ＝ 4/4' }, { score: { clef: 'treble', time: 'C|', notes: [{ k: 'C5', d: 'h' }, { k: 'G4', d: 'h' }], end: 'end', sp: 40 }, cap: '<b>¢</b> ＝ 2/2' }] } }
       ],
       sum: ['下の数＝1拍の音符、上の数＝1小節の拍の数', '1拍目が強拍。4拍子は 強・弱・中強・弱', '6/8 は 3つずつまとまる 複合2拍子'],
-      types: ['timeFit', 'missing', 'timeKind', 'eighthCount', 'strong', 'timeMean']
+      types: ['timeFit', 'missing', 'timeKind', 'eighthCount', 'strong', 'timeMean', 'barError']
     },
     /* ---------------- 04 ---------------- */
     {
@@ -180,12 +180,12 @@
       cards: [
         { k: '✨ ひとことで言うと', h: '調号は「いつも使う ♯♭」のまとめ書き', b: 'ニ長調は ファ♯ と ド♯ をいつも使う。毎回書くかわりに 音部記号のすぐ右に まとめて書く。これが<b>調号</b>。', fig: function () { var d = M.scale('D4', 'major').map(M.str); return { col: [{ score: { clef: 'treble', key: 2, notes: d.map(function (k, i) { return { k: k, d: 'q', c: i === 2 || i === 6 ? C.red : null }; }), sp: 36 }, play: true, ttl: '調号あり（ふつうの書き方）' }, { score: { clef: 'treble', notes: d.map(function (k, i) { return { k: k, d: 'q', c: i === 2 || i === 6 ? C.red : null }; }), sp: 36 }, ttl: '調号なしで書くと' }] }; } },
         { k: 'ポイント 1', h: '♯ と ♭ は つく順番が決まっている', b: '♯は <b>ファ・ド・ソ・レ・ラ・ミ・シ</b> の順。♭は その逆で <b>シ・ミ・ラ・レ・ソ・ド・ファ</b>。調号は いつも この順に 左から書く。', fig: { col: [{ c: 'keyOrder', ttl: '♯ の順' }, { c: 'keyOrder', a: { sharp: false }, ttl: '♭ の順' }] } },
-        { k: 'ポイント 2', h: '調号から 調の名前を見つける', b: '<b>♯</b>：いちばん右の♯の<em>半音上</em>が 長調の主音。<b>♭</b>：<em>右から2番目</em>の♭が 長調の主音（♭1つは ヘ長調）。短調は 長調の主音の<b>短3度下</b>。', fig: function () { return { col: [{ score: { clef: 'treble', key: 3, notes: [{ k: 'A4', d: 'w', c: C.red, lab: '長：' + M.keyName(3) }, { k: 'F#4', d: 'w', c: C.accent || C.green, lab: '短：' + M.keyName(3, true) }], sp: 90, ls: 14 }, cap: '最後の♯は ソ♯ → 半音上の <b>ラ</b>' }, { score: { clef: 'treble', key: -3, notes: [{ k: 'Eb4', d: 'w', c: C.red, lab: '長：' + M.keyName(-3) }, { k: 'C4', d: 'w', c: C.green, lab: '短：' + M.keyName(-3, true) }], sp: 90, ls: 14 }, cap: '右から2番目の♭は <b>ミ♭</b>' }] }; } },
+        { k: 'ポイント 2', h: '調号から 調の名前を見つける', b: '<b>♯</b>：いちばん右の♯の<em>半音上</em>が 長調の主音。<b>♭</b>：<em>右から2番目</em>の♭が 長調の主音（♭1つは ヘ長調）。短調は 長調の主音の<b>短3度下</b>。', pts: ['長調か 短調かは メロディーで見分ける：短調は 導音に 臨時記号がつき、短調の主音で 終わることが多い'], fig: function () { return { col: [{ score: { clef: 'treble', key: 3, notes: [{ k: 'A4', d: 'w', c: C.red, lab: '長：' + M.keyName(3) }, { k: 'F#4', d: 'w', c: C.accent || C.green, lab: '短：' + M.keyName(3, true) }], sp: 90, ls: 14 }, cap: '最後の♯は ソ♯ → 半音上の <b>ラ</b>' }, { score: { clef: 'treble', key: -3, notes: [{ k: 'Eb4', d: 'w', c: C.red, lab: '長：' + M.keyName(-3) }, { k: 'C4', d: 'w', c: C.green, lab: '短：' + M.keyName(-3, true) }], sp: 90, ls: 14 }, cap: '右から2番目の♭は <b>ミ♭</b>' }] }; } },
         { k: 'ポイント 3', h: '五度圏', b: '長調を 完全5度ずつ上に ならべると 円になる。<em>右回りで ♯が1つずつ増え</em>、左回りで ♭が増える。内側は 同じ調号の 短調。タップしてみよう。', wide: false, fig: { c: 'circle', a: { tap: true } } },
         { k: 'ポイント 4', h: 'となりの調（近親調）', b: '関係の深い調。<b>平行調</b>＝調号が同じ（ハ長調とイ短調）。<b>同主調</b>＝主音が同じ（ハ長調とハ短調）。<b>属調</b>・<b>下属調</b>＝五度圏の となり。', fig: { c: 'related', a: { f: 0 } } }
       ],
       sum: ['♯：ファドソレラミシ、♭：シミラレソドファ', '最後の♯の半音上／右から2番目の♭ が長調の主音', '平行調は短3度下、属調は♯が1つ多い'],
-      types: ['keyMaj', 'keyMin', 'keySig', 'sigCount', 'related', 'relMin', 'keyOrderQ']
+      types: ['keyMaj', 'keyMin', 'keySig', 'sigCount', 'related', 'relMin', 'keyOrderQ', 'melKey']
     },
     /* ---------------- 10 ---------------- */
     {
@@ -234,7 +234,7 @@
         { k: 'ポイント 5', h: '発想を表す言葉', b: '曲の気分や表情を表す言葉。速さの言葉と いっしょに書かれることも多い（例：Allegro con brio ＝ 速く 生き生きと）。', fig: { html: table(['言葉', '読み', '意味'], [['dolce', 'ドルチェ', '甘く やわらかに'], ['cantabile', 'カンタービレ', '歌うように'], ['espressivo', 'エスプレッシーヴォ', '表情豊かに'], ['legato', 'レガート', 'なめらかに'], ['maestoso', 'マエストーソ', '荘厳に'], ['grazioso', 'グラツィオーソ', '優雅に'], ['con brio', 'コン・ブリオ', '生き生きと'], ['leggiero', 'レッジェーロ', '軽く'], ['tranquillo', 'トランクイッロ', '静かに'], ['agitato', 'アジタート', '激しく']], { en: true, fs: 13.5 }) } }
       ],
       sum: ['p 弱く・f 強く・m やや', 'Largo〈Adagio〈Andante〈Moderato〈Allegro〈Presto', 'D.C. 始めへ・D.S. 𝄋へ・Fine 終わり'],
-      types: ['dyn', 'dynOrder', 'tempo', 'tempoChange', 'artic', 'express', 'repeatOrder']
+      types: ['dyn', 'dynOrder', 'hairpin', 'tempo', 'tempoChange', 'artic', 'express', 'repeatOrder']
     },
     /* ---------------- 14 ---------------- */
     {
