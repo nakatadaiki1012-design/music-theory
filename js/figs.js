@@ -112,24 +112,30 @@
 
   // 音符の木（全音符 → 2分 → 4分 → 8分 → 16分）
   CUSTOM.noteTree = function (box, a) {
-    var rest = a.rest, W = 520, rows = rest ? [['w', 1], ['h', 2], ['q', 4], ['8', 8]] : [['w', 1], ['h', 2], ['q', 4], ['8', 8], ['16', 16]];
-    var H = rows.length * 62 + 10, items = [], beams = [], texts = [];
+    // 横の長さ ＝ 時間。どの段も 同じ横幅（全音符 1 つ分）に ならべるので、たてに そろって見える
+    var rest = a.rest, W = 520, X0 = 128, X1 = W - 14, RH = 62;
+    var rows = rest ? [['w', 1], ['h', 2], ['q', 4], ['8', 8]] : [['w', 1], ['h', 2], ['q', 4], ['8', 8], ['16', 16]];
+    var H = rows.length * RH + 6, items = [], beams = [], texts = [];
+    var lineY = function (ri) { return ri * RH + 42; }; // 段の線の高さ（Stave の y = ri*RH-18 → 中央の線は +60）
     rows.forEach(function (r, ri) {
-      var n = r[1], cw = (W - 150) / n;
-      for (var i = 0; i < n; i++) {
-        items.push({ s: ri, x: 130 + cw * i + cw / 2 - 6, k: 'B4', d: r[0] + (rest ? 'r' : ''), st: 1, rk: r[0] === 'w' && rest ? 'd/5' : null });
-      }
+      var n = r[1], cw = (X1 - X0) / n;
+      for (var i = 0; i < n; i++) items.push({ s: ri, x: X0 + cw * i + 6, k: 'B4', d: r[0] + (rest ? 'r' : ''), st: 1 });
       if (!rest && (r[0] === '8' || r[0] === '16')) {
-        var base = items.length - n;
-        for (var b = 0; b < n; b += 4) beams.push([base + b, base + b + 1, base + b + 2, base + b + 3].filter(function (x) { return x < items.length; }));
+        var base = items.length - n, g = r[0] === '8' ? 2 : 4; // 1 拍ずつ 連桁
+        for (var b = 0; b < n; b += g) { var grp = []; for (var j = 0; j < g; j++) grp.push(base + b + j); beams.push(grp); }
       }
-      texts.push({ x: 8, y: ri * 62 + 62, t: (rest ? M.REST_JP : M.DUR_JP)[r[0]], anchor: 'start', size: 14 });
-      texts.push({ x: 8, y: ri * 62 + 78, t: (4 / n) + ' 拍', anchor: 'start', size: 12, c: 'var(--muted)', bold: false });
+      texts.push({ x: 8, y: lineY(ri) + 2, t: (rest ? M.REST_JP : M.DUR_JP)[r[0]], anchor: 'start', size: 14 });
+      texts.push({ x: 8, y: lineY(ri) + 18, t: (4 / n) + ' 拍', anchor: 'start', size: 12, c: 'var(--muted)', bold: false });
     });
-    var staves = rows.map(function (r, ri) { return { x: 120, y: ri * 62 - 18, w: W - 130, hide: true, mid: true }; });
-    // 1 本線の「打楽器譜」にのせて 長さを横幅で見せる
-    var r = M.free(box, { w: W, h: H + 20, staves: staves, items: items.map(function (it) { return Object.assign(it, { k: 'B4' }); }), beams: rest ? [] : beams, texts: texts });
-    if (r) M.fit(r.svg, W, 0, H);
+    var staves = rows.map(function (r, ri) { return { x: X0 - 6, y: ri * RH - 18, w: X1 - X0 + 10, hide: true, mid: true }; });
+    var res = M.free(box, { w: W, h: H, staves: staves, items: items, beams: rest ? [] : beams, texts: texts });
+    if (!res) return;
+    // 1 拍ごとの 点線（たてに そろっていることが わかるように）
+    for (var k = 0; k <= 4; k++) {
+      var x = X0 + (X1 - X0) / 4 * k;
+      M.svgEl(res.svg, 'line', { x1: x, x2: x, y1: 4, y2: H - 4, stroke: 'currentColor', 'stroke-opacity': .18, 'stroke-dasharray': '3 4' });
+    }
+    M.fit(res.svg, W, 0, H);
   };
 
   // 付点：音符 ＋ その半分

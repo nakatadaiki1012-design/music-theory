@@ -445,12 +445,15 @@ window.GK = window.GK || {};
       var sn = makeNote(it, (spec.staves[it.s || 0] || {}).clef || 'treble', { key: [0, 0, 0, 0, 0, 0, 0] });
       if (it.st) sn.setStemDirection(it.st);
       var tc = new V.TickContext(); tc.addTickable(sn).preFormat().setX(it.x - st.getNoteStartX());
-      sn.setStave(st); sn.setContext(ctx).draw();
+      sn.setStave(st);
+      var dx = sn.getAbsoluteX() - it.x; if (dx) tc.setX(tc.getX() - dx); // 左はしが ちょうど it.x に来るように
       outN.push(sn);
       if (it.lab) svgText(svg, it.x + 6 + (it.lx || 0), it.ly || ((spec.staves[it.s || 0] || {}).y + 76), it.lab, { c: it.lc || it.c || INK, size: it.ls || 13 });
     });
-    // 連桁
-    (spec.beams || []).forEach(function (ix) { new V.Beam(ix.map(function (i) { return outN[i]; })).setContext(ctx).draw(); });
+    // 連桁は 音符を描く前につくる（先に描くと はたも出てしまう）
+    var bms = (spec.beams || []).map(function (ix) { return new V.Beam(ix.map(function (i) { return outN[i]; })); });
+    outN.forEach(function (sn) { sn.setContext(ctx).draw(); });
+    bms.forEach(function (bm) { bm.setContext(ctx).draw(); });
     (spec.ties || []).forEach(function (ix) { new V.StaveTie({ first_note: outN[ix[0]], last_note: outN[ix[1]], first_indices: [0], last_indices: [0] }).setContext(ctx).draw(); });
     (spec.glyphs || []).forEach(function (g) {
       ctx.save(); ctx.setFillStyle(g.c || INK);
