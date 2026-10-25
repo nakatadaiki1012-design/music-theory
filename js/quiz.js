@@ -24,6 +24,8 @@
   var tx = function (t, k) { return { k: k == null ? t : k, t: t }; };
   var tw = function (t, w, k) { var o = tx(t, k); o.w = w; return o; }; // w：その選択肢が 本当は何か（まちがえたときに 見せる）
   var pn = function (p) { p = M.p(p); return { k: M.str({ l: p.l, a: p.a, o: 4 }), t: N(p) }; }; // 音名の選択肢（オクターブなし）
+  // ヘ音記号の五線の まん中（レ3 あたり）に 来るように オクターブを ずらす
+  function toBass(ps) { var avg = ps.reduce(function (t, p) { return t + M.midi(p); }, 0) / ps.length, k = Math.round((50 - avg) / 12); return ps.map(function (p) { return { l: p.l, a: p.a, o: p.o + k }; }); }
   function nat(lo, hi) { var r = [], a = M.dia(lo), b = M.dia(hi); for (var d = a; d <= b; d++) r.push({ l: d % 7, a: 0, o: Math.floor(d / 7) }); return r; }
   function posTxt(p, clef) { // 五線の どこか
     var bottom = { treble: 'E4', bass: 'G2', alto: 'F3' }[clef], d = M.dia(p) - M.dia(bottom);
@@ -427,10 +429,11 @@
   };
   T.ivName = {
     u: 'u06', st: 2, gen: function (R, st) {
-      var pr = ivPair(R, st >= 3), a = pr[0], b = pr[1], iv = M.interval(a, b), harm = R() < 0.5;
+      var pr = ivPair(R, st >= 3), a = pr[0], b = pr[1], iv = M.interval(a, b), harm = R() < 0.5, clef = 'treble';
+      if (st >= 3 && R() < 0.4) { clef = 'bass'; var bb = toBass([a, b]); a = bb[0]; b = bb[1]; } // ヘ音記号でも 読めるように
       var m = mc(R, tx(iv.name), ivWrongs(iv.deg, iv.q));
       var mk = {}; mk[M.midi(a)] = { c: C.red }; mk[M.midi(b)] = { c: C.red };
-      return { q: '2つの音の音程は？', fig: { score: { clef: 'treble', notes: harm ? [{ k: [M.str(a), M.str(b)], d: 'w' }] : [{ k: M.str(a), d: 'w' }, { k: M.str(b), d: 'w' }], sp: 60, minBar: 80 } }, ch: m.ch, a: m.a, why: m.why, ex: N(a) + '〜' + N(b) + '：<b>' + iv.deg + '度</b>で 半音 <b>' + iv.semis + ' 個</b> → <b>' + iv.name + '</b>。', exFig: { kbd: { from: M.midi(a) < 60 ? 'C3' : 'C4', to: M.midi(b) > 83 ? 'B6' : 'B5', mark: mk, steps: [[M.midi(a), M.midi(b), '半音' + iv.semis, C.red]], h: 70 } }, play: harm ? [[[a, b], 2]] : [[a, 1], [b, 1.5]] };
+      return { q: '2つの音の音程は？', fig: { score: { clef: clef, notes: harm ? [{ k: [M.str(a), M.str(b)], d: 'w' }] : [{ k: M.str(a), d: 'w' }, { k: M.str(b), d: 'w' }], sp: 60, minBar: 80 } }, ch: m.ch, a: m.a, why: m.why, ex: N(a) + '〜' + N(b) + '：<b>' + iv.deg + '度</b>で 半音 <b>' + iv.semis + ' 個</b> → <b>' + iv.name + '</b>。', exFig: { kbd: { from: 'C' + a.o, to: 'B' + Math.max(a.o + 1, b.o), mark: mk, steps: [[M.midi(a), M.midi(b), '半音' + iv.semis, C.red]], h: 70 } }, play: harm ? [[[a, b], 2]] : [[a, 1], [b, 1.5]] };
     }
   };
   T.ivBuild = {
@@ -614,22 +617,22 @@
   };
 
   /* =================== 09 調と調号 =================== */
-  var ksig = function (f, minor) { return { score: { clef: 'treble', key: f, minor: minor, notes: [], minBar: 30 } }; };
+  var ksig = function (f, minor, clef) { return { score: { clef: clef || 'treble', key: f, minor: minor, notes: [], minBar: 30 } }; };
   T.keyMaj = {
     u: 'u09', st: 1, gen: function (R, st) {
-      var f = st >= 2 ? pick([-7, -6, -5, -4, 4, 5, 6, 7, -3, 3], R) : ri(-3, 3, R);
+      var f = st >= 2 ? pick([-7, -6, -5, -4, 4, 5, 6, 7, -3, 3], R) : ri(-3, 3, R), clef = st >= 3 && R() < 0.5 ? 'bass' : 'treble';
       var wr = [f - 1, f + 1, -f, f + 2, f - 2].filter(function (x) { return x >= -7 && x <= 7; }).map(function (x) { return tw(M.keyName(x), M.keyName(x) + ' の 調号は ' + sigTxt(x), x); }).concat([tw(M.keyName(f, true), M.keyName(f, true) + ' は 短調（この調号の 平行調）', 'm')]);
       var m = mc(R, tx(M.keyName(f), f), wr);
       var how = f === 0 ? '調号なしは ハ長調' : f > 0 ? 'いちばん右の♯（' + N({ l: M.SHARPS[f - 1], a: 1, o: 4 }) + '）の 半音上' : f === -1 ? '♭1つは ヘ長調' : '右から2番目の♭（' + N({ l: M.FLATS[-f - 2], a: -1, o: 4 }) + '）';
-      return { q: 'この調号の <b>長調</b> は？', fig: ksig(f), ch: m.ch, a: m.a, why: m.why, ex: how + ' → <b>' + M.keyName(f) + '</b>。', exFig: { score: { clef: 'treble', key: f, notes: [{ k: M.str(M.keyTonic(f)), d: 'w', c: C.red, lab: '主音' }], minBar: 60 } } };
+      return { q: 'この調号の <b>長調</b> は？' + (clef === 'bass' ? '（ヘ音記号）' : ''), fig: ksig(f, false, clef), ch: m.ch, a: m.a, why: m.why, ex: how + ' → <b>' + M.keyName(f) + '</b>。', exFig: { score: { clef: 'treble', key: f, notes: [{ k: M.str(M.keyTonic(f)), d: 'w', c: C.red, lab: '主音' }], minBar: 60 } } };
     }
   };
   T.keyMin = {
-    u: 'u09', st: 2, gen: function (R) {
-      var f = ri(-4, 4, R);
+    u: 'u09', st: 2, gen: function (R, st) {
+      var f = ri(-4, 4, R), clef = st >= 3 && R() < 0.5 ? 'bass' : 'treble';
       var wr = [tx(M.keyName(f), 'M')].concat([f - 1, f + 1, -f, f + 3].filter(function (x) { return x >= -7 && x <= 7; }).map(function (x) { return tx(M.keyName(x, true), x); }));
       var m = mc(R, tx(M.keyName(f, true), f), wr);
-      return { q: 'この調号の <b>短調</b> は？', fig: ksig(f, true), ch: m.ch, a: m.a, ex: '長調は ' + M.keyName(f) + '。その主音の <b>短3度下</b> → <b>' + M.keyName(f, true) + '</b>（平行調）。', exFig: { score: { clef: 'treble', key: f, notes: [{ k: M.str(M.keyTonic(f)), d: 'w', lab: '長調の主音' }, { k: M.str(M.up(M.keyTonic(f), 3, 'm', true)), d: 'w', c: C.red, lab: '短調の主音' }], sp: 70, ls: 12 } } };
+      return { q: 'この調号の <b>短調</b> は？' + (clef === 'bass' ? '（ヘ音記号）' : ''), fig: ksig(f, true, clef), ch: m.ch, a: m.a, ex: '長調は ' + M.keyName(f) + '。その主音の <b>短3度下</b> → <b>' + M.keyName(f, true) + '</b>（平行調）。', exFig: { score: { clef: 'treble', key: f, notes: [{ k: M.str(M.keyTonic(f)), d: 'w', lab: '長調の主音' }, { k: M.str(M.up(M.keyTonic(f), 3, 'm', true)), d: 'w', c: C.red, lab: '短調の主音' }], sp: 70, ls: 12 } } };
     }
   };
   T.keySig = {
@@ -692,16 +695,17 @@
   var TRI = ['maj', 'min', 'aug', 'dim'];
   var RECIPE = { maj: '長3度＋短3度', min: '短3度＋長3度', aug: '長3度＋長3度', dim: '短3度＋短3度', dom7: '長三和音＋短7度', maj7: '長三和音＋長7度', min7: '短三和音＋短7度', hdim7: '減三和音＋短7度', dim7: '減三和音＋減7度' };
   var tyW = function (t) { return tw(M.CH_JP[t], M.CH_JP[t] + ' ＝ ' + RECIPE[t], t); };
-  function chordFig(ps, o) { o = o || {}; return { score: { clef: 'treble', key: o.key || 0, notes: [{ k: ps.map(M.str), d: 'w', kc: o.kc }], minBar: o.w || 70, noClef: o.noClef } }; }
+  function chordFig(ps, o) { o = o || {}; return { score: { clef: o.clef || 'treble', key: o.key || 0, notes: [{ k: ps.map(M.str), d: 'w', kc: o.kc }], minBar: o.w || 70, noClef: o.noClef } }; }
   T.triadType = {
     u: 'u10', st: 1, gen: function (R, st) {
       var root, ty;
       if (st >= 2) { root = pick(nat('C4', 'A4'), R); root.a = pick([0, 0, 1, -1], R); ty = pick(TRI, R); }
       else { var d = ri(1, 7, R), ch0 = M.diatonic(0, false, d); root = ch0[0]; ty = M.chordType(ch0); }
-      var ps = M.chord(root, ty);
+      var ps = M.chord(root, ty), clef = st >= 3 && R() < 0.4 ? 'bass' : 'treble';
+      if (clef === 'bass') ps = toBass(ps);
       var m = mc(R, tx(M.CH_JP[ty], ty), TRI.map(tyW));
       var i1 = M.interval(ps[0], ps[1]).name, i2 = M.interval(ps[1], ps[2]).name;
-      return { q: 'この三和音の 種類は？', fig: chordFig(ps), ch: m.ch, a: m.a, ex: '下から <b>' + i1 + '</b> ＋ <b>' + i2 + '</b> → <b>' + M.CH_JP[ty] + '</b>。', play: [[ps, 2]], why: m.why };
+      return { q: 'この三和音の 種類は？', fig: chordFig(ps, { clef: clef }), ch: m.ch, a: m.a, ex: '下から <b>' + i1 + '</b> ＋ <b>' + i2 + '</b> → <b>' + M.CH_JP[ty] + '</b>。', play: [[ps, 2]], why: m.why };
     }
   };
   T.triadBuild = {
