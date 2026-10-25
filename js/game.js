@@ -24,13 +24,13 @@
   };
   /* ---------- ルール（数学Aラボと同じ） ---------- */
   var BONUS = { 1: 6, 2: 12, 3: 20 }, PENALTY = 2, COMBO_BONUS = 3;
-  var bonusSec = function (st, ok) { return Math.round(BONUS[st] * Math.max(0.2, Math.pow(0.96, ok)) * 10) / 10; };
+  var bonusSec = function (st, ok) { return Math.round(BONUS[st] * Math.max(0.15, Math.pow(0.94, ok)) * 10) / 10; };
   var mult = function (k) { return k >= 40 ? 3 : k >= 30 ? 2.5 : k >= 20 ? 2 : k >= 10 ? 1.5 : 1; };
   var RULER = [[0, 'ウォーミングアップ中'], [5, '小テスト 1 回分'], [10, '楽典ドリル 1 ページ分'], [20, '定期テストの楽典 1 回分'], [30, '楽典検定 1 回分'], [45, '音大入試の楽典 1 回分'], [60, '楽典の問題集 1 冊分']];
   var ruler = function (n) { var r = RULER[0][1]; RULER.forEach(function (x) { if (n >= x[0]) r = x[1]; }); return r; };
-  // 時間が たつほど 時計が速く進む（60 秒から だんだん、3 分で 3 倍）。上手な人も いつかは 終わる
-  var DRAIN0 = 60, DRAINK = 60, DRAINMAX = 3;
-  var drainRate = function (sec) { return Math.min(DRAINMAX, 1 + Math.max(0, sec - DRAIN0) / DRAINK); };
+  // 時間が たつほど 時計が速く進む（45 秒から だんだん、上限なし：2 分で 約 2.7 倍、3 分で 4 倍）。上手な人も 必ず 終わる
+  var DRAIN0 = 45, DRAINK = 45, HARD_END = 300; // HARD_END：念のため 5 分で 必ず終わり
+  var drainRate = function (sec) { return 1 + Math.max(0, sec - DRAIN0) / DRAINK; };
   // 問題：はじめの 8 問は ★1 の種類だけ、22 問目までは ★2 まで、そのあとは 全部（だんだん むずかしく）
   function makeQs(cfg, seed) {
     var R = GK.rng(seed), T = GK.Q.T, all = GK.Q.typesOf(unitsOf(cfg), true), out = [], bag = [], last = null;
@@ -114,6 +114,7 @@
     var bar = $('#gbar', G.box); if (bar) { bar.firstChild.style.width = Math.min(100, left / max * 100) + '%'; bar.classList.toggle('low', left < 10000); }
     var tm = $('#gtm', G.box), dr = G.mode === 'battle' ? 1 : drainRate((now() - G.startAt) / 1000);
     if (tm) tm.innerHTML = Math.ceil(left / 1000) + '秒' + (dr > 1.05 ? '<small style="color:var(--warm);font-size:13px;margin-left:4px">⏩×' + dr.toFixed(1) + '</small>' : '');
+    if (G.mode !== 'battle' && t - G.startAt > HARD_END * 1000) left = 0;
     if (left <= 0 && !G.over) { G.over = true; clearInterval(G.timer); G.dur = (now() - G.startAt) / 1000; GK.fx('whistle'); G.hooks.end && G.hooks.end(G); }
   }
   function showQ() {
