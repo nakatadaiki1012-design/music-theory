@@ -164,7 +164,7 @@ window.GK = window.GK || {};
   /* =========================================================
      楽譜（VexFlow 4）
      spec = {
-       clef: 'treble' | 'bass' | 'alto' | 'tenor' | 'grand', key: 2（♯2つ）/ -3（♭3つ）, minor, time: '3/4',
+       clef: 'treble' | 'bass' | 'alto' | 'tenor' | 'soprano' | 'mezzo-soprano' | 'baritone-c' | 'grand', key: 2（♯2つ）/ -3（♭3つ）, minor, time: '3/4',
        bars: [[note, ...], ...] または notes: [note, ...],
        w: 横の長さ（省略すると自動）, end: 'end'|'single'|'none'|'repeat', begin: 'repeat',
        noKeyAcc: true（調号を書かない）
@@ -176,11 +176,15 @@ window.GK = window.GK || {};
   var INK = 'currentColor';
   M.COL = { red: '#c4452a', blue: '#2f6bb8', green: '#2c8a5c', gold: '#c08a0e', purple: '#7d4fb0', gray: '#9a968b' };
 
+  // 音部記号ごとの 第3線（まん中の線）の音。ハ音記号は「ドの線」が 動く：ソプラノ 第1線・メゾソプラノ 第2線・アルト 第3線・テノール 第4線・バリトン 第5線
+  M.CLEF_MID = { treble: 'B4', bass: 'D3', alto: 'C4', tenor: 'A3', soprano: 'G4', 'mezzo-soprano': 'E4', 'baritone-c': 'F3', grand: 'B4' };
+  M.CLEF_C_LINE = { soprano: 1, 'mezzo-soprano': 2, alto: 3, tenor: 4, 'baritone-c': 5 };
+  M.CLEF_JP = { treble: 'ト音記号', bass: 'ヘ音記号', soprano: 'ソプラノ記号', 'mezzo-soprano': 'メゾソプラノ記号', alto: 'アルト記号', tenor: 'テノール記号', 'baritone-c': 'バリトン記号' };
+  // 第1線（いちばん下の線）の音
+  M.clefBottom = function (clef) { var m = M.p(M.CLEF_MID[clef] || 'B4'); return M.P(m.l - 4, 0, m.o); };
   function restKey(clef, d) {
-    var w = /^w/.test(d), h = /^h/.test(d);
-    if (clef === 'bass') return w ? 'f/3' : 'd/3';
-    if (clef === 'alto') return w ? 'e/4' : 'c/4';
-    return w ? 'd/5' : 'b/4';
+    var w = /^w/.test(d), m = M.p(M.CLEF_MID[clef] || 'B4'), k = w ? M.P(m.l + 2, 0, m.o) : m; // 全休符は 第4線から ぶら下がる
+    return M.vf(k);
   }
   function asArr(k) { return Array.isArray(k) ? k : [k]; }
   function clefOf(spec) { return spec.clef === 'grand' ? 'treble' : (spec.clef || 'treble'); }

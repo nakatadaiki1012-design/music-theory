@@ -73,7 +73,7 @@
     box.style.flexDirection = 'column'; box.style.gap = '6px'; box.style.alignItems = 'stretch';
     var clef = a.clef || 'treble', cur = a.start || 'C4';
     var lo = a.from || (clef === 'bass' ? 'C2' : clef === 'grand' ? 'C3' : 'C4'), hi = a.to || (clef === 'bass' ? 'B3' : clef === 'grand' ? 'B5' : 'B5');
-    box.innerHTML = (a.clefs ? '<div class="seg" style="justify-content:center;flex:none">' + [['treble', '𝄞 ト音記号'], ['bass', '𝄢 ヘ音記号'], ['alto', '𝄡 ハ音記号'], ['grand', '大譜表']].map(function (c) { return '<button type="button" data-cl="' + c[0] + '" aria-pressed="' + (c[0] === clef) + '">' + c[1] + '</button>'; }).join('') + '</div>' : '') +
+    box.innerHTML = (a.clefs ? '<div class="seg" style="justify-content:center;flex:none">' + [['treble', '𝄞 ト音記号'], ['bass', '𝄢 ヘ音記号'], ['alto', '𝄡 アルト'], ['tenor', '𝄡 テノール'], ['grand', '大譜表']].map(function (c) { return '<button type="button" data-cl="' + c[0] + '" aria-pressed="' + (c[0] === clef) + '">' + c[1] + '</button>'; }).join('') + '</div>' : '') +
       '<div class="sc st" style="flex:1 1 0;min-height:0"></div><div class="nmline" style="flex:none;text-align:center;font-weight:700;font-size:18px"></div><div class="kb" style="flex:1 1 0;min-height:60px;max-height:150px;display:flex"></div>';
     var st = box.querySelector('.st'), kb = box.querySelector('.kb'), nl = box.querySelector('.nmline');
     var black = { 1: [0, 1], 3: [1, 1], 6: [3, 1], 8: [4, 1], 10: [5, 1] }, white = { 0: 0, 2: 1, 4: 2, 5: 3, 7: 4, 9: 5, 11: 6 };
@@ -83,7 +83,7 @@
       var b = black[pc]; return { l: b[0], a: b[1], o: o };
     }
     function draw() {
-      if (clef === 'alto') { lo = 'C3'; hi = 'B4'; } else if (clef === 'bass') { lo = 'C2'; hi = 'B3'; } else if (clef === 'grand') { lo = 'C3'; hi = 'B5'; } else { lo = 'C4'; hi = 'B5'; }
+      if (clef === 'alto' || clef === 'tenor') { lo = 'C3'; hi = 'B4'; } else if (clef === 'bass') { lo = 'C2'; hi = 'B3'; } else if (clef === 'grand') { lo = 'C3'; hi = 'B5'; } else { lo = 'C4'; hi = 'B5'; }
       if (a.from) lo = a.from; if (a.to && clef === (a.clef || 'treble')) hi = a.to;
       var p = M.p(cur), mk = {}; mk[M.midi(p)] = { c: 'var(--gold)' };
       var pp = M.p(cur);
@@ -130,6 +130,24 @@
       var ref = c[0] === 'treble' ? 'G4' : c[0] === 'bass' ? 'F3' : 'C4';
       var ns = c[0] === 'alto' ? [{ k: 'C4', d: 'w', c: C.red, lab: '中央の' + GK.nm('C4') }] : [{ k: ref, d: 'w', c: C.blue, lab: GK.nm(ref) }, { k: 'C4', d: 'w', c: C.red, lab: '中央の' + GK.nm('C4') }];
       M.score(s, { clef: c[0], notes: ns, minBar: 130, sp: 70, ls: 13, zoom: 2.2, below: 30, above: 26 });
+    });
+  };
+
+  // ハ音記号の なかま：くぼみの指す線が 中央のド（list：記号、inst：楽器を書く）
+  CUSTOM.cClefs = function (box, a) {
+    var list = a.list || ['soprano', 'mezzo-soprano', 'alto', 'tenor', 'baritone-c'], big = list.length <= 2;
+    var INST = { alto: 'ビオラ', tenor: 'チェロ・ファゴット・トロンボーン（高い音）', soprano: '昔の 合唱の楽譜など', 'mezzo-soprano': '昔の 合唱の楽譜など', 'baritone-c': '昔の 合唱の楽譜など' };
+    box.style.cssText += ';flex-direction:column;align-items:stretch;gap:' + (big ? 8 : 2) + 'px';
+    list.forEach(function (c) {
+      var d = document.createElement('div'); d.style.cssText = 'flex:1 1 0;min-height:0;display:flex;align-items:center;gap:10px';
+      box.appendChild(d);
+      var cap = document.createElement('div'); cap.className = 'cap'; cap.style.cssText = 'flex:0 0 ' + (big ? 8.5 : 8) + 'em;text-align:left;line-height:1.35';
+      cap.innerHTML = '<b style="font-size:' + (big ? 16 : 14) + 'px">' + M.CLEF_JP[c] + '</b><br><span style="color:' + C.red + '">第' + M.CLEF_C_LINE[c] + '線が ド</span>' + (a.inst !== false ? '<br><small style="color:var(--muted)">' + INST[c] + '</small>' : '');
+      d.appendChild(cap);
+      var s = document.createElement('div'); s.style.cssText = 'flex:1 1 0;min-width:0;height:100%;display:flex;align-items:center'; d.appendChild(s);
+      var ns = [{ k: 'C4', d: 'w', c: C.red, lab: big ? '中央の' + GK.nm('C4') : GK.nm('C4') }];
+      if (big) { var m = M.p(M.CLEF_MID[c]), lo = M.clefBottom(c); ns.push({ k: M.str(lo), d: 'w', c: C.blue, lab: GK.nm(lo) + '（第1線）' }); }
+      M.score(s, { clef: c, notes: ns, minBar: big ? 150 : 90, sp: big ? 80 : 60, ls: big ? 12 : 12, zoom: 2.2, below: big ? 34 : 26, above: big ? 30 : 18 });
     });
   };
 

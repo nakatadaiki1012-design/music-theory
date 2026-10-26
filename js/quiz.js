@@ -28,7 +28,7 @@
   function toBass(ps) { var avg = ps.reduce(function (t, p) { return t + M.midi(p); }, 0) / ps.length, k = Math.round((50 - avg) / 12); return ps.map(function (p) { return { l: p.l, a: p.a, o: p.o + k }; }); }
   function nat(lo, hi) { var r = [], a = M.dia(lo), b = M.dia(hi); for (var d = a; d <= b; d++) r.push({ l: d % 7, a: 0, o: Math.floor(d / 7) }); return r; }
   function posTxt(p, clef) { // 五線の どこか
-    var bottom = { treble: 'E4', bass: 'G2', alto: 'F3' }[clef], d = M.dia(p) - M.dia(bottom);
+    var bottom = M.clefBottom(clef), d = M.dia(p) - M.dia(bottom);
     if (d >= 0 && d <= 8) return d % 2 === 0 ? '第' + (d / 2 + 1) + '線' : '第' + ((d + 1) / 2) + '間';
     if (d < 0) { var k = -d; return k % 2 === 0 ? '下第' + (k / 2) + '線' : (k === 1 ? '第1線の下' : '下第' + ((k - 1) / 2) + '線の下'); }
     var u = d - 8; return u % 2 === 0 ? '上第' + (u / 2) + '線' : (u === 1 ? '第5線の上' : '上第' + ((u - 1) / 2) + '線の上');
@@ -61,7 +61,11 @@
   var MARKS = {
     treble: [['G4', 'ト音記号の 第2線は ソ'], ['C5', 'ト音記号の 第3間は ド'], ['C4', '下第1線は 中央のド'], ['G5', 'ト音記号の 第5線の上は ソ']],
     bass: [['F3', 'ヘ音記号の 第4線は ファ'], ['C3', 'ヘ音記号の 第2間は ド'], ['C4', '上第1線は 中央のド'], ['G2', 'ヘ音記号の 第1線は ソ']],
-    alto: [['C4', 'ハ音記号の 第3線は 中央のド'], ['F3', 'ハ音記号の 第1線は ファ'], ['G4', 'ハ音記号の 第5線は ソ']]
+    alto: [['C4', 'アルト記号の 第3線は 中央のド'], ['F3', 'アルト記号の 第1線は ファ'], ['G4', 'アルト記号の 第5線は ソ']],
+    tenor: [['C4', 'テノール記号の 第4線は 中央のド'], ['D3', 'テノール記号の 第1線は レ'], ['A3', 'テノール記号の 第3線は ラ']],
+    soprano: [['C4', 'ソプラノ記号の 第1線は 中央のド'], ['G4', 'ソプラノ記号の 第3線は ソ'], ['C5', 'ソプラノ記号の 第4間は ド']],
+    'mezzo-soprano': [['C4', 'メゾソプラノ記号の 第2線は 中央のド'], ['A3', 'メゾソプラノ記号の 第1線は ラ']],
+    'baritone-c': [['C4', 'バリトン記号の 第5線は 中央のド'], ['B2', 'バリトン記号の 第1線は シ']]
   };
   function readGen(clef, poolE, poolH) {
     return function (R, st) {
@@ -72,12 +76,61 @@
       var ref = M.p(mk[0]), d = M.dia(p) - M.dia(ref), sg = d < 0 ? -1 : 1, path = [];
       for (var j = 0; sg * j <= sg * d; j += sg) path.push(M.P(ref.l + j, 0, ref.o));
       var how = d === 0 ? 'この音が ちょうど その音' : 'そこから ' + (d > 0 ? '上へ ' : '下へ ') + Math.abs(d) + ' つ（' + path.map(N).join('→') + '）';
-      return { q: 'この音の音名は？', fig: one(p, clef), ch: m.ch, a: m.a, ex: mk[1].replace(/ソ$|ド$|ファ$/, function (x) { return N(ref); }) + '。' + how + ' → <b>' + N(p) + '</b>。', exFig: { score: { clef: clef, notes: path.map(function (x, j) { var last = j === path.length - 1; return { k: M.str(x), d: 'q', c: last ? C.red : j === 0 ? C.blue : C.gray, lab: j === 0 || last ? N(x) : '', lc: last ? C.red : C.blue }; }), sp: 34, beam: false } }, play: [[p, 1.5]] };
+      return { q: 'この音の音名は？', fig: one(p, clef), ch: m.ch, a: m.a, ex: mk[1].replace(/(ド|レ|ミ|ファ|ソ|ラ|シ)$/, function () { return N(ref); }) + '。' + how + ' → <b>' + N(p) + '</b>。', exFig: { score: { clef: clef, notes: path.map(function (x, j) { var last = j === path.length - 1; return { k: M.str(x), d: 'q', c: last ? C.red : j === 0 ? C.blue : C.gray, lab: j === 0 || last ? N(x) : '', lc: last ? C.red : C.blue }; }), sp: 34, beam: false } }, play: [[p, 1.5]] };
     };
   }
   T.readT = { u: 'u01', st: 1, gen: readGen('treble', nat('C4', 'A5'), nat('G3', 'C6')) };
   T.readB = { u: 'u01', st: 2, gen: readGen('bass', nat('E2', 'C4'), nat('C2', 'E4')) };
-  T.readA = { u: 'u01', st: 3, gen: readGen('alto', nat('E3', 'C5'), nat('C3', 'E5')) };
+  var clefQ = function (clef, g) { return function (R, st) { var q = g(R, st); q.q = '<b>' + M.CLEF_JP[clef] + '</b>（ハ音記号）。この音の音名は？'; return q; }; };
+  T.readA = { u: 'u01', st: 3, gen: clefQ('alto', readGen('alto', nat('E3', 'C5'), nat('C3', 'E5'))) };
+  T.readTn = { u: 'u01', st: 3, gen: clefQ('tenor', readGen('tenor', nat('C3', 'A4'), nat('A2', 'C5'))) };
+  // ソプラノ・メゾソプラノ・バリトン記号（めずらしい ハ音記号）
+  T.readC = {
+    u: 'u01', st: 3, gen: function (R, st) {
+      var c = pick(['soprano', 'mezzo-soprano', 'baritone-c'], R), lo = M.clefBottom(c), top = M.P(lo.l + 8, 0, lo.o);
+      var q = readGen(c, nat(M.str(M.P(lo.l - 1, 0, lo.o)), M.str(M.P(top.l + 1, 0, top.o))), nat(M.str(M.P(lo.l - 2, 0, lo.o)), M.str(M.P(top.l + 2, 0, top.o))))(R, st);
+      q.q = '<b>' + M.CLEF_JP[c] + '</b>（ハ音記号）。この音の音名は？'; return q;
+    }
+  };
+  var CCL = ['soprano', 'mezzo-soprano', 'alto', 'tenor', 'baritone-c'];
+  var cStaff = function (c, notes) { return { score: { clef: c, notes: notes || [], minBar: notes ? 90 : 40, sp: 60, zoom: 2.4 } }; };
+  T.cClefMid = {
+    u: 'u01', st: 2, gen: function (R, st) {
+      var c = st >= 3 ? pick(CCL, R) : pick(['alto', 'tenor'], R), n = M.CLEF_C_LINE[c];
+      var m = mc(R, tx('第' + n + '線'), [1, 2, 3, 4, 5].map(function (k) { return tx('第' + k + '線'); }).concat([tx('第' + Math.min(4, n) + '間')]));
+      return { q: 'この <b>' + M.CLEF_JP[c] + '</b> で <b>中央のド</b> は どこ？', fig: cStaff(c), ch: m.ch, a: m.a, ex: 'ハ音記号は まん中の くぼみが 指す線が 中央のド → <b>第' + n + '線</b>。', exFig: cStaff(c, [{ k: 'C4', d: 'w', c: C.red, lab: '中央の' + N('C4') }]) };
+    }
+  };
+  T.cClefName = {
+    u: 'u01', st: 2, gen: function (R, st) {
+      var c = st >= 3 ? pick(CCL, R) : pick(['alto', 'tenor', 'alto', 'tenor', 'soprano'], R);
+      var m = mc(R, tx(M.CLEF_JP[c]), CCL.map(function (x) { return tw(M.CLEF_JP[x], M.CLEF_JP[x] + ' は 第' + M.CLEF_C_LINE[x] + '線が ド'); }));
+      return { q: 'この ハ音記号の 名前は？（赤い音が 中央のド）', fig: cStaff(c, [{ k: 'C4', d: 'w', c: C.red }]), ch: m.ch, a: m.a, why: m.why, ex: 'ドの線が 第' + M.CLEF_C_LINE[c] + '線 → <b>' + M.CLEF_JP[c] + '</b>。下から ソプラノ（1）・メゾソプラノ（2）・アルト（3）・テノール（4）・バリトン（5）。' };
+    }
+  };
+  T.cClefInst = {
+    u: 'u01', st: 1, gen: function (R) {
+      var L = [
+        ['<b>ビオラ</b>の楽譜で ふだん使う 音部記号は？', 'アルト記号', ['テノール記号', 'ト音記号', 'ヘ音記号'], 'ビオラは まん中の音域なので、まん中の線が ドの <b>アルト記号</b>。'],
+        ['<b>チェロ</b>が 高い音を書くときに 使う 音部記号は？', 'テノール記号', ['アルト記号', 'ソプラノ記号', 'ヘ音記号'], 'チェロは ふだん ヘ音記号。高い音は 加線が多くなるので <b>テノール記号</b>（第4線が ド）。もっと高いと ト音記号。'],
+        ['<b>ファゴット</b>や <b>トロンボーン</b>が 高い音で使う 音部記号は？', 'テノール記号', ['アルト記号', 'メゾソプラノ記号', 'ト音記号'], 'ふだんは ヘ音記号、高い音は <b>テノール記号</b>（第4線が ド）。'],
+        ['<b>アルト記号</b>を ふだん使う 楽器は？', 'ビオラ', ['チェロ', 'フルート', 'トランペット'], 'アルト記号（第3線が ド）は <b>ビオラ</b>の 記号。'],
+        ['<b>テノール記号</b>で ドになるのは？', '第4線', ['第3線', '第1線', '第5線'], 'テノール記号は アルト記号を 1 線 上にずらした形 → <b>第4線</b>が 中央のド。']
+      ];
+      var x = pick(L, R), m = mc(R, tx(x[1]), x[2].map(function (y) { return tx(y); }));
+      return { q: x[0], ch: m.ch, a: m.a, ex: x[3], exFig: { c: 'cClefs', a: { list: ['alto', 'tenor'] } } };
+    }
+  };
+  T.cClefSame = {
+    u: 'u01', st: 3, gen: function (R) {
+      var c = pick(['alto', 'tenor'], R), to = c === 'alto' ? 'treble' : 'bass';
+      var p = pick(c === 'alto' ? nat('G3', 'D5') : nat('C3', 'G4'), R);
+      if (to === 'treble' && M.dia(p) < M.dia('A3')) p = M.p('C4');
+      var wr = [-1, 1, -2, 2].map(function (k) { var x = M.P(p.l + k, 0, p.o); return { k: M.str(x), fig: one(x, to) }; });
+      var m = mc(R, { k: M.str(p), fig: one(p, to) }, wr);
+      return { q: '<b>' + M.CLEF_JP[c] + '</b>の この音と 同じ高さを <b>' + M.CLEF_JP[to] + '</b>で 書いたのは？', fig: one(p, c), ch: m.ch, a: m.a, ex: 'この音は ' + posTxt(p, c) + ' → <b>' + N(p) + '</b>（' + M.str(p) + '）。' + M.CLEF_JP[to] + 'では ' + posTxt(p, to) + '。', exFig: { row: [one(p, c, { lab: N(p), c: C.red }), one(p, to, { lab: N(p), c: C.red })] }, play: [[p, 1.5]] };
+    }
+  };
   T.findNote = {
     u: 'u01', st: 1, gen: function (R) {
       var pool = nat('C4', 'G5'), p = pick(pool, R);
@@ -1144,13 +1197,68 @@
   /* =========================================================
      出題
      ========================================================= */
+  // 🎤 まちがえたときに 見せる 覚え方（授業の「覚え方」カードと 同じ 合言葉）
+  var TIPS = {};
+  [
+  ['readT,findNote,ledgerN', 'ト音記号の 線は「ミソシレファ」、間は「ファラドミ」'],
+  ['readB', 'ヘ音記号の 線は「ソシレファラ」、間は「ラドミソ」'],
+  ['readA', 'アルト記号は まん中の 第3線が 中央のド'],
+  ['readTn', 'テノール記号は 第4線が 中央のド（アルト記号を 1 線 上にずらした形）'],
+  ['readC,cClefMid,cClefName,cClefInst,cClefSame', 'ハ音記号は「ドを 指さす矢印」（アルト 第3線・テノール 第4線）'],
+  ['grandSame', '中央のドは ト音記号でも ヘ音記号でも 加線 1 本'],
+  ['nameSys', 'ドレミ ＝ ハニホ ＝ CDE。ト音記号の「ト」は ソ（G）'],
+  ['durName,durBeats,durCount,durSum,longest,beatCount', 'はたが 1 本ふえるごとに 半分。付点は 自分の半分を おまけ'],
+  ['restName,restBeats', '全休符は 重いから ぶら下がる、2分休符は 軽いから のっかる'],
+  ['timeMean,eighthCount,timeFit,missing,barError', '拍子記号は 下が「何分音符」、上が「いくつ」'],
+  ['timeKind', '6/8 は「タタタ・タタタ」の 2 拍子（3 つずつ まとまる ＝ 複合拍子）'],
+  ['strong', '1 拍目は いつも 主役。4 拍子は ドン・タ・トン・タ'],
+  ['tieSlur,tieLen', '同じ高さ（たいら）なら タイ、ちがう高さは スラー'],
+  ['tripletQ', '3連符 ＝ 2 人用の席に 3 人'],
+  ['synco', 'シンコペーション ＝ 強い拍を 先取りする「食い気味」のリズム'],
+  ['pickup,pickupBeat', '弱起は パズルの 2 ピース：最初と最後で 1 小節'],
+  ['rhythmEar', '音の数を 数えてから、長い音が どこにあるかを 聴く'],
+  ['accName,jpAcc,accKbd', '♯ は「えい（嬰）！」と 半音 持ち上げる、♭ は「へん（変）」に 半音 へこむ'],
+  ['halfWhole', 'ミ‐ファ・シ‐ド は 仲良しペア（白鍵どうしでも 半音）'],
+  ['enharm,kbdName', '黒鍵は 左の白鍵の ♯、右の白鍵の ♭'],
+  ['dblAcc', '𝄪・𝄫 は 鍵盤 2 つ分（全音）動く'],
+  ['accRule', '臨時記号は その小節だけの 1日パス'],
+  ['ivDeg', '両はしも 数える（ド〜ソ は ド・レ・ミ・ファ・ソ で 5 度）'],
+  ['ivName,ivBuild,ivSemis,ivWider,ivQual,ivEar', '半音の数：短3度＝3、長3度＝4、完全4度＝5、完全5度＝7'],
+  ['ivInv', '転回は「9 から引いて、長短 入れかえ」。完全は 完全のまま'],
+  ['majPattern,majWrong,majFill,majHalf,majSharps,scaleName', '長音階は「2 つと半、3 つと半」（全全半・全全全半）'],
+  ['degreeName', '5 番目 属音、4 番目 下属音、7 番目 導音（主音へ みちびく）'],
+  ['minType,minSteps,minMel,minName', '旋律短音階は「行きは よいよい、帰りは 自然」'],
+  ['minLead', '和声短音階は 7 を上げて 導音を作る'],
+  ['minEar,majMinEar,chordEar', '明るい・暗いは 3 番目の音で 決まる'],
+  ['keyMaj,keySig,sigCount', '♯ の調は「ト・ニ・イ・ホ・ロ」、♭ の調は「ヘ・変ロ・変ホ・変イ」'],
+  ['keyOrderQ', '♯ は「ファドソレラミシ」、♭ は 逆から「シミラレソドファ」'],
+  ['keyMin,related,relMin,melKey', '短調は 長調の主音から 下へ「ド・シ・ラ」と 3 つ'],
+  ['triadType,triadBuild,chordTones,seventh', '下が 長3度なら 明るい、短3度なら 暗い。増は ふくらむ、減は しぼむ'],
+  ['isTriad', '三和音は だんご 3 兄弟（線・線・線 か 間・間・間）'],
+  ['inversion,chordRoot', '転回形は「いちばん下に だれが いるか」。根音は だんごに 並べ直して 探す'],
+  ['chordName,nameToChord', 'コードネームは 大文字 ＝ 根音、m ＝ 短、7 ＝ 短7度を トッピング'],
+  ['roman,chordInKey', '長調では Ⅰ・Ⅳ・Ⅴ が 長、Ⅱ・Ⅲ・Ⅵ が 短、Ⅶ が 減'],
+  ['func,funcName,cadence,cadenceEar', 'Ⅰ＝おうち、Ⅳ＝おでかけ、Ⅴ＝帰りたい。Ⅴ→Ⅰ は「ただいま！」'],
+  ['transNote,transMelody,transInterval,transBack,transChord', '移調は 全員そろって 同じ歩数で 引っこし'],
+  ['transKey,transInst', '楽譜の「ド」で 楽器の名前の音が 鳴る（B♭管 → シ♭、F管 → ファ）'],
+  ['dyn,dynOrder,dynLoud,dynSym', 'p ＝ ひそひそ、f ＝ フォース（力）、m ＝ まあまあ'],
+  ['hairpin', '＜ は 口が開く（だんだん強く）、＞ は 口が閉じる（だんだん弱く）'],
+  ['tempo,tmFast', '速さの はしご：Largo 寝そべる → Andante 歩く → Allegro 走る → Presto ダッシュ'],
+  ['tempoChange', 'accel. ＝ アクセル、rit. ＝ ブレーキ、a tempo ＝ もとの速さ'],
+  ['tmMean,tmRev,read14,cat14,opp14', '-issimo ＝ とても、-etto・-ino ＝ ちょっと ひかえめ'],
+  ['auxMean,phrase', 'molto もりもり、poco ぽこっと少し、subito すぐ、sempre ずっと'],
+  ['express,exMean,exRev,mood,read15,cat15', '英語や カタカナ語の 親戚を 探そう（dolce ＝ スイーツ、maestoso ＝ マエストロ）'],
+  ['artic,artSym,artMean,artRev,opp15', '点 ＝ 短く、線 ＝ 十分 のばす、＞ ＝ 強く。pizz. は つまんで ピッ'],
+  ['repeatOrder', 'D.C. ＝ 頭（カーポ）へ、D.S. ＝ 𝄋 へ、Fine ＝ フィニッシュ']
+  ].forEach(function (x) { x[0].split(',').forEach(function (id) { TIPS[id] = x[1]; }); });
   GK.Q = { T: T };
+  GK.Q.TIPS = TIPS;
   Object.keys(T).forEach(function (k) { T[k].id = k; });
   // 1 問つくる
   GK.Q.make = function (id, R, st) {
     var t = T[id], s = st || t.st;
     var q = t.gen(R, s);
-    q.t = id; q.u = t.u; q.st = Math.max(t.st, Math.min(3, s)); q.ear = !!(t.ear || q.ear);
+    q.t = id; q.u = t.u; if (!q.tip && TIPS[id]) q.tip = TIPS[id]; q.st = Math.max(t.st, Math.min(3, s)); q.ear = !!(t.ear || q.ear);
     return q;
   };
   // 同じ問題（問題文と答えが同じ）が 続けて出ないように 作り直す。seen：これまでに出した問題

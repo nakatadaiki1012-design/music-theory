@@ -67,7 +67,7 @@
     o = o || {};
     var fb = $('.fb', el);
     fb.hidden = false;
-    fb.innerHTML = '<span class="mk ' + (ok ? 'ok' : 'ng') + '">' + (ok == null ? '📖' : ok ? '○' : '✕') + '</span><div class="ex">' + (o.noEx ? (ok ? '正解！' : '正解は ' + (q.ch[q.a].fig ? (q.a + 1) + ' 番' : '<b>' + q.ch[q.a] + '</b>')) : q.ex) + (!ok && !o.noEx && q.why && q.why[o.pick] ? '<div class="why">✕ えらんだ答え：' + q.why[o.pick] + '</div>' : '') + '</div>' +
+    fb.innerHTML = '<span class="mk ' + (ok ? 'ok' : 'ng') + '">' + (ok == null ? '📖' : ok ? '○' : '✕') + '</span><div class="ex">' + (o.noEx ? (ok ? '正解！' : '正解は ' + (q.ch[q.a].fig ? (q.a + 1) + ' 番' : '<b>' + q.ch[q.a] + '</b>')) : q.ex) + (!ok && !o.noEx && q.why && q.why[o.pick] ? '<div class="why">✕ えらんだ答え：' + q.why[o.pick] + '</div>' : '') + (!ok && !o.noEx && q.tip ? '<div class="tip">🎤 覚え方：' + q.tip + '</div>' : '') + '</div>' +
       (o.next ? '<button type="button" class="btn main" data-qa="next">' + (o.nextLabel || '次へ ▶') + '</button>' : '');
     if (!o.noEx && (q.exFig || q.ear)) {
       var fig = $('.qfig', el); el.classList.remove('nofig');
