@@ -12,6 +12,12 @@
   F.render = function (el, fig) {
     el.innerHTML = '';
     if (!fig) return;
+    // 横に長い楽譜は スマホでは 小さくなるので、wrap 小節ずつ 段を分ける（どの段も 同じ幅 w）
+    if (fig.score && fig.score.wrap && window.innerWidth < 640 && (fig.score.bars || []).length > fig.score.wrap) {
+      var sp = fig.score, lines = [];
+      for (var i = 0; i < sp.bars.length; i += sp.wrap) lines.push(sp.bars.slice(i, i + sp.wrap));
+      fig = Object.assign({}, fig, { score: null, col: lines.map(function (bs, j) { return { score: Object.assign({}, sp, { bars: bs, time: j === 0 ? sp.time : null, end: j === lines.length - 1 ? sp.end : null, wrap: null, w: sp.wrapW || 260 }) }; }) });
+    }
     var w = document.createElement('div'); w.className = 'fig'; el.appendChild(w);
     if (fig.ttl) { var t = document.createElement('div'); t.className = 'ttl2'; t.innerHTML = fig.ttl; w.appendChild(t); }
     var box = document.createElement('div');
