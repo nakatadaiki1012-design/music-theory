@@ -57,10 +57,10 @@
   function termTable(names, fs) {
     return function () {
       var ts = names.map(GK.termByName);
-      if (window.innerWidth >= 640) return { html: table(['言葉', '読み', '意味'], ts.map(function (t) { return [t.t, t.r, t.m]; }), { en: true, fs: fs || 13.5 }) };
+      if (window.innerWidth >= 640) return { html: table(['言葉', '読み', '意味', '英語などの なかま'], ts.map(function (t) { return [t.t, t.r, t.m, t.en ? '<small style="color:var(--muted)">' + t.en + '</small>' : '']; }), { en: true, fs: fs || 13.5, mw: 680 }) };
       return { html: '<table style="border-collapse:collapse;width:100%;line-height:1.2;font-size:calc(12.5px * var(--k))">' + ts.map(function (t) {
         var p = /^(.*?)（(.*)）$/.exec(t.t);
-        return '<tr><td style="padding:2px 6px;border-bottom:1px solid var(--line);white-space:nowrap"><b class="en" style="font-style:italic;font-size:1.12em">' + (p ? p[1] : t.t) + '</b>' + (p ? ' <small class="en">' + p[2] + '</small>' : '') + '<br><small style="color:var(--muted)">' + t.r + '</small></td><td style="padding:2px 6px;border-bottom:1px solid var(--line)">' + t.m + '</td></tr>';
+        return '<tr><td style="padding:2px 6px;border-bottom:1px solid var(--line);white-space:nowrap"><b class="en" style="font-style:italic;font-size:1.12em">' + (p ? p[1] : t.t) + '</b>' + (p ? ' <small class="en">' + p[2] + '</small>' : '') + '<br><small style="color:var(--muted)">' + t.r + '</small></td><td style="padding:2px 6px;border-bottom:1px solid var(--line)">' + t.m + (t.en ? '<br><small style="color:var(--muted)">≒ ' + t.en + '</small>' : '') + '</td></tr>';
       }).join('') + '</table>' };
     };
   }
@@ -250,7 +250,7 @@
         { k: 'ポイント 2', h: '奏法の記号', b: '音符につく記号。<b>スタッカート</b>（短く切る）、<b>テヌート</b>（音の長さを十分に保つ）、<b>アクセント</b>（目立たせて強く）、<b>フェルマータ</b>（ほどよく のばす）。', fig: { score: { clef: 'treble', time: '4/4', bars: [[{ k: 'C5', d: 'q', art: 'a.', lab: 'スタッカート' }, { k: 'D5', d: 'q', art: 'a-', lab: 'テヌート' }, { k: 'E5', d: 'q', art: 'a>', lab: 'アクセント' }, { k: 'F5', d: 'q', art: 'a@a', lab: 'フェルマータ' }]], end: 'end', sp: 72, ls: 12 } } },
         { k: 'ポイント 3', h: 'くり返しの記号', b: '<b>𝄆 𝄇</b>（反復記号）の間を くり返す。<b>1番カッコ・2番カッコ</b>は 2回目に 1番カッコをとばす。', fig: { col: [{ c: 'repeat', a: { kind: 'basic' } }, { c: 'repeat', a: { kind: 'volta' } }] } },
         { k: 'ポイント 4', h: 'D.C.・D.S.・Fine・Coda', b: '<b>D.C.</b>（ダ・カーポ）＝始めにもどる。<b>D.S.</b>（ダル・セーニョ）＝𝄋 にもどる。<b>Fine</b>（フィーネ）＝終わり。<b>𝄌 Coda</b>＝コーダへ とぶ。', fig: { col: [{ c: 'repeat', a: { kind: 'dc' } }, { c: 'repeat', a: { kind: 'ds' } }] } },
-        { k: 'ポイント 5', h: '発想を表す言葉', b: '曲の気分や表情を表す言葉。速さの言葉と いっしょに書かれることも多い（例：Allegro con brio ＝ 速く 生き生きと）。', fig: { html: table(['言葉', '読み', '意味'], [['dolce', 'ドルチェ', '甘く やわらかに'], ['cantabile', 'カンタービレ', '歌うように'], ['espressivo', 'エスプレッシーヴォ', '表情豊かに'], ['legato', 'レガート', 'なめらかに'], ['maestoso', 'マエストーソ', '荘厳に'], ['grazioso', 'グラツィオーソ', '優雅に'], ['con brio', 'コン・ブリオ', '生き生きと'], ['leggiero', 'レッジェーロ', '軽く'], ['tranquillo', 'トランクイッロ', '静かに'], ['agitato', 'アジタート', '激しく']], { en: true, fs: 13.5 }) } },
+        { k: 'ポイント 5', h: '発想を表す言葉', b: '曲の気分や表情を表す言葉。速さの言葉と いっしょに書かれることも多い（例：Allegro con brio ＝ 速く 生き生きと）。', fig: termTable(['dolce', 'cantabile', 'espressivo', 'legato', 'maestoso', 'grazioso', 'con brio', 'leggiero', 'tranquillo', 'agitato']) },
         MEMO('楽語は「イメージ」で 覚える', 'イタリア語を 暗記じゃなくて 映像で 覚える！', [['p ＝ ひそひそ、f ＝ フォース（力）', 'm は「まあまあ」：mp まあまあ弱く、mf まあまあ強く'], ['速さの はしご', 'Largo 寝そべる → Adagio くつろぐ → Andante 歩く → Moderato ふつう → Allegro 走る → Presto ダッシュ'], ['＜ は 口が開く、＞ は 口が閉じる', '開く ＝ だんだん強く、閉じる ＝ だんだん弱く'], ['D.C. ＝ 頭（カーポ）へ、Fine ＝ フィニッシュ', 'D.S. は セーニョ（𝄋 の印）へ']])
       ],
       sum: ['p 弱く・f 強く・m やや', 'Largo〈Adagio〈Andante〈Moderato〈Allegro〈Presto', 'D.C. 始めへ・D.S. 𝄋へ・Fine 終わり'],
@@ -270,7 +270,7 @@
         MEMO('語尾と 車で 覚える', '知らない言葉も 語尾を見れば だいたい わかる！', [['-issimo ＝ とても', 'pianissimo（とても弱く）、Prestissimo（とても速く）'], ['-etto・-ino ＝ ちょっと ひかえめ', 'Larghetto は Largo より 少し速く、Allegretto は Allegro より 少し遅く'], ['accel. ＝ アクセルを ふむ', 'だんだん速く。反対の rit. は ブレーキ'], ['molto もりもり、poco ぽこっと 少し', 'subito すぐ、sempre ずっと']])
       ],
       sum: ['遅い Grave・Largo・Lento・Adagio → Andante → Moderato → Allegro → Vivace → Presto', 'rit.・rall. だんだん遅く／accel. だんだん速く／a tempo もとの速さ', 'molto 非常に・poco 少し・subito すぐに・sempre つねに'],
-      types: ['tmMean', 'tmRev', 'tmFast', 'dynSym', 'dynLoud', 'auxMean', 'phrase', 'cat14', 'opp14', 'read14']
+      types: ['tmMean', 'tmRev', 'tmFast', 'dynSym', 'dynLoud', 'auxMean', 'phrase', 'cat14', 'opp14', 'read14', 'etym14']
     },
     /* ---------------- 15 ---------------- */
     {
@@ -286,7 +286,7 @@
         MEMO('イタリア語は「親戚の言葉」で 覚える', '英語や 身近な カタカナ語と つなげれば 暗記は いらない！', [['英語に そっくり', 'espressivo ＝ expressive、energico ＝ energetic、brillante ＝ brilliant'], ['dolce ＝ ドルチェ（スイーツ）', '甘く やわらかに。cantabile は カンターレ（歌う）→ 歌うように'], ['maestoso ＝ マエストロ（巨匠）', '巨匠のように 堂々と、荘厳に'], ['pizz. ＝ つまんで ピッ、arco ＝ アーチ（弓）', 'tutti ＝ みんな、solo ＝ ひとり']])
       ],
       sum: ['やさしい dolce・cantabile／元気 con brio・animato／激しい agitato・con fuoco', 'pizz. 指ではじく ⇔ arco 弓で', 'tutti 全員で ⇔ solo 1 人で、simile 前と同じように'],
-      types: ['exMean', 'exRev', 'mood', 'artMean', 'artRev', 'artSym', 'cat15', 'opp15', 'read15']
+      types: ['exMean', 'exRev', 'mood', 'artMean', 'artRev', 'artSym', 'cat15', 'opp15', 'read15', 'etym15']
     }
   ];
   GK.UNIT = {}; GK.UNITS.forEach(function (u, i) { u.no = ('0' + (i + 1)).slice(-2); GK.UNIT[u.id] = u; });

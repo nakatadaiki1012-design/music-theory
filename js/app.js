@@ -390,13 +390,13 @@
     var cats = [['all', 'すべて']].concat(nW ? [['weak', '⚠ 苦手 ' + nW]] : []).concat(['tempo', 'tchg', 'dyn', 'expr', 'art', 'aux', 'form'].map(function (c) { return [c, GK.TERM_CAT[c].replace(/（.*）/, '')]; }));
     if (nW) cat = 'weak';
     body.innerHTML = '<div class="toolw"><div class="ctl"><div class="seg">' + cats.map(function (c) { return '<button type="button" data-tc="' + c[0] + '" aria-pressed="' + (c[0] === cat) + '">' + c[1] + '</button>'; }).join('') + '</div>' +
-      '<input id="tq" type="search" placeholder="さがす（例：allegro・だんだん）" style="flex:1 1 160px;min-width:0;font:inherit;padding:6px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)"></div>' +
+      '<input id="tq" type="search" placeholder="さがす（例：allegro・だんだん・vivid）" style="flex:1 1 160px;min-width:0;font:inherit;padding:6px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)"></div>' +
       '<div id="tl" style="flex:1 1 0;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;align-content:start;padding:2px"></div></div>';
     function draw() {
       var q = qs.trim().toLowerCase();
-      var L = GK.TERMS.filter(function (t) { return (cat === 'all' || t.c === cat || (cat === 'weak' && weak[t.t])) && (!q || (t.t + ' ' + t.r + ' ' + t.m).toLowerCase().indexOf(q) >= 0); });
+      var L = GK.TERMS.filter(function (t) { return (cat === 'all' || t.c === cat || (cat === 'weak' && weak[t.t])) && (!q || (t.t + ' ' + t.r + ' ' + t.m + ' ' + (t.nu || '') + ' ' + (t.et || '') + ' ' + (t.en || '')).toLowerCase().indexOf(q) >= 0); });
       $('#tl').innerHTML = L.length ? L.map(function (t) {
-        return '<div style="border:1.5px solid ' + (weak[t.t] ? 'var(--warm)' : 'var(--line)') + ';border-radius:10px;padding:6px 10px;background:var(--panel)">' + (weak[t.t] ? '<small style="float:right;color:var(--warm)">⚠ 苦手</small>' : '') + '<b class="en" style="font-style:italic;font-size:1.15em">' + esc(t.t) + '</b> <small style="color:var(--muted)">' + esc(t.r) + '</small><br><span>' + esc(t.m) + '</span><small style="display:block;color:var(--muted);font-size:11px">' + '★★★'.slice(0, t.lv) + '・' + GK.TERM_CAT[t.c].replace(/（.*）/, '') + '</small></div>';
+        return '<div style="border:1.5px solid ' + (weak[t.t] ? 'var(--warm)' : 'var(--line)') + ';border-radius:10px;padding:6px 10px;background:var(--panel)">' + (weak[t.t] ? '<small style="float:right;color:var(--warm)">⚠ 苦手</small>' : '') + '<b class="en" style="font-style:italic;font-size:1.15em">' + esc(t.t) + '</b> <small style="color:var(--muted)">' + esc(t.r) + '</small><br><span>' + esc(t.m) + '</span>' + (t.nu ? '<small style="display:block;margin-top:2px;line-height:1.45">💡 ' + esc(t.nu) + '</small>' : '') + (t.et ? '<small style="display:block;line-height:1.45;color:var(--blue)">🌱 ' + esc(t.et) + (t.en ? ' → <i class="en">' + esc(t.en) + '</i>' : '') + '</small>' : '') + '<small style="display:block;color:var(--muted);font-size:11px">' + '★★★'.slice(0, t.lv) + '・' + GK.TERM_CAT[t.c].replace(/（.*）/, '') + '</small></div>';
       }).join('') : '<p class="note">見つかりません</p>';
     }
     body.onclick = function (e) {

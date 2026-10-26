@@ -1055,7 +1055,9 @@
   var TM = GK.TERMS, syn = GK.termSyn;
   var en = function (t) { return '<i class="en" style="font-weight:700">' + t + '</i>'; };
   var tq = function (t) { return '<b class="en" style="font-style:italic">' + t.t + '</b>'; };
-  var tex = function (t) { return '<b class="en" style="font-style:italic">' + t.t + '</b> <small>［' + t.r + '］</small>＝ ' + t.m + '。'; };
+  var tex = function (t) { return '<b class="en" style="font-style:italic">' + t.t + '</b> <small>［' + t.r + '］</small>＝ ' + t.m + '。' + tnu(t); };
+  // ニュアンスと 語源（terms_info.js）
+  var tnu = function (t) { return t.nu ? '<br><small>💡 ' + t.nu + (t.et ? '　🌱 ' + t.et + (t.en ? ' → <i class="en">' + t.en + '</i>' : '') : '') + '</small>' : ''; };
   var wt = function (x) { return '「' + x.m + '」は ' + en(x.t) + ' の 意味'; }, wm = function (x) { return en(x.t) + ' ＝ ' + x.m; };
   var inCats = function (cats) { return function (t) { return cats.indexOf(t.c) >= 0; }; };
   // 演習では まちがえた楽語（weakT）を 半分くらいの確率で 出す。クラス対戦では使わない（全員 同じ問題にするため）
@@ -1089,10 +1091,28 @@
     };
   }
   var C14 = ['tempo', 'tchg', 'dyn', 'aux'], C15 = ['expr', 'art', 'form'];
+  // 英語の なかま：同じ語源の 英語から 楽語を当てる（または その逆）
+  var EN_OK = function (t) { return t.en && /^[a-z]/i.test(t.en) && !/^(and|but|turn|accent|not too much|little by little)$/.test(t.en); };
+  var enKey = function (t) { return t.en.split(/[・（ ]/)[0].replace(/-$/, ''); };
+  function etymGen(cats) {
+    return function (R, st) {
+      var pool = TM.filter(inCats(cats)).filter(EN_OK).filter(function (t) { return t.lv <= Math.max(2, st); }), t = pick(pool, R), k = enKey(t);
+      var others = TM.filter(inCats(cats)).filter(function (x) { return x !== t && !syn(x.t, t.t) && (!x.en || x.en.indexOf(k) < 0) && (!t.en || !x.en || t.en.indexOf(enKey(x)) < 0); });
+      if (R() < 0.5) {
+        var m = mc(R, tx(en(t.t), t.t), others.map(function (x) { return tw(en(x.t), wm(x), x.t); }));
+        return { q: '英語の <b class="en">' + t.en + '</b> と 同じ 語源（なかま）の 楽語は？', ch: m.ch, a: m.a, why: m.why, ex: tex(t), term: t.t };
+      }
+      var o2 = others.filter(EN_OK);
+      var m2 = mc(R, tx('<i class="en">' + t.en + '</i>', t.en), o2.map(function (x) { return tw('<i class="en">' + x.en + '</i>', '<i class="en">' + x.en + '</i> は ' + en(x.t) + '（' + x.m + '）の なかま', x.en); }));
+      return { q: tq(t) + '（' + t.m + '）と 同じ 語源の 英語は？', ch: m2.ch, a: m2.a, why: m2.why, ex: tex(t), term: t.t };
+    };
+  }
   T.tmMean = { u: 'u14', st: 1, gen: termGen(['tempo', 'tchg', 'dyn'], 'mean') };
   T.tmRev = { u: 'u14', st: 1, gen: termGen(['tempo', 'tchg', 'dyn'], 'rev') };
   T.auxMean = { u: 'u14', st: 1, gen: termGen(['aux'], 'mean') };
   T.read14 = { u: 'u14', st: 2, gen: termGen(C14, 'read') };
+  T.etym14 = { u: 'u14', st: 2, gen: etymGen(C14) };
+  T.etym15 = { u: 'u15', st: 2, gen: etymGen(C15) };
   T.exMean = { u: 'u15', st: 1, gen: termGen(['expr'], 'mean') };
   T.exRev = { u: 'u15', st: 2, gen: termGen(['expr'], 'rev') };
   T.artMean = { u: 'u15', st: 1, gen: termGen(['art', 'form'], 'mean') };
@@ -1247,7 +1267,7 @@
   ['tempoChange', 'accel. ＝ アクセル、rit. ＝ ブレーキ、a tempo ＝ もとの速さ'],
   ['tmMean,tmRev,read14,cat14,opp14', '-issimo ＝ とても、-etto・-ino ＝ ちょっと ひかえめ'],
   ['auxMean,phrase', 'molto もりもり、poco ぽこっと少し、subito すぐ、sempre ずっと'],
-  ['express,exMean,exRev,mood,read15,cat15', '英語や カタカナ語の 親戚を 探そう（dolce ＝ スイーツ、maestoso ＝ マエストロ）'],
+  ['express,exMean,exRev,mood,read15,cat15,etym14,etym15', '英語や カタカナ語の 親戚を 探そう（dolce ＝ スイーツ、maestoso ＝ マエストロ）'],
   ['artic,artSym,artMean,artRev,opp15', '点 ＝ 短く、線 ＝ 十分 のばす、＞ ＝ 強く。pizz. は つまんで ピッ'],
   ['repeatOrder', 'D.C. ＝ 頭（カーポ）へ、D.S. ＝ 𝄋 へ、Fine ＝ フィニッシュ']
   ].forEach(function (x) { x[0].split(',').forEach(function (id) { TIPS[id] = x[1]; }); });
@@ -1258,7 +1278,7 @@
   GK.Q.make = function (id, R, st) {
     var t = T[id], s = st || t.st;
     var q = t.gen(R, s);
-    q.t = id; q.u = t.u; if (!q.tip && TIPS[id]) q.tip = TIPS[id]; q.st = Math.max(t.st, Math.min(3, s)); q.ear = !!(t.ear || q.ear);
+    q.t = id; q.u = t.u; if (!q.tip && TIPS[id] && !(q.term && GK.termByName(q.term) && GK.termByName(q.term).nu)) q.tip = TIPS[id]; // 楽語は 解説に 語源（いちばんの 覚え方）が 入るので 省く q.st = Math.max(t.st, Math.min(3, s)); q.ear = !!(t.ear || q.ear);
     return q;
   };
   // 同じ問題（問題文と答えが同じ）が 続けて出ないように 作り直す。seen：これまでに出した問題
