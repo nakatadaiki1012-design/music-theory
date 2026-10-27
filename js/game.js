@@ -111,9 +111,16 @@
     }
     if (!G.started) { G.started = true; G.last = now(); GK.fx('go'); showQ(); }
     var left = timeLeft(), max = G.mode === 'battle' ? G.cfg.t * 1000 : Math.max(G.cfg.t * 1000, 1);
-    var bar = $('#gbar', G.box); if (bar) { bar.firstChild.style.width = Math.min(100, left / max * 100) + '%'; bar.classList.toggle('low', left < 10000); }
+    // ゲージ：同じ値なら さわらない（チカチカ防止）。赤は 10 秒を切ったら、12 秒を こえたら もどす
+    var bar = $('#gbar', G.box);
+    if (bar && isFinite(left)) {
+      var pc = (Math.round(Math.min(100, left / max * 100) * 2) / 2) + '%';
+      if (bar.firstChild.style.width !== pc) bar.firstChild.style.width = pc;
+      if (left < 10000) bar.classList.add('low'); else if (left > 12000) bar.classList.remove('low');
+    }
     var tm = $('#gtm', G.box), dr = G.mode === 'battle' ? 1 : drainRate((now() - G.startAt) / 1000);
-    if (tm) tm.innerHTML = Math.ceil(left / 1000) + '秒' + (dr > 1.05 ? '<small style="color:var(--warm);font-size:13px;margin-left:4px;font-family:var(--font-en);font-style:italic">accel. ×' + dr.toFixed(1) + '</small>' : '');
+    var th = Math.ceil(left / 1000) + '秒' + (dr > 1.05 ? '<small>accel. ×' + dr.toFixed(1) + '</small>' : '');
+    if (tm && tm.dataset.h !== th) { tm.dataset.h = th; tm.innerHTML = th; }
     GK.STAGE.tick(G, left);
     if (G.mode !== 'battle' && t - G.startAt > HARD_END * 1000) left = 0;
     if (left <= 0 && !G.over) { G.over = true; clearInterval(G.timer); G.dur = (now() - G.startAt) / 1000; GK.fx('whistle'); G.hooks.end && G.hooks.end(G); }

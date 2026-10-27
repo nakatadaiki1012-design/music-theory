@@ -1278,7 +1278,9 @@
   GK.Q.make = function (id, R, st) {
     var t = T[id], s = st || t.st;
     var q = t.gen(R, s);
-    q.t = id; q.u = t.u; if (!q.tip && TIPS[id] && !(q.term && GK.termByName(q.term) && GK.termByName(q.term).nu)) q.tip = TIPS[id]; // 楽語は 解説に 語源（いちばんの 覚え方）が 入るので 省く q.st = Math.max(t.st, Math.min(3, s)); q.ear = !!(t.ear || q.ear);
+    q.t = id; q.u = t.u; q.st = Math.max(t.st, Math.min(3, s)); q.ear = !!(t.ear || q.ear);
+    // 楽語は 解説に 語源（いちばんの 覚え方）が 入るので 覚え方の 一言は 省く
+    if (!q.tip && TIPS[id] && !(q.term && GK.termByName(q.term) && GK.termByName(q.term).nu)) q.tip = TIPS[id];
     return q;
   };
   // 同じ問題（問題文と答えが同じ）が 続けて出ないように 作り直す。seen：これまでに出した問題
