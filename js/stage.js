@@ -55,7 +55,7 @@
     var at = Math.max(Date.now(), G.bannerFree || 0), wait = at - Date.now();
     G.bannerFree = at + 1300;
     setTimeout(function () {
-      var p = G.box && G.box.firstChild; if (!p || G.dead) return;
+      var p = G.box && G.box.firstChild; if (!p || G.dead || G.over || !p.querySelector('#stg')) return; // 終わったあとの 画面には 出さない
       var b = document.createElement('div'); b.className = 'gbanner ' + (cls || ''); b.innerHTML = html;
       p.appendChild(b); setTimeout(function () { b.remove(); }, 1600);
     }, wait);

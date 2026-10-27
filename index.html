@@ -345,6 +345,100 @@ svg.dia .en { font-family: var(--font-en); }
 @keyframes fok { 0% { box-shadow: inset 0 0 0 4px var(--ok); } 100% { box-shadow: inset 0 0 0 0 var(--ok); } }
 @keyframes fng { 0%, 50% { transform: translateX(-5px); } 25%, 75% { transform: translateX(5px); } 100% { transform: none; } }
 
+/* ===== 🎮 ゲーム画面（夜のコンサートホール） ===== */
+.arena { --ar-ink: #f6f1e4; --ar-dim: rgba(246, 241, 228, .62); color: var(--ar-ink); border: 0 !important; overflow: hidden;
+  background: radial-gradient(ellipse 70% 55% at 50% -8%, rgba(255, 214, 140, .30), transparent 70%),
+    radial-gradient(ellipse 90% 30% at 50% 108%, rgba(255, 190, 110, .22), transparent 70%),
+    linear-gradient(180deg, #1b1838 0%, #241a3d 55%, #2b1b2c 100%) !important; }
+.arena::before, .arena::after { content: ""; position: absolute; top: 0; bottom: 0; width: 26px; z-index: 0; pointer-events: none;
+  background: repeating-linear-gradient(90deg, #7a1424 0 7px, #9b1d30 7px 12px, #6a1020 12px 16px); box-shadow: 0 0 18px rgba(0, 0, 0, .55); }
+.arena::before { left: 0; border-radius: 0 0 18px 0; }
+.arena::after { right: 0; border-radius: 0 0 0 18px; }
+.arena > * { position: relative; z-index: 1; }
+.arena { padding-left: 38px !important; padding-right: 38px !important; }
+/* 上の HUD */
+.arena .ta-top { background: rgba(10, 8, 26, .55); border: 1px solid rgba(255, 255, 255, .14); border-radius: 14px; padding: 6px 12px; box-shadow: 0 4px 14px rgba(0, 0, 0, .35); }
+.arena .ta-top .tm { color: #fff; font-weight: 700; }
+.arena .ta-top .tm::before { content: "⏱ "; font-size: .9em; }
+.arena .ta-top .tm small { color: #ffb36b; }
+.arena .ta-top .tbar { height: 18px; border-radius: 9px; border: 2px solid rgba(255, 255, 255, .35); background: rgba(255, 255, 255, .10); position: relative; }
+.arena .ta-top .tbar i { position: relative; background: linear-gradient(90deg, #2fd3a5, #7ef0b8); box-shadow: 0 0 12px rgba(80, 240, 180, .55); border-radius: 7px; }
+.arena .ta-top .tbar i::after { content: ""; position: absolute; inset: 2px 6px auto 6px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .45); }
+.arena .ta-top .tbar.low i { background: linear-gradient(90deg, #ff5e3a, #ffb14a); box-shadow: 0 0 14px rgba(255, 110, 60, .75); }
+.arena .ta-top .tbar.low { animation: lowglow 1.6s ease-in-out infinite; }
+@keyframes lowglow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 110, 60, 0); } 50% { box-shadow: 0 0 14px 2px rgba(255, 110, 60, .45); } }
+.arena .ta-top .sc { color: #ffd76a; text-shadow: 0 2px 0 rgba(0, 0, 0, .4); }
+.arena .ta-top .sc small { color: var(--ar-dim); }
+.arena .ta-top .sc.bump { animation: scbump .35s ease-out; }
+@keyframes scbump { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+.arena .ta-top .cb { color: #ffb36b; }
+.arena .ta-top .cb b { display: inline-block; font-family: var(--font-en); font-size: 1.25em; color: #fff; }
+.arena .ta-top .cb.hot b { color: #ffd76a; text-shadow: 0 0 10px rgba(255, 180, 60, .8); }
+.arena .ta-top .cb.bump b { animation: scbump .3s ease-out; }
+.arena .ta-top .rank { border-color: #ffd76a; color: #ffd76a; }
+/* ステージの帯 */
+.arena .stagebar { background: rgba(10, 8, 26, .45); border-color: rgba(255, 255, 255, .14); color: var(--ar-ink); }
+.arena .stagebar .sa { background: rgba(255, 255, 255, .14); }
+.arena .stagebar .sa i { background: linear-gradient(90deg, #ffb14a, #ffd76a); box-shadow: 0 0 8px rgba(255, 210, 110, .7); }
+.arena .stagebar .sn { color: var(--ar-dim); }
+.arena .stagebar.ff { background: linear-gradient(90deg, rgba(255, 180, 60, .35), rgba(255, 90, 90, .35), rgba(255, 180, 60, .35)); background-size: 200% 100%; border-color: #ffd76a; }
+/* 問題カード：楽譜が 読みやすいように 白い 紙 */
+.arena #gq > .qz { background: var(--panel); color: var(--ink); border-radius: 16px; margin-top: 8px; padding: 10px 14px 12px !important; box-shadow: 0 10px 30px rgba(0, 0, 0, .45), 0 0 0 3px rgba(255, 215, 120, .25); }
+.arena #gq > .qz.flash-ok { animation: aok .45s ease-out; }
+.arena #gq > .qz.flash-ng { animation: fng .35s; }
+@keyframes aok { 0% { box-shadow: 0 0 0 0 rgba(47, 211, 165, .9), 0 10px 30px rgba(0, 0, 0, .45); } 100% { box-shadow: 0 0 0 18px rgba(47, 211, 165, 0), 0 10px 30px rgba(0, 0, 0, .45); } }
+/* 答えのボタン：4 色 ＋ 音符マーク */
+.arena .qz .ch button { border: 0; color: #fff; border-radius: 12px; min-height: 58px; text-shadow: 0 1px 0 rgba(0, 0, 0, .25); box-shadow: 0 5px 0 rgba(0, 0, 0, .28); transition: transform .08s, box-shadow .08s; }
+.arena .qz .ch button:nth-child(1) { background: linear-gradient(180deg, #3aa0e8, #2779c7); }
+.arena .qz .ch button:nth-child(2) { background: linear-gradient(180deg, #f2795a, #d9553c); }
+.arena .qz .ch button:nth-child(3) { background: linear-gradient(180deg, #f4b53c, #d9921c); }
+.arena .qz .ch button:nth-child(4) { background: linear-gradient(180deg, #9a6be0, #7646c2); }
+.arena .qz .ch button:hover:not(:disabled) { filter: brightness(1.08); }
+.arena .qz .ch button:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0, 0, 0, .28); }
+.arena .qz .ch button .kn { color: rgba(255, 255, 255, .85); font-size: 13px; font-family: var(--font-sym); }
+.arena .qz .ch button:nth-child(1) .kn::before { content: "♩ "; } .arena .qz .ch button:nth-child(2) .kn::before { content: "♪ "; }
+.arena .qz .ch button:nth-child(3) .kn::before { content: "♫ "; } .arena .qz .ch button:nth-child(4) .kn::before { content: "♬ "; }
+.arena .qz .ch button.fg { background: #fff !important; color: var(--ink); box-shadow: 0 5px 0 rgba(0, 0, 0, .18), inset 0 0 0 3px #3aa0e8; }
+.arena .qz .ch button.fg:nth-child(2) { box-shadow: 0 5px 0 rgba(0, 0, 0, .18), inset 0 0 0 3px #f2795a; }
+.arena .qz .ch button.fg:nth-child(3) { box-shadow: 0 5px 0 rgba(0, 0, 0, .18), inset 0 0 0 3px #f4b53c; }
+.arena .qz .ch button.fg:nth-child(4) { box-shadow: 0 5px 0 rgba(0, 0, 0, .18), inset 0 0 0 3px #9a6be0; }
+.arena .qz .ch button.fg .kn { color: var(--muted); }
+.arena .qz .ch button.ok { background: linear-gradient(180deg, #34d39e, #1fa877) !important; color: #fff; box-shadow: 0 0 0 4px rgba(52, 211, 158, .45), 0 5px 0 rgba(0, 0, 0, .28); transform: scale(1.04); }
+.arena .qz .ch button.ng { background: linear-gradient(180deg, #8a8a96, #6a6a76) !important; color: #fff; }
+.arena .qz .ch button.dim { opacity: .35; }
+.arena .qz .ch button.ok::after, .arena .qz .ch button.ng::after { color: #fff; }
+/* はんてい（ナイス！・ブラボー！） */
+.judge { position: absolute; left: 50%; top: 46%; z-index: 9; pointer-events: none; text-align: center; transform: translate(-50%, -50%); animation: judgein .9s ease-out forwards; white-space: nowrap; }
+.judge b { display: block; font-family: var(--font-display); font-size: 54px; font-weight: 900; letter-spacing: .02em; color: #ffd76a;
+  text-shadow: 0 0 2px #4a2a00, 0 2px 0 #4a2a00, 0 4px 0 #4a2a00, 2px 2px 0 #4a2a00, -2px 2px 0 #4a2a00, 0 0 26px rgba(255, 200, 80, .9); }
+.judge small { display: inline-block; margin-top: 2px; font-size: 18px; font-weight: 800; color: #fff; background: rgba(10, 8, 26, .75); border-radius: 999px; padding: 2px 12px; }
+.judge.lv2 b { color: #7ef0b8; text-shadow: 0 0 2px #0b3d2c, 0 2px 0 #0b3d2c, 0 4px 0 #0b3d2c, 2px 2px 0 #0b3d2c, -2px 2px 0 #0b3d2c, 0 0 26px rgba(80, 240, 180, .9); }
+.judge.lv3 b { color: #ff9ad5; text-shadow: 0 0 2px #4a0b33, 0 2px 0 #4a0b33, 0 4px 0 #4a0b33, 2px 2px 0 #4a0b33, -2px 2px 0 #4a0b33, 0 0 30px rgba(255, 120, 200, .95); font-size: 60px; }
+.judge.ng b { color: #dcdce6; text-shadow: 0 0 2px #2a2a36, 0 2px 0 #2a2a36, 0 4px 0 #2a2a36, 2px 2px 0 #2a2a36, -2px 2px 0 #2a2a36; font-size: 44px; }
+@keyframes judgein { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.4) rotate(-6deg); } 18% { opacity: 1; transform: translate(-50%, -50%) scale(1.12) rotate(-3deg); } 35% { transform: translate(-50%, -50%) scale(1) rotate(-3deg); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -62%) scale(1) rotate(-3deg); } }
+/* 結果（カーテンコール） */
+.res.arena .note, .res.arena p { color: var(--ar-ink); }
+.res.arena .big { color: #ffd76a; font-size: calc(64px * var(--k)); text-shadow: 0 4px 0 #4a2a00, 0 0 30px rgba(255, 200, 80, .6); font-variant-numeric: tabular-nums; }
+.res.arena .big small { color: var(--ar-dim); }
+.res.arena .curtain { background: rgba(255, 215, 120, .14); border-color: #ffd76a; color: var(--ar-ink); }
+.res.arena .curtain small { color: var(--ar-dim); }
+.res.arena .msg { color: #fff; }
+.res.arena .btn:not(.main) { background: rgba(255, 255, 255, .94); color: var(--ink); }
+.res.arena .btn.ghost { background: transparent; color: var(--ar-ink); border-color: rgba(255, 255, 255, .5); }
+/* カウントダウン */
+.arena .count { color: #ffd76a; text-shadow: 0 6px 0 #4a2a00, 3px 3px 0 #4a2a00, -3px 3px 0 #4a2a00, 0 0 40px rgba(255, 200, 80, .7); }
+.arena .count span { display: inline-block; animation: cdin .9s ease-out; }
+@keyframes cdin { 0% { opacity: 0; transform: scale(2.2); } 30% { opacity: 1; transform: scale(.92); } 45% { transform: scale(1); } 100% { opacity: 1; } }
+.arena .count small { display: block; font-size: 22px; text-shadow: none; color: var(--ar-dim); text-align: center; font-family: var(--font-body); }
+.arena .gbanner { top: 132px; }
+@media (max-width: 640px) {
+  .arena { padding-left: 16px !important; padding-right: 16px !important; }
+  .arena::before, .arena::after { width: 9px; }
+  .arena #gq > .qz { padding: 8px 10px 10px !important; border-radius: 12px; }
+  .judge b { font-size: 40px; } .judge.lv3 b { font-size: 44px; } .judge.ng b { font-size: 34px; } .judge small { font-size: 15px; }
+  .arena .ta-top .tbar { height: 14px; }
+}
+
 /* クラス対戦（先生） */
 .host { flex: 1; min-height: 0; display: grid; gap: 12px; grid-template-columns: 290px minmax(0, 1fr); }
 .hostL { padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: hidden; }
@@ -610,17 +704,17 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261027b"></script>
-<script src="js/music.js?v=20261027b"></script>
-<script src="js/core.js?v=20261027b"></script>
-<script src="js/figs.js?v=20261027b"></script>
-<script src="js/terms.js?v=20261027b"></script>
-<script src="js/terms_info.js?v=20261027b"></script>
-<script src="js/terms_pro.js?v=20261027b"></script>
-<script src="js/lessons.js?v=20261027b"></script>
-<script src="js/quiz.js?v=20261027b"></script>
-<script src="js/app.js?v=20261027b"></script>
-<script src="js/stage.js?v=20261027b"></script>
-<script src="js/game.js?v=20261027b"></script>
+<script src="js/config.js?v=20261027e"></script>
+<script src="js/music.js?v=20261027e"></script>
+<script src="js/core.js?v=20261027e"></script>
+<script src="js/figs.js?v=20261027e"></script>
+<script src="js/terms.js?v=20261027e"></script>
+<script src="js/terms_info.js?v=20261027e"></script>
+<script src="js/terms_pro.js?v=20261027e"></script>
+<script src="js/lessons.js?v=20261027e"></script>
+<script src="js/quiz.js?v=20261027e"></script>
+<script src="js/app.js?v=20261027e"></script>
+<script src="js/stage.js?v=20261027e"></script>
+<script src="js/game.js?v=20261027e"></script>
 </body>
 </html>

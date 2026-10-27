@@ -87,12 +87,12 @@
     stopGame();
     G = { cfg: cfg, qs: makeQs(cfg, seed), i: 0, mode: mode, startAt: startAt, score: 0, combo: 0, maxCombo: 0, ok: 0, ng: 0, res: [], over: false, hooks: hooks || {}, box: box,
       left: cfg.t * 1000, last: startAt };
-    box.innerHTML = '<section class="panel qz" style="position:relative"><div class="ta-top"><span class="tm" id="gtm"></span><div class="tbar" id="gbar"><i></i></div><span class="cb" id="gcb"></span><span class="sc" id="gsc">0<small> 点</small></span>' + (mode === 'battle' ? '<span class="rank" id="grk">−</span>' : '') + '</div>' + GK.STAGE.html() + '<div id="gq" style="flex:1;min-height:0;display:flex;flex-direction:column"></div></section>';
+    box.innerHTML = '<section class="panel qz arena" style="position:relative"><div class="ta-top"><span class="tm" id="gtm"></span><div class="tbar" id="gbar"><i></i></div><span class="cb" id="gcb"></span><span class="sc" id="gsc">0<small> 点</small></span>' + (mode === 'battle' ? '<span class="rank" id="grk">−</span>' : '') + '</div>' + GK.STAGE.html() + '<div id="gq" style="flex:1;min-height:0;display:flex;flex-direction:column"></div></section>';
     G.timer = setInterval(tick, 100);
     GK.quizKeys(function () { return G && G.qel; });
     tick();
   }
-  function stopGame() { if (G) { clearInterval(G.timer); G.dead = true; } }
+  function stopGame() { if (G) { clearInterval(G.timer); clearInterval(G.cuT); G.dead = true; } }
   GK.onLeave(function () { stopGame(); G = null; });
   function timeLeft() {
     if (G.mode === 'battle') return Math.max(0, G.startAt + G.cfg.t * 1000 - now());
@@ -106,7 +106,7 @@
     if (!gq) { stopGame(); return; }
     if (t < G.startAt) {
       var n = Math.ceil((G.startAt - t) / 1000);
-      if (G.cd !== n) { G.cd = n; gq.innerHTML = '<div class="count">' + n + '</div>'; GK.fx('count'); }
+      if (G.cd !== n) { G.cd = n; gq.innerHTML = '<div class="count"><div><span>' + n + '</span><small>' + (n === 3 ? '🎻 チューニング…' : n === 2 ? '🎼 楽譜を ひらいて…' : '🎬 開演！') + '</small></div></div>'; GK.fx('count'); }
       return;
     }
     if (!G.started) { G.started = true; G.last = now(); GK.fx('go'); showQ(); }
@@ -139,7 +139,7 @@
         if (ok) {
           G.combo++; G.ok++; G.maxCombo = Math.max(G.maxCombo, G.combo);
           var ff = GK.STAGE.ffOn(G), pts = Math.round(q.st * 30 * mult(G.combo) * (ff ? 2 : 1));
-          G.score += pts; pop = '+' + pts + (ff ? ' ff' : '');
+          G.score += pts; pop = '+' + pts + ' 点' + (ff ? '（ff ×2）' : '');
           if (G.mode !== 'battle') {
             var b = bonusSec(q.st, G.ok - 1) + (G.combo % 5 === 0 ? COMBO_BONUS : 0);
             G.left = Math.min(Math.max(G.cfg.t * 1000, timeLeft()), timeLeft() + b * 1000); G.last = now();
@@ -148,25 +148,42 @@
           G.qel.classList.add('flash-ok');
           GK.STAGE.correct(G, G.qel.querySelector('.ch button.ok'));
         } else {
-          G.combo = 0; G.ng++; pop = '✕';
-          if (G.mode !== 'battle') { G.left = timeLeft() - PENALTY * 1000; G.last = now(); pop += '　−' + PENALTY + '秒'; }
+          G.combo = 0; G.ng++; pop = '';
+          if (G.mode !== 'battle') { G.left = timeLeft() - PENALTY * 1000; G.last = now(); pop += '−' + PENALTY + ' 秒'; }
           G.qel.classList.add('flash-ng');
           GK.STAGE.wrong(G);
         }
-        popup(pop, !ok);
-        $('#gsc', G.box).innerHTML = GK.fmtN(G.score) + '<small> 点</small>';
-        $('#gcb', G.box).textContent = G.combo >= 3 ? '🔥 ' + G.combo + ' コンボ' + (mult(G.combo) > 1 ? ' ×' + mult(G.combo) : '') : '';
+        judge(ok, pop);
+        countUp(G.score);
+        var cb = $('#gcb', G.box);
+        cb.innerHTML = G.combo >= 3 ? '🔥 <b>' + G.combo + '</b> コンボ' + (mult(G.combo) > 1 ? ' ×' + mult(G.combo) : '') : '';
+        cb.classList.toggle('hot', G.combo >= 10); bump(cb);
         G.hooks.answer && G.hooks.answer(G);
         setTimeout(function () { if (G && !G.over && !G.dead) { G.i++; showQ(); } }, ok ? 380 : 1100);
       }
     });
   }
-  function popup(t, ng) {
-    var p = document.createElement('div'); p.className = 'pop' + (ng ? ' ng' : ''); p.textContent = t;
-    var sc = $('#gsc', G.box); if (!sc) return;
-    p.style.right = '16px'; p.style.top = (G.box.querySelector('#stg') ? G.box.querySelector('#stg').offsetTop + G.box.querySelector('#stg').offsetHeight + 34 : 78) + 'px';
-    G.box.firstChild.appendChild(p); setTimeout(function () { p.remove(); }, 800);
+  // ゲームらしい 演出：はんてい（ナイス！ など）、点数の カウントアップ
+  function bump(el) { if (!el) return; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  function judge(ok, sub) {
+    var sec = G.box.firstChild; if (!sec) return;
+    var old = sec.querySelector('.judge'); if (old) old.remove();
+    var c = G.combo, w = ok ? (c >= 20 ? ['ブラビッシモ！', 'lv3'] : c >= 10 ? ['ブラボー！', 'lv2'] : c >= 5 ? ['すばらしい！', ''] : ['ナイス！', '']) : ['おしい！', 'ng'];
+    var j = document.createElement('div'); j.className = 'judge ' + w[1]; j.innerHTML = '<b>' + w[0] + '</b>' + (sub ? '<small>' + sub + '</small>' : '');
+    sec.appendChild(j); setTimeout(function () { j.remove(); }, 950);
   }
+  function countUp(to) {
+    var el = $('#gsc', G.box); if (!el) return;
+    var from = G.shown || 0, t0 = Date.now(); G.shown = to;
+    if (to !== from) bump(el);
+    clearInterval(G.cuT);
+    G.cuT = setInterval(function () {
+      var k = Math.min(1, (Date.now() - t0) / 350), v = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+      if (el.isConnected) el.innerHTML = GK.fmtN(v) + '<small> 点</small>';
+      if (k >= 1) clearInterval(G.cuT);
+    }, 30);
+  }
+
 
   /* ---------- ⏱ タイムアタック ---------- */
   GK.route(/^ta$/, function () {
@@ -181,9 +198,11 @@
     if (nb && g.score > 0) GK.confetti(60);
     var mm = Math.floor(g.dur / 60), ss = Math.round(g.dur % 60);
     setTimeout(function () { GK.STAGE.applause(Math.min(1, 0.3 + GK.STAGE.venueOf(g.score) * 0.1 + (nb ? 0.3 : 0))); }, 300);
-    V.innerHTML = '<section class="panel res"><p class="note">🎭 カーテンコール・' + esc(rangeName(g.cfg)) + '・⏱ ' + (mm ? mm + ' 分 ' : '') + ss + ' 秒 つづいた</p>' + GK.STAGE.curtain(g) + '<div class="big">' + GK.fmtN(g.score) + '<small> 点</small></div>' +
+    V.innerHTML = '<section class="panel res arena"><p class="note">🎭 カーテンコール・' + esc(rangeName(g.cfg)) + '・⏱ ' + (mm ? mm + ' 分 ' : '') + ss + ' 秒 つづいた</p>' + GK.STAGE.curtain(g) + '<div class="big" id="fsc">0<small> 点</small></div>' +
       '<p class="msg">' + (nb ? '🎉 ベスト更新！' : 'ベスト ' + GK.fmtN(best) + ' 点') + '　正解 ' + g.ok + ' 問・最大 ' + g.maxCombo + ' コンボ</p><p>📏 <b>' + g.ok + ' 問正解 ≒ ' + ruler(g.ok) + '</b></p>' +
       '<div class="acts"><button type="button" class="btn" id="rep">🔊 あなたの演奏を聴く</button>' + (g.res.length ? '<button type="button" class="btn" id="rv">📖 ' + (g.ng ? 'まちがえた ' + g.ng + ' 問の解説' : '解説を見る') + '</button>' : '') + '<button type="button" class="btn" id="brag">📣 自慢する</button><button type="button" class="btn main" data-go="#ta">▶ もう一度</button><button type="button" class="btn ghost" data-go="#game">◀ ゲームのトップ</button></div></section>';
+    // 点数を カウントアップで 見せる
+    var fsc = $('#fsc'), t0 = Date.now(), ct = setInterval(function () { var k = Math.min(1, (Date.now() - t0) / 1200), v = Math.round(g.score * (1 - Math.pow(1 - k, 3))); if (!fsc.isConnected) { clearInterval(ct); return; } fsc.innerHTML = GK.fmtN(v) + '<small> 点</small>'; if (k >= 1) clearInterval(ct); }, 30);
     $('#rep').onclick = function () { GK.STAGE.replay(g); };
     $('#brag').onclick = function () { GK.share('🎼 楽典ラボ タイムアタック（' + rangeName(g.cfg) + '）で ' + GK.fmtN(g.score) + ' 点！ ' + GK.STAGE.VENUES[GK.STAGE.venueOf(g.score)][2] + ' 公演まで とどいた！ ' + g.ok + ' 問正解・最大 ' + g.maxCombo + ' コンボ（' + ruler(g.ok) + '）\n' + location.origin + location.pathname); };
     var rv = $('#rv'); if (rv) rv.onclick = function () { GK.review(V, g.res, function () { GK.go('#game'); }); };
