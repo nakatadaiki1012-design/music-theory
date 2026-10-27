@@ -439,6 +439,14 @@ svg.dia .en { font-family: var(--font-en); }
   .arena .ta-top .tbar { height: 14px; }
 }
 
+/* せまい画面：1 段目に 時間・コンボ・点数、2 段目に ゲージ（段数が 変わらないので 画面が ゆれない） */
+@media (max-width: 900px) {
+  .ta-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; column-gap: 8px; row-gap: 5px; }
+  .ta-top .tm, .ta-top .cb, .ta-top .sc { width: auto; }
+  .ta-top .cb { text-align: center; text-overflow: ellipsis; }
+  .ta-top .tbar { grid-column: 1 / -1; grid-row: 2; min-width: 0; }
+}
+
 /* クラス対戦（先生） */
 .host { flex: 1; min-height: 0; display: grid; gap: 12px; grid-template-columns: 290px minmax(0, 1fr); }
 .hostL { padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: hidden; }
@@ -654,11 +662,10 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
   .qz .fb .mk { font-size: 24px; }
   .qz .fb .ex { font-size: 13.5px; }
   .foot .kh { display: none; }
-  .ta-top { flex-wrap: wrap; row-gap: 4px; }
-  .ta-top .tbar { order: 9; flex-basis: 100%; height: 10px; }
-  .ta-top .sc { font-size: 20px; margin-left: auto; width: auto; }
-  .ta-top .tm { width: auto; }
-  .ta-top .cb { width: auto; }
+  .ta-top .sc { font-size: 20px; }
+  .ta-top .tm { font-size: 17px; }
+  .ta-top .tm small { font-size: 11px; }
+  .ta-top .cb { font-size: 13px; }
   .celebrate { padding: 12px 18px; white-space: nowrap; }
   .celebrate b { font-size: 22px; }
   .count { font-size: 80px; }
@@ -704,17 +711,17 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261027e"></script>
-<script src="js/music.js?v=20261027e"></script>
-<script src="js/core.js?v=20261027e"></script>
-<script src="js/figs.js?v=20261027e"></script>
-<script src="js/terms.js?v=20261027e"></script>
-<script src="js/terms_info.js?v=20261027e"></script>
-<script src="js/terms_pro.js?v=20261027e"></script>
-<script src="js/lessons.js?v=20261027e"></script>
-<script src="js/quiz.js?v=20261027e"></script>
-<script src="js/app.js?v=20261027e"></script>
-<script src="js/stage.js?v=20261027e"></script>
-<script src="js/game.js?v=20261027e"></script>
+<script src="js/config.js?v=20261027f"></script>
+<script src="js/music.js?v=20261027f"></script>
+<script src="js/core.js?v=20261027f"></script>
+<script src="js/figs.js?v=20261027f"></script>
+<script src="js/terms.js?v=20261027f"></script>
+<script src="js/terms_info.js?v=20261027f"></script>
+<script src="js/terms_pro.js?v=20261027f"></script>
+<script src="js/lessons.js?v=20261027f"></script>
+<script src="js/quiz.js?v=20261027f"></script>
+<script src="js/app.js?v=20261027f"></script>
+<script src="js/stage.js?v=20261027f"></script>
+<script src="js/game.js?v=20261027f"></script>
 </body>
 </html>
