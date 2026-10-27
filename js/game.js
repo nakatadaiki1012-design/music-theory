@@ -23,7 +23,7 @@
     return (GR.filter(function (x) { return x[0] === cfg.m; })[0] || GR[0])[1];
   };
   /* ---------- ルール（数学Aラボと同じ） ---------- */
-  var BONUS = { 1: 2, 2: 4, 3: 6 }, PENALTY = 2, COMBO_BONUS = 1; // 正解で もどる時間は 少しだけ
+  var BONUS = { 1: 1, 2: 2, 3: 3 }, PENALTY = 2, COMBO_BONUS = 1; // 正解で もどる時間は ほんの少しだけ
   var bonusSec = function (st, ok) { return Math.round(BONUS[st] * Math.max(0.3, Math.pow(0.97, ok)) * 10) / 10; };
   var mult = function (k) { return k >= 40 ? 3 : k >= 30 ? 2.5 : k >= 20 ? 2 : k >= 10 ? 1.5 : 1; };
   var RULER = [[0, 'ウォーミングアップ中'], [5, '小テスト 1 回分'], [10, '楽典ドリル 1 ページ分'], [20, '定期テストの楽典 1 回分'], [30, '楽典検定 1 回分'], [45, '音大入試の楽典 1 回分'], [60, '楽典の問題集 1 冊分']];
@@ -141,7 +141,7 @@
           var ff = GK.STAGE.ffOn(G), pts = Math.round(q.st * 30 * mult(G.combo) * (ff ? 2 : 1));
           G.score += pts; pop = '+' + pts + ' 点' + (ff ? '（ff ×2）' : '');
           if (G.mode !== 'battle') {
-            var b = bonusSec(q.st, G.ok - 1) + (G.combo % 5 === 0 ? COMBO_BONUS : 0);
+            var b = bonusSec(q.st, G.ok - 1) + (G.combo % 10 === 0 ? COMBO_BONUS : 0);
             G.left = Math.min(Math.max(G.cfg.t * 1000, timeLeft()), timeLeft() + b * 1000); G.last = now();
             pop += '　+' + b + '秒';
           }
