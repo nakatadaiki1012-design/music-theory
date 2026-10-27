@@ -69,6 +69,14 @@
   function memo(items) {
     return { html: '<div class="memo">' + items.map(function (x, i) { return '<div class="mi"><span class="mn">' + (i + 1) + '</span><div><b>' + x[0] + '</b>' + (x[1] ? '<small>' + x[1] + '</small>' : '') + '</div></div>'; }).join('') + '</div>' };
   }
+  // 教科書の 一言 と 演奏家の イメージ（terms_pro.js）
+  function proTable(names) {
+    return function () {
+      var ts = names.map(GK.termByName), wide = window.innerWidth >= 640;
+      return { html: '<table style="border-collapse:collapse;width:100%;max-width:640px;line-height:1.3;font-size:calc(' + (wide ? 14 : 12.5) + 'px * var(--k))"><tr><th style="text-align:left;padding:3px 6px;border-bottom:1.5px solid var(--ink)">言葉</th><th style="text-align:left;padding:3px 6px;border-bottom:1.5px solid var(--ink)">📖 教科書</th><th style="text-align:left;padding:3px 6px;border-bottom:1.5px solid var(--ink)">🎻 演奏家の イメージ</th></tr>' +
+        ts.map(function (t) { return '<tr><td style="padding:3px 6px;border-bottom:1px solid var(--line);white-space:nowrap"><b class="en" style="font-style:italic">' + GK.termShort(t.t) + '</b></td><td style="padding:3px 6px;border-bottom:1px solid var(--line);color:var(--muted)">' + t.m + '</td><td style="padding:3px 6px;border-bottom:1px solid var(--line);font-weight:700;color:var(--warm)">' + t.ps + '</td></tr>'; }).join('') + '</table>' };
+    };
+  }
   var MEMO = function (h, b, items) { return { k: '🎤 覚え方', h: h, b: b, fig: memo(items) }; };
 
   /* =========================================================
@@ -251,10 +259,11 @@
         { k: 'ポイント 3', h: 'くり返しの記号', b: '<b>𝄆 𝄇</b>（反復記号）の間を くり返す。<b>1番カッコ・2番カッコ</b>は 2回目に 1番カッコをとばす。', fig: { col: [{ c: 'repeat', a: { kind: 'basic' } }, { c: 'repeat', a: { kind: 'volta' } }] } },
         { k: 'ポイント 4', h: 'D.C.・D.S.・Fine・Coda', b: '<b>D.C.</b>（ダ・カーポ）＝始めにもどる。<b>D.S.</b>（ダル・セーニョ）＝𝄋 にもどる。<b>Fine</b>（フィーネ）＝終わり。<b>𝄌 Coda</b>＝コーダへ とぶ。', fig: { col: [{ c: 'repeat', a: { kind: 'dc' } }, { c: 'repeat', a: { kind: 'ds' } }] } },
         { k: 'ポイント 5', h: '発想を表す言葉', b: '曲の気分や表情を表す言葉。速さの言葉と いっしょに書かれることも多い（例：Allegro con brio ＝ 速く 生き生きと）。', fig: termTable(['dolce', 'cantabile', 'espressivo', 'legato', 'maestoso', 'grazioso', 'con brio', 'leggiero', 'tranquillo', 'agitato']) },
+        { k: 'ポイント 6', h: '教科書の 一言の「その奥」', b: '楽語は 1 語の 日本語に 訳すと 大事な イメージが こぼれる。たとえば <b>fermata</b> は イタリア語で ふだん「<em>バス停</em>」。流れが いったん 止まり、みんなで 息を そろえて また 出発する 場所。', fig: proTable(['fermata', 'Allegro', 'Andante', 'staccato', 'p（piano）', 'f（forte）', 'crescendo（cresc.）', 'dolce']) },
         MEMO('楽語は「イメージ」で 覚える', 'イタリア語を 暗記じゃなくて 映像で 覚える！', [['p ＝ ひそひそ、f ＝ フォース（力）', 'm は「まあまあ」：mp まあまあ弱く、mf まあまあ強く'], ['速さの はしご', 'Largo 寝そべる → Adagio くつろぐ → Andante 歩く → Moderato ふつう → Allegro 走る → Presto ダッシュ'], ['＜ は 口が開く、＞ は 口が閉じる', '開く ＝ だんだん強く、閉じる ＝ だんだん弱く'], ['D.C. ＝ 頭（カーポ）へ、Fine ＝ フィニッシュ', 'D.S. は セーニョ（𝄋 の印）へ']])
       ],
       sum: ['p 弱く・f 強く・m やや', 'Largo〈Adagio〈Andante〈Moderato〈Allegro〈Presto', 'D.C. 始めへ・D.S. 𝄋へ・Fine 終わり'],
-      types: ['dyn', 'dynOrder', 'hairpin', 'tempo', 'tempoChange', 'artic', 'express', 'repeatOrder']
+      types: ['dyn', 'dynOrder', 'hairpin', 'tempo', 'tempoChange', 'artic', 'express', 'repeatOrder', 'proQ']
     },
     /* ---------------- 14 ---------------- */
     {
@@ -283,6 +292,7 @@
         { k: 'ポイント 4', h: '装飾記号', b: '音を 飾る記号。<b>tr</b>（トリル）は 上の音と すばやく くり返す。<b>モルデント</b>は 下の音、<b>プラルトリラー</b>は 上の音を 1 回 はさむ。', fig: { score: { clef: 'treble', notes: [{ k: 'D5', d: 'q', orn: 'tr', lab: 'トリル' }, { k: 'D5', d: 'q', orn: 'mordent', lab: 'モルデント' }, { k: 'D5', d: 'q', orn: 'mordent_inverted', lab: 'プラルトリラー' }, { k: 'D5', d: 'q', orn: 'turn', lab: 'ターン' }], sp: 84, ls: 12 } } },
         { k: 'ポイント 5', h: '楽器の ひき方', b: '弦楽器は <b>pizz.</b>（指ではじく）⇔ <b>arco</b>（弓でひく）。<b>con sordino</b>（弱音器をつけて）⇔ <b>senza sordino</b>（はずして）。', fig: termTable(['pizzicato（pizz.）', 'arco', 'tremolo', 'glissando（gliss.）', 'arpeggio', 'con sordino', 'senza sordino', 'divisi（div.）', 'una corda']) },
         { k: 'ポイント 6', h: '合奏と 楽譜の指示', b: '<b>tutti</b>（全員で）⇔ <b>solo</b>（1 人で）。<b>simile</b> は「前と同じように」で、同じ記号を 書くのを 省く。', fig: termTable(['tutti', 'solo', 'simile', '8va（ottava）', 'loco', 'al Fine', 'attacca', 'G.P.（general pause）']) },
+        { k: 'ポイント 7', h: '演奏家の イメージで 読む', b: '発想や 奏法の 言葉も、日本語の 一言より「どんな 景色・気持ちか」で 覚えると 演奏が 変わる。', fig: proTable(['maestoso', 'agitato', 'leggiero', 'cantabile', 'legato', 'tenuto', 'sotto voce', 'con sordino']) },
         MEMO('イタリア語は「親戚の言葉」で 覚える', '英語や 身近な カタカナ語と つなげれば 暗記は いらない！', [['英語に そっくり', 'espressivo ＝ expressive、energico ＝ energetic、brillante ＝ brilliant'], ['dolce ＝ ドルチェ（スイーツ）', '甘く やわらかに。cantabile は カンターレ（歌う）→ 歌うように'], ['maestoso ＝ マエストロ（巨匠）', '巨匠のように 堂々と、荘厳に'], ['pizz. ＝ つまんで ピッ、arco ＝ アーチ（弓）', 'tutti ＝ みんな、solo ＝ ひとり']])
       ],
       sum: ['やさしい dolce・cantabile／元気 con brio・animato／激しい agitato・con fuoco', 'pizz. 指ではじく ⇔ arco 弓で', 'tutti 全員で ⇔ solo 1 人で、simile 前と同じように'],

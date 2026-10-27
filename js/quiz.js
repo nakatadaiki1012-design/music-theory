@@ -1057,7 +1057,8 @@
   var tq = function (t) { return '<b class="en" style="font-style:italic">' + t.t + '</b>'; };
   var tex = function (t) { return '<b class="en" style="font-style:italic">' + t.t + '</b> <small>［' + t.r + '］</small>＝ ' + t.m + '。' + tnu(t); };
   // ニュアンスと 語源（terms_info.js）
-  var tnu = function (t) { return t.nu ? '<br><small>💡 ' + t.nu + (t.et ? '　🌱 ' + t.et + (t.en ? ' → <i class="en">' + t.en + '</i>' : '') : '') + '</small>' : ''; };
+  // 演奏家の イメージ（terms_pro.js）が あれば それを、なければ ニュアンスを 見せる
+  var tnu = function (t) { return t.nu ? '<br><small>' + (t.ps ? '🎻 演奏家の イメージ：<b>' + t.ps + '</b>' : '💡 ' + t.nu) + (t.et ? '　🌱 ' + t.et + (t.en ? ' → <i class="en">' + t.en + '</i>' : '') : '') + '</small>' : ''; };
   var wt = function (x) { return '「' + x.m + '」は ' + en(x.t) + ' の 意味'; }, wm = function (x) { return en(x.t) + ' ＝ ' + x.m; };
   var inCats = function (cats) { return function (t) { return cats.indexOf(t.c) >= 0; }; };
   // 演習では まちがえた楽語（weakT）を 半分くらいの確率で 出す。クラス対戦では使わない（全員 同じ問題にするため）
@@ -1112,6 +1113,19 @@
   T.auxMean = { u: 'u14', st: 1, gen: termGen(['aux'], 'mean') };
   T.read14 = { u: 'u14', st: 2, gen: termGen(C14, 'read') };
   T.etym14 = { u: 'u14', st: 2, gen: etymGen(C14) };
+  // 教科書の 一言の 奥にある、演奏家の イメージ
+  T.proQ = {
+    u: 'u13', st: 2, gen: function (R) {
+      var pool = TM.filter(function (t) { return t.ps; }), t = pick(pool, R);
+      if (t.t === 'fermata' || R() < 0.15) {
+        t = GK.termByName('fermata');
+        var m0 = mc(R, tx('バス停（停留所）'), ['とまり木', '信号', '線路', '終電'].map(function (x) { return tx(x); }));
+        return { q: '教科書では「ほどよく のばす」と 習う <b>fermata（𝄐）</b>。イタリア語で ふだんは 何の意味？', ch: m0.ch, a: m0.a, ex: '<b>fermata ＝ 停留所・バス停</b>。' + t.pl, term: t.t };
+      }
+      var m = mc(R, tx(t.ps), pool.filter(function (x) { return x !== t && !syn(x.t, t.t); }).map(function (x) { return tw(x.ps, '「' + x.ps + '」は ' + en(x.t) + ' の イメージ'); }));
+      return { q: '教科書では「' + t.m + '」と 習う ' + tq(t) + '。演奏家の イメージに 近いのは？', ch: m.ch, a: m.a, why: m.why, ex: '<b>' + t.ps + '</b>。' + t.pl, term: t.t };
+    }
+  };
   T.etym15 = { u: 'u15', st: 2, gen: etymGen(C15) };
   T.exMean = { u: 'u15', st: 1, gen: termGen(['expr'], 'mean') };
   T.exRev = { u: 'u15', st: 2, gen: termGen(['expr'], 'rev') };
@@ -1267,7 +1281,7 @@
   ['tempoChange', 'accel. ＝ アクセル、rit. ＝ ブレーキ、a tempo ＝ もとの速さ'],
   ['tmMean,tmRev,read14,cat14,opp14', '-issimo ＝ とても、-etto・-ino ＝ ちょっと ひかえめ'],
   ['auxMean,phrase', 'molto もりもり、poco ぽこっと少し、subito すぐ、sempre ずっと'],
-  ['express,exMean,exRev,mood,read15,cat15,etym14,etym15', '英語や カタカナ語の 親戚を 探そう（dolce ＝ スイーツ、maestoso ＝ マエストロ）'],
+  ['express,exMean,exRev,mood,read15,cat15,etym14,etym15,proQ', '英語や カタカナ語の 親戚を 探そう（dolce ＝ スイーツ、maestoso ＝ マエストロ）'],
   ['artic,artSym,artMean,artRev,opp15', '点 ＝ 短く、線 ＝ 十分 のばす、＞ ＝ 強く。pizz. は つまんで ピッ'],
   ['repeatOrder', 'D.C. ＝ 頭（カーポ）へ、D.S. ＝ 𝄋 へ、Fine ＝ フィニッシュ']
   ].forEach(function (x) { x[0].split(',').forEach(function (id) { TIPS[id] = x[1]; }); });
