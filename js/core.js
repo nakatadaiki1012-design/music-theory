@@ -90,6 +90,7 @@
     else if (kind === 'count') beep(740, 0, 0.12, 'sine', 0.15);
     else if (kind === 'tick') { beep(1760, 0, 0.04, 'square', 0.05); beep(880, 0, 0.06, 'sine', 0.08); }
     else if (kind === 'go') beep(1480, 0, 0.35, 'sine', 0.18);
+    else if (kind === 'poppo') { [[587, 0], [740, 0], [880, 0], [587, .42], [740, .42], [880, .42]].forEach(function (x) { beep(x[0], x[1], .34, 'triangle', .07); }); } // 汽笛
     else if (kind === 'whistle') { beep(2100, 0, 0.5, 'sine', 0.12); beep(2160, 0, 0.5, 'sine', 0.08); }
     else if (kind === 'fanfare') { [523, 659, 784, 1047].forEach(function (f, i) { beep(f, i * 0.11, i === 3 ? 0.5 : 0.14, 'triangle', 0.12); }); }
     else if (kind === 'drum') { for (var i = 0; i < 16; i++) beep(120 + Math.random() * 30, i * 0.07, 0.06, 'square', 0.05); }

@@ -197,14 +197,14 @@
     GK.rwSave(); GK.earn(Math.floor(g.score / 20)); GK.checkBadges();
     if (nb && g.score > 0) GK.confetti(60);
     var mm = Math.floor(g.dur / 60), ss = Math.round(g.dur % 60);
-    setTimeout(function () { GK.STAGE.applause(Math.min(1, 0.3 + GK.STAGE.venueOf(g.score) * 0.1 + (nb ? 0.3 : 0))); }, 300);
-    V.innerHTML = '<section class="panel res arena"><p class="note">🎭 カーテンコール・' + esc(rangeName(g.cfg)) + '・⏱ ' + (mm ? mm + ' 分 ' : '') + ss + ' 秒 つづいた</p>' + GK.STAGE.curtain(g) + '<div class="big" id="fsc">0<small> 点</small></div>' +
+    setTimeout(function () { GK.STAGE.applause(Math.min(1, 0.3 + GK.STAGE.stationOf(g.ok) * 0.08 + (nb ? 0.3 : 0))); }, 300);
+    V.innerHTML = '<section class="panel res arena"><p class="note">🚂 旅の記録・' + esc(rangeName(g.cfg)) + '・⏱ ' + (mm ? mm + ' 分 ' : '') + ss + ' 秒 つづいた</p>' + GK.STAGE.curtain(g) + '<div class="big" id="fsc">0<small> 点</small></div>' +
       '<p class="msg">' + (nb ? '🎉 ベスト更新！' : 'ベスト ' + GK.fmtN(best) + ' 点') + '　正解 ' + g.ok + ' 問・最大 ' + g.maxCombo + ' コンボ</p><p>📏 <b>' + g.ok + ' 問正解 ≒ ' + ruler(g.ok) + '</b></p>' +
       '<div class="acts"><button type="button" class="btn" id="rep">🔊 あなたの演奏を聴く</button>' + (g.res.length ? '<button type="button" class="btn" id="rv">📖 ' + (g.ng ? 'まちがえた ' + g.ng + ' 問の解説' : '解説を見る') + '</button>' : '') + '<button type="button" class="btn" id="brag">📣 自慢する</button><button type="button" class="btn main" data-go="#ta">▶ もう一度</button><button type="button" class="btn ghost" data-go="#game">◀ ゲームのトップ</button></div></section>';
     // 点数を カウントアップで 見せる
     var fsc = $('#fsc'), t0 = Date.now(), ct = setInterval(function () { var k = Math.min(1, (Date.now() - t0) / 1200), v = Math.round(g.score * (1 - Math.pow(1 - k, 3))); if (!fsc.isConnected) { clearInterval(ct); return; } fsc.innerHTML = GK.fmtN(v) + '<small> 点</small>'; if (k >= 1) clearInterval(ct); }, 30);
     $('#rep').onclick = function () { GK.STAGE.replay(g); };
-    $('#brag').onclick = function () { GK.share('🎼 楽典ラボ タイムアタック（' + rangeName(g.cfg) + '）で ' + GK.fmtN(g.score) + ' 点！ ' + GK.STAGE.VENUES[GK.STAGE.venueOf(g.score)][2] + ' 公演まで とどいた！ ' + g.ok + ' 問正解・最大 ' + g.maxCombo + ' コンボ（' + ruler(g.ok) + '）\n' + location.origin + location.pathname); };
+    $('#brag').onclick = function () { GK.share('🎼 楽典ラボ タイムアタック（' + rangeName(g.cfg) + '）で ' + GK.fmtN(g.score) + ' 点！ ' + '音楽史列車で ' + GK.STAGE.STATIONS[GK.STAGE.stationOf(g.ok)][2] + ' まで 行けた！ ' + g.ok + ' 問正解・最大 ' + g.maxCombo + ' コンボ（' + ruler(g.ok) + '）\n' + location.origin + location.pathname); };
     var rv = $('#rv'); if (rv) rv.onclick = function () { GK.review(V, g.res, function () { GK.go('#game'); }); };
   }
 
