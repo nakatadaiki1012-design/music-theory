@@ -251,7 +251,7 @@
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + Hh); svg.removeAttribute('width'); svg.removeAttribute('height'); svg.setAttribute('class', 'vf');
     svg.style.width = ''; svg.style.height = ''; svg.style.maxWidth = Math.round(W * (spec.zoom || 2)) + 'px'; svg.dataset.w = W;
     M.fit(svg, W, top + 40, top + gap + 80);
-    return { svg: svg };
+    return { svg: svg, xAt: xAt, y1: st1.getYForLine(4), y2: st2.getYForLine(4) };
   };
   F.CUSTOM.cpfig = function (box, a) { M.cpfig(box, a); };
   CP.fig = function (key, cf, cp, above, o) { return { c: 'cpfig', a: Object.assign({ key: key, cf: cf, cp: cp, above: above }, o || {}) }; };

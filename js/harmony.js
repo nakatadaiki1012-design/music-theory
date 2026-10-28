@@ -262,8 +262,14 @@
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + Hh); svg.removeAttribute('width'); svg.removeAttribute('height'); svg.setAttribute('class', 'vf');
     svg.style.width = ''; svg.style.height = ''; svg.style.maxWidth = Math.round(W * (spec.zoom || 2.2)) + 'px'; svg.dataset.w = W;
     M.fit(svg, W, top + 40, top + gap + 80);
-    return { svg: svg, notes: sn, xs: xs };
+    return { svg: svg, notes: sn, xs: xs, y1: st1.getYForLine(4), y2: st2.getYForLine(4) };
   };
+  /* ---------- 五線を タップして 音を 入力する 道具 ---------- */
+  // 画面の 位置 → 図の 座標
+  M.svgPt = function (svg, ev) { var pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY; var m = svg.getScreenCTM(); return m ? pt.matrixTransform(m.inverse()) : { x: 0, y: 0 }; };
+  // 下から 1 本めの 線の y と 音部記号 → タップした 高さの 音（l, o）。線の 間は 5px ＝ 音階 1 つ
+  M.yToDiatonic = function (y, yBottom, clef) { var base = clef === 'bass' ? 2 * 7 + 4 : 4 * 7 + 2, dn = base + Math.round((yBottom - y) / 5); return { l: ((dn % 7) + 7) % 7, o: Math.floor(dn / 7) }; };
+  M.diatonicOf = function (p) { return p.o * 7 + p.l; };
   // 図の 部品：{ c: 'satb', a: spec }
   F.CUSTOM.satb = function (box, a) { M.satb(box, a); };
 

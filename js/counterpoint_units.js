@@ -412,7 +412,7 @@
     body.innerHTML = '<div class="toolw hl"><div class="ctl"><div class="seg"><button type="button" data-ca="1" aria-pressed="' + S.above + '">上に つける</button><button type="button" data-ca="0" aria-pressed="' + !S.above + '">下に つける</button></div>' +
       '<div class="seg"><button type="button" data-cl="1" aria-pressed="' + (S.lv === 1) + '">みじかい</button><button type="button" data-cl="2" aria-pressed="' + (S.lv === 2) + '">ふつう</button><button type="button" data-cl="3" aria-pressed="' + (S.lv === 3) + '">ながい</button></div>' +
       '<button type="button" class="btn sm" id="cNew">🎲 新しい課題</button><button type="button" class="btn sm" id="cPlay">🔊 聴く</button><button type="button" class="btn sm" id="cModel">📖 お手本</button></div>' +
-      '<div class="out" id="cInfo"></div><div class="fig sc" id="cStaff" style="flex:1 1 0;min-height:130px"></div><div class="hgrid" id="cGrid"></div><div class="hres" id="cRes"></div></div>';
+      '<div class="out" id="cInfo"></div><div class="fig sc hstaff" id="cStaff" style="flex:1 1 0;min-height:200px"></div><div class="hgrid" id="cGrid"></div><div class="hres" id="cRes"></div></div>';
     body.onclick = function (e) {
       var b = e.target.closest('[data-ca],[data-cl],#cNew,#cPlay,#cModel,[data-cc]'); if (!b) return;
       if (b.dataset.ca) { S.above = b.dataset.ca === '1'; newTask(); }
@@ -428,11 +428,21 @@
       GK.store.set('cplab', { above: S.above, lv: S.lv });
       if (b.dataset.ca || b.dataset.cl) GK.cpLab(body); else draw();
     };
+    var geo = null;
+    // 五線を タップして 音を 書く
+    $('#cStaff', body).addEventListener('click', function (e) {
+      if (!geo || S.t.show) return;
+      var t = S.t, pt = M.svgPt(geo.svg, e), i = 0, bd = 1e9;
+      t.cf.forEach(function (_, q) { var x = geo.xAt[q * 4]; if (x != null && Math.abs(x - pt.x) < bd) { bd = Math.abs(x - pt.x); i = q; } });
+      var treble = S.above, dn = M.yToDiatonic(pt.y, treble ? geo.y1 : geo.y2, treble ? 'treble' : 'bass'), p0 = CP.pit(t.key, 0), n = M.diatonicOf(dn) - M.diatonicOf(p0), c = t.cf[i];
+      n = Math.max(S.above ? c : c - 9, Math.min(S.above ? c + 9 : c, n));
+      t.cp[i].n = n; t.done = false; GK.M.play([[M.str(CP.pit(t.key, n)), 0.8]], 100); draw();
+    });
     draw();
     function draw() {
       var t = S.t, cp = t.show ? t.model : t.cp, iss = CP.check({ key: t.key, cf: t.cf, cp: cp, above: S.above, sp: 1 });
       $('#cInfo', body).innerHTML = '<b>' + esc(kname(t.key)) + '</b><span>第1類（1対1）</span><span>定旋律に 対位線を ' + (S.above ? '上' : '下') + 'へ 書こう</span>' + (t.show ? '<span class="note">📖 お手本を 表示中</span>' : '');
-      M.cpfig($('#cStaff', body), { key: t.key, cf: t.cf, cp: cp, above: S.above, bad: iss.map(function (x) { return x.t; }), zoom: 2.4 });
+      geo = M.cpfig($('#cStaff', body), { key: t.key, cf: t.cf, cp: cp, above: S.above, bad: iss.map(function (x) { return x.t; }), zoom: 2.4 });
       var g = '<i></i>' + t.cf.map(function (_, i) { return '<b class="hh">' + (i + 1) + '</b>'; }).join('') + '<b class="hv" style="color:' + BLUE + '">対位線</b>';
       cp.forEach(function (x, i) {
         var bad = iss.some(function (z) { return z.bar === i; }), c = t.cf[i], st = Math.abs(x.n - c);
