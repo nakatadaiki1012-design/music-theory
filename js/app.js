@@ -117,9 +117,10 @@
     function show() {
       var q = o.qs[i];
       GK.drawQ(el, q, {
-        top: prog() + (q.retry ? '<span class="cat" style="color:var(--warm);border-color:var(--warm)">🔁 もう一度</span>' : ''), noEx: o.mode === 'test',
+        top: prog() + (q.retry ? '<span class="cat" style="color:var(--warm);border-color:var(--warm)">🔁 もう一度</span>' : '') + (q.mix ? '<span class="cat" style="color:var(--blue);border-color:var(--blue)">🔁 前に 習った ところ</span>' : ''), noEx: o.mode === 'test',
         onPick: function (k, ok) {
           res.push({ q: q, pick: k, ok: ok });
+          GK.skillNote && GK.skillNote(q.t, ok);
           if (o.mode === 'prac') {
             noteMiss(q.t, ok); if (q.term) noteTerm(q.term, ok); if (ok) { RW.drillOk++; if (q.ear) RW.earOk++; GK.earn(5); }
             // まちがえたら 同じ種類の 新しい問題を 3 問あとに（1 セット 3 回まで）
@@ -160,39 +161,52 @@
   /* =========================================================
      ホーム
      ========================================================= */
-  GK.route(/^home$/, function () {
-    var pass = GK.passCount(), seen = GK.UNITS.filter(function (u) { return GK.prog(u.id).seen; }).length;
-    var next = GK.UNITS.filter(function (u) { return !GK.prog(u.id).pass; })[0] || GK.UNITS[0];
-    var task = GK.store.get('task', null);
+  // ホームの 3 つの タブ：🎼 楽典 ／ 🎹 和声法 ／ 🧰 道具と 学習サポート
+  GK.route(/^home(?:\/(theory|harm|tools))?$/, function (m) {
+    var tab = m[1] || GK.store.get('homeTab', 'theory');
+    if (tab === 'harm' && !(GK.HUNITS && GK.HUNITS.length)) tab = 'theory';
+    GK.store.set('homeTab', tab);
+    var list = tab === 'harm' ? GK.HUNITS : GK.UNITS, task = GK.store.get('task', null);
+    var pass = list.filter(function (u) { return GK.prog(u.id).pass; }).length, seen = list.filter(function (u) { return GK.prog(u.id).seen; }).length;
+    var next = list.filter(function (u) { return !GK.prog(u.id).pass; })[0] || list[0];
+    var due = GK.dueTypes ? GK.dueTypes().length : 0, hasH = GK.HUNITS && GK.HUNITS.length;
+    var tile = function (u) {
+      var p = GK.prog(u.id), mx = GK.unitMastery ? GK.unitMastery(u.id) : { pct: 0 };
+      return '<button type="button" class="tile" data-go="#' + u.id + '"><span class="no">' + u.no + '</span><span class="tg">' + u.sym + '</span><b>' + esc(u.title) + '</b><small>' + esc(u.en) + '</small><div class="gl">' + esc(u.goal) + '</div>' +
+        '<div class="pips"><i class="' + (p.seen ? 'on' : '') + '"></i><i class="' + (p.prac >= 7 ? 'on' : '') + '"></i><i class="' + (p.pass ? 'on' : '') + '"></i>' + (mx.pct ? '<span class="mpc" title="身についた度">' + mx.pct + '%</span>' : '') + '</div>' + (p.pass ? '<span class="stamp">合格</span>' : '') + '</button>';
+    };
+    var tool = function (go, ic, ttl, en, gl, badge) { return '<button type="button" class="tile tool" data-go="' + go + '"><span class="no">' + ic + '</span><b>' + ttl + '</b><small>' + en + '</small><div class="gl">' + gl + '</div>' + (badge ? '<span class="stamp" style="color:var(--warm);border-color:var(--warm)">' + badge + '</span>' : '') + '</button>'; };
+    var tiles, n;
+    if (tab === 'tools') {
+      tiles = [tool('#learn/due', '🔁', '今日の復習', 'Review', '間をあけて 思い出すと 長く おぼえられる', due ? due + ' 種類' : ''), tool('#learn/diag', '🧭', '力だめし', 'Check-up', '今の実力を はかって「ここから」を 決める'), tool('#learn/map', '🗺', '学習マップ', 'Skill Map', '単元ごとの 身につき具合・苦手'),
+        tool('#tools/kbd', '🎹', '鍵盤と五線', 'Keyboard', 'おした鍵盤が 楽譜になる'), tool('#tools/circle', '⭕', '五度圏と調号', 'Circle of Fifths', '調をえらんで 音階を聴く'), tool('#tools/chord', '🎶', '和音・音程ビルダー', 'Chord Builder', '根音と種類で 組み立てる'),
+        tool('#tools/terms', '📚', '楽語じてん', 'Dictionary', GK.TERMS.length + ' 語を 種類別に 調べる')].concat(hasH ? (GK.HTOOLS || []).map(function (t) { return tool(t.go, t.ic, t.ttl, t.en, t.gl); }) : []);
+      n = tiles.length; tiles = tiles.join('');
+    } else { n = list.length; tiles = list.map(tile).join(''); }
+    var cols = n > 16 ? Math.ceil(n / 4) : n > 9 ? 4 : 3, rows = Math.ceil(n / cols);
+    var tabs = [['theory', '🎼 楽典（' + GK.UNITS.length + ' 単元）'], hasH ? ['harm', '🎹 和声法（' + GK.HUNITS.length + ' 単元）'] : null, ['tools', '🧰 道具・復習' + (due ? ' ' + due : '')]].filter(Boolean);
     V.innerHTML = '<div class="home"><aside class="panel hero">' +
-      '<h2 class="cname">楽典</h2><p class="cdesc">音名・リズム・音程・音階・調・和音・記号を、楽譜と図で 見て・聴いて・解いて 身につける</p>' +
-      '<div class="stats"><div class="stat"><b>' + pass + '<small>/' + GK.UNITS.length + '</small></b><small>合格した単元</small></div><div class="stat"><b>' + GK.fmtN(RW.drillOk) + '</b><small>演習の正解</small></div><div class="stat"><b>' + GK.levelOf(RW.coins).name + '</b><small>段位</small></div></div>' +
+      '<h2 class="cname">' + (tab === 'harm' ? '和声法' : '楽典') + '</h2><p class="cdesc">' + (tab === 'harm' ? '四声部の 和音の つなぎ方を、楽譜と 音で 見て・聴いて・自分で 書いて 身につける' : '音名・リズム・音程・音階・調・和音・記号を、楽譜と図で 見て・聴いて・解いて 身につける') + '</p>' +
+      '<div class="stats"><div class="stat"><b>' + pass + '<small>/' + list.length + '</small></b><small>合格した単元</small></div><div class="stat"><b>' + GK.fmtN(RW.drillOk) + '</b><small>演習の正解</small></div><div class="stat"><b>' + GK.levelOf(RW.coins).name + '</b><small>段位</small></div></div>' +
       (task ? '<div class="taskbox">📮 <span>課題 <b>' + task.units.filter(function (u) { return GK.prog(u).pass; }).length + '/' + task.units.length + '</b> 合格</span><button type="button" class="btn" data-go="#task">見る</button></div>' : '') +
       '<div class="acts"><button type="button" class="btn main" data-go="#' + next.id + '">▶ ' + (seen ? 'つづき' : 'はじめる') + '：' + esc(next.title) + '</button>' +
-      '<button type="button" class="btn" data-go="#drill">💪 まとめて演習' + (Object.keys(GK.store.get('weak', {})).length ? '・🔁 苦手 ' + Object.keys(GK.store.get('weak', {})).length : '') + '</button>' +
-      '<button type="button" class="btn" data-go="#game">🎮 タイムアタック・クラス対戦</button></div>' +
-      '<div class="heromini"><h3>1 単元 ＝ 3 ステップ</h3><div class="cycle"><ol><li><b>💡</b><b>ポイント</b><span>図と音で わかる</span></li><li><b>💪</b><b>演習</b><span>10 問。毎回ちがう問題</span></li><li><b>🏁</b><b>テスト</b><span>5 問中 4 問で 合格</span></li></ol></div>' +
-      '<h3 style="margin-top:10px">🎹 さわって確かめる</h3><div class="cycle"><ol><li><b>🎹</b><b>鍵盤と五線</b><span>おすと 楽譜に出る</span></li><li><b>⭕</b><b>五度圏</b><span>調と調号</span></li><li><b>🎶</b><b>和音・音程</b><span>組み立てて 鳴らす</span></li></ol></div></div>' +
-      '</aside><section class="grid">' +
-      GK.UNITS.map(function (u) {
-        var p = GK.prog(u.id);
-        return '<button type="button" class="tile" data-go="#' + u.id + '"><span class="no">' + u.no + '</span><span class="tg">' + u.sym + '</span><b>' + esc(u.title) + '</b><small>' + esc(u.en) + '</small><div class="gl">' + esc(u.goal) + '</div>' +
-          '<div class="pips"><i class="' + (p.seen ? 'on' : '') + '"></i><i class="' + (p.prac >= 7 ? 'on' : '') + '"></i><i class="' + (p.pass ? 'on' : '') + '"></i></div>' + (p.pass ? '<span class="stamp">合格</span>' : '') + '</button>';
-      }).join('') +
-      '<button type="button" class="tile tool" data-go="#tools/kbd"><span class="no">🎹</span><b>鍵盤と五線</b><small>Keyboard</small><div class="gl">おした鍵盤が 楽譜になる</div></button>' +
-      '<button type="button" class="tile tool" data-go="#tools/circle"><span class="no">⭕</span><b>五度圏と調号</b><small>Circle of Fifths</small><div class="gl">調をえらんで 音階を聴く</div></button>' +
-      '<button type="button" class="tile tool" data-go="#tools/chord"><span class="no">🎶</span><b>和音・音程ビルダー</b><small>Chord Builder</small><div class="gl">根音と種類で 組み立てる</div></button>' +
-      '<button type="button" class="tile tool" data-go="#tools/terms"><span class="no">📚</span><b>楽語じてん</b><small>Dictionary</small><div class="gl">' + GK.TERMS.length + ' 語を 種類別に 調べる</div></button>' +
-      '</section></div>';
+      (due ? '<button type="button" class="btn warm" data-go="#learn/due">🔁 復習 ' + due + '</button>' : '<button type="button" class="btn" data-go="#learn/diag">🧭 力だめし</button>') +
+      '<button type="button" class="btn" data-go="#drill">💪 まとめて演習</button>' +
+      '<button type="button" class="btn" data-go="#game">🎮 ゲーム</button></div>' +
+      '<div class="heromini"><h3>1 単元 ＝ 3 ステップ</h3><div class="cycle"><ol><li><b>💡</b><b>ポイント</b><span>図と音で わかる</span></li><li><b>💪</b><b>演習</b><span>10 問。毎回ちがう問題</span></li><li><b>🏁</b><b>テスト</b><span>' + GK.TEST_N + ' 問中 ' + GK.PASS + ' 問で 合格</span></li></ol></div>' +
+      '<h3 style="margin-top:10px">🧠 わすれない しくみ</h3><div class="cycle"><ol><li><b>🔁</b><b>今日の復習</b><span>間をあけて 思い出す</span></li><li><b>🧭</b><b>力だめし</b><span>実力を はかる</span></li><li><b>🗺</b><b>学習マップ</b><span>身につき具合</span></li></ol></div></div>' +
+      '</aside><section class="gridw"><div class="mtabs">' + tabs.map(function (x) { return '<button type="button" data-go="#home/' + x[0] + '" aria-pressed="' + (x[0] === tab) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="grid" style="--c1:' + cols + ';--r1:' + rows + ';--c2:3;--r2:' + Math.ceil(n / 3) + ';--c3:2;--r3:' + Math.ceil(n / 2) + '">' + tiles + '</div></section></div>';
   });
 
   /* =========================================================
      単元：💡 ポイント ／ 💪 演習 ／ 🏁 テスト
      ========================================================= */
-  GK.route(/^(u\d\d)(?:\/(p|x|t))?(?:\/(\d+))?$/, function (m) {
+  GK.route(/^([uh]\d\d)(?:\/(p|x|t))?(?:\/(\d+))?$/, function (m) {
     var u = GK.UNIT[m[1]]; if (!u) { GK.go('#home'); return; }
+    var back = u.grp === 'harm' ? '#home/harm' : '#home/theory';
     var step = m[2] || 'p', p = GK.prog(u.id);
-    V.innerHTML = '<div class="uhead"><button type="button" class="btn back" data-go="#home">◀ 一覧</button><div class="ut"><small>楽典ラボ・' + u.no + '・' + esc(u.en) + '</small><h2>' + esc(u.title) + '</h2></div>' +
+    V.innerHTML = '<div class="uhead"><button type="button" class="btn back" data-go="' + back + '">◀ 一覧</button><div class="ut"><small>楽典ラボ・' + u.no + '・' + esc(u.en) + '</small><h2>' + esc(u.title) + '</h2></div>' +
       '<nav class="steps">' + [['p', '💡 ポイント', p.seen], ['x', '💪 演習', p.prac >= 7], ['t', '🏁 テスト', p.pass]].map(function (s) { return '<button type="button" data-go="#' + u.id + '/' + s[0] + '" aria-current="' + (s[0] === step) + '">' + s[1] + (s[2] ? '<span class="ck">✓</span>' : '') + '</button>'; }).join('') + '</nav></div><div class="stage" id="stage"></div>';
     var st = $('#stage');
     if (step === 'p') lesson(u, st, m[3] != null ? +m[3] : p.card || 0);
@@ -268,6 +282,7 @@
   function practice(u, st) {
     var R = GK.rng(Math.floor(Math.random() * 1e9));
     var qs = GK.Q.set([u.id], 10, R, { ramp: true, weak: true });
+    if (GK.mixReview) GK.mixReview(qs, u.id); // 前の単元の問題を 2 問まぜる（わすれにくくなる）
     GK.runSet(st, {
       qs: qs, mode: 'prac', onEnd: function (res, n) {
         var p = GK.prog(u.id); GK.setProg(u.id, { prac: Math.max(p.prac, n), pracN: (p.pracN || 0) + 1 });
@@ -285,22 +300,22 @@
 
   function testU(u, st) {
     var p = GK.prog(u.id);
-    st.innerHTML = '<section class="panel res"><div class="big">🏁 確認テスト</div><p class="msg">' + esc(u.title) + '：5 問・ヒントなし・1 回勝負。<b>4 問以上で 合格</b></p>' +
-      (p.test >= 0 ? '<p class="note">これまでの最高：' + p.test + ' / 5' + (p.pass ? '（合格 ' + esc(p.pass) + '）' : '') + '</p>' : '') +
+    st.innerHTML = '<section class="panel res"><div class="big">🏁 確認テスト</div><p class="msg">' + esc(u.title) + '：' + GK.TEST_N + ' 問・ヒントなし・1 回勝負。<b>' + GK.PASS + ' 問以上で 合格</b></p>' +
+      (p.test >= 0 ? '<p class="note">これまでの最高：' + p.test + ' / ' + (p.testN || 5) + (p.pass ? '（合格 ' + esc(p.pass) + '）' : '') + '</p>' : '') +
       '<div class="acts"><button type="button" class="btn main big" id="go">▶ はじめる</button><button type="button" class="btn" data-go="#' + u.id + '/x">💪 先に演習</button></div></section>';
     $('#go').onclick = run;
     GK.onKey(function (e) { if (e.key === 'Enter') run(); });
     function run() {
       var R = GK.rng(Math.floor(Math.random() * 1e9));
-      var qs = GK.Q.set([u.id], 5, R, { noEar: true, ramp: true });
+      var qs = GK.Q.set([u.id], GK.TEST_N, R, { noEar: true, ramp: true });
       GK.runSet(st, {
         qs: qs, mode: 'test', onEnd: function (res, n) {
           var pass = n >= GK.PASS, first = pass && !GK.prog(u.id).pass;
-          GK.setProg(u.id, { test: Math.max(GK.prog(u.id).test, n) });
+          var pp = GK.prog(u.id); GK.setProg(u.id, { test: pp.testN === GK.TEST_N ? Math.max(pp.test, n) : n, testN: GK.TEST_N }); // 問題数が 5 → 8 に 変わったので、古い 記録は 置きかえる
           if (pass && first) GK.setProg(u.id, { pass: GK.today() });
           if (pass) { GK.earn(first ? 150 : 50); GK.confetti(first ? 80 : 30); GK.fx('fanfare'); }
-          st.innerHTML = '<section class="panel res">' + (pass ? '<div class="stampbig">合格</div>' : '') + '<div class="big">' + n + '<small> / 5</small></div><p class="msg">' + (pass ? (first ? '🎉 はじめての合格！ +150 コイン' : '合格！ +50 コイン') : 'あと ' + (GK.PASS - n) + ' 問。解説を見て もう一度') + '</p>' +
-            '<div class="acts"><button type="button" class="btn" id="rv">📖 ' + (n < 5 ? 'まちがえた問題の解説' : '解説を見る') + '</button><button type="button" class="btn ' + (pass ? '' : 'main') + '" id="again">🔁 もう一度（新しい問題）</button>' + (pass ? nextBtn(u) : '<button type="button" class="btn main" data-go="#' + u.id + '/p/0">💡 ポイントを見直す</button>') + '</div></section>';
+          st.innerHTML = '<section class="panel res">' + (pass ? '<div class="stampbig">合格</div>' : '') + '<div class="big">' + n + '<small> / ' + GK.TEST_N + '</small></div><p class="msg">' + (pass ? (first ? '🎉 はじめての合格！ +150 コイン' : '合格！ +50 コイン') : 'あと ' + (GK.PASS - n) + ' 問。解説を見て もう一度') + '</p>' +
+            '<div class="acts"><button type="button" class="btn" id="rv">📖 ' + (n < GK.TEST_N ? 'まちがえた問題の解説' : '解説を見る') + '</button><button type="button" class="btn ' + (pass ? '' : 'main') + '" id="again">🔁 もう一度（新しい問題）</button>' + (pass ? nextBtn(u) : '<button type="button" class="btn main" data-go="#' + u.id + '/p/0">💡 ポイントを見直す</button>') + '</div></section>';
           $('#again').onclick = run;
           $('#rv').onclick = function () { GK.review(st, res, function () { testU(u, st); }); };
         }
@@ -308,7 +323,7 @@
     }
   }
   function nextBtn(u) {
-    var i = GK.UNITS.indexOf(u), n = GK.UNITS[i + 1];
+    var L = u.grp === 'harm' ? GK.HUNITS : GK.UNITS, i = L.indexOf(u), n = L[i + 1];
     return n ? '<button type="button" class="btn main" data-go="#' + n.id + '">▶ 次の単元：' + esc(n.title) + '</button>' : '<button type="button" class="btn main" data-go="#game">🎮 ゲームで腕だめし</button>';
   }
 

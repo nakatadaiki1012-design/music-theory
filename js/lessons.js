@@ -299,5 +299,6 @@
       types: ['exMean', 'exRev', 'mood', 'artMean', 'artRev', 'artSym', 'cat15', 'opp15', 'read15', 'etym15']
     }
   ];
-  GK.UNIT = {}; GK.UNITS.forEach(function (u, i) { u.no = ('0' + (i + 1)).slice(-2); GK.UNIT[u.id] = u; });
+  GK.UNIT = {}; GK.HUNITS = []; GK.HTOOLS = [];
+  GK.UNITS.forEach(function (u, i) { u.no = ('0' + (i + 1)).slice(-2); u.grp = 'theory'; GK.UNIT[u.id] = u; });
 })();

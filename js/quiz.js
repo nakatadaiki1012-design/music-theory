@@ -15,9 +15,15 @@
   // 正解 1 つ ＋ まちがい（key が同じものは 1 つに）
   function mc(R, right, wrongs, n) {
     n = n || 4;
-    var seen = {}, list = [];
+    var seen = {}, list = [], pool = shuffle(wrongs.slice(), R);
+    // 文字の選択肢は 長さが ちかい まちがいを えらぶ（「いちばん長いのが 正解」の かたよりを 防ぐ）
+    var plain = function (x) { return x.t != null && !x.fig; }, len = function (x) { return String(x.t).replace(/<[^>]+>/g, '').length; };
+    if (plain(right) && pool.length > n && pool.every(plain)) {
+      var L = len(right); pool.sort(function (a, b) { return Math.abs(len(a) - L) - Math.abs(len(b) - L); });
+      pool = shuffle(pool.slice(0, n + 1), R);
+    }
     seen[right.k] = 1;
-    shuffle(wrongs.slice(), R).forEach(function (w) { if (list.length < n - 1 && !seen[w.k]) { seen[w.k] = 1; list.push(w); } });
+    pool.forEach(function (w) { if (list.length < n - 1 && !seen[w.k]) { seen[w.k] = 1; list.push(w); } });
     var all = shuffle([right].concat(list), R);
     return { ch: all.map(function (x) { return x.fig ? { fig: x.fig, k: x.k } : x.t; }), a: all.indexOf(right), why: all.map(function (x) { return x.w || ''; }) };
   }
@@ -431,7 +437,7 @@
       var pool = st >= 3 ? ['E#4', 'B#4', 'Cb5', 'Fb4', 'C#4', 'Eb4', 'Ab4', 'F#4'] : st >= 2 ? ['C#4', 'D#4', 'F#4', 'G#4', 'A#4', 'Db4', 'Eb4', 'Gb4', 'Ab4', 'Bb4', 'E#4', 'Cb5'] : ['C#4', 'F#4', 'G#4', 'Eb4', 'Bb4', 'Ab4', 'Db4'];
       var p = M.p(pick(pool, R)), mi = M.midi(p), cand = [mi];
       shuffle([-2, -1, 1, 2], R).forEach(function (k) { var x = mi + k; if (cand.length < 4 && x >= 60 && x <= 72) cand.push(x); });
-      cand.sort(function (a, b) { return a - b; });
+      cand = shuffle(cand, R); // ①〜④ は ばらばらの 順（左から 順だと 答えの 位置が かたよる）
       var lab = ['①', '②', '③', '④'], mk = {}; cand.forEach(function (x, i) { mk[x] = { c: 'var(--gold)', t: lab[i] }; });
       var nat = { l: p.l, a: 0, o: p.o }, black = [1, 3, 6, 8, 10].indexOf(mi % 12) >= 0, ak = {}; ak[mi] = { c: C.red, t: N(p) }; ak[M.midi(nat)] = { c: C.blue, t: N(nat) };
       return { q: '楽譜の音を ひくのは ①〜④の どの鍵盤？', fig: { col: [one(p, 'treble'), { kbd: { from: 'C4', to: 'C5', mark: mk, h: 110 } }] }, ch: lab.slice(0, cand.length), a: cand.indexOf(mi), ex: N(nat) + ' の 鍵盤から ' + (p.a > 0 ? '右（上）' : '左（下）') + 'に 半音 → <b>' + (black ? '黒鍵' : '白鍵') + '</b>。' + (black ? '' : '白鍵どうしの 半音（ミ‐ファ・シ‐ド）に 注意。'), exFig: { kbd: { from: 'C4', to: 'C5', mark: ak, h: 80 } }, play: [[p, 1.5]] };

@@ -123,6 +123,31 @@ h2.ttl { font-family: var(--font-display); font-size: 22px; margin: 0; line-heig
 .taskbox b { color: var(--warm); }
 .taskbox .btn { margin-left: auto; padding: 4px 10px; font-size: 13px; }
 
+.gridw { display: flex; flex-direction: column; gap: 8px; min-height: 0; min-width: 0; }
+.mtabs { flex: none; display: flex; gap: 6px; flex-wrap: wrap; }
+.mtabs button { border: 1.5px solid var(--line); background: var(--panel); border-radius: 999px; padding: 4px 14px; font-size: 14px; font-weight: 700; }
+.mtabs button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.gridw .grid { flex: 1; grid-template-columns: repeat(var(--c1, 4), minmax(0, 1fr)); grid-template-rows: repeat(var(--r1, 4), minmax(0, 1fr)); }
+.tile .pips .mpc { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--muted); font-family: var(--font-en); line-height: 5px; }
+@media (max-width: 900px) { .gridw .grid { grid-template-columns: repeat(var(--c2, 3), minmax(0, 1fr)); grid-template-rows: repeat(var(--r2, 6), minmax(0, 1fr)); } }
+@media (max-width: 640px) { .gridw .grid { grid-template-columns: repeat(var(--c3, 2), minmax(0, 1fr)); grid-template-rows: repeat(var(--r3, 8), minmax(0, 1fr)); } .mtabs button { padding: 3px 10px; font-size: 12.5px; } }
+/* 学習サポート */
+.dgrid, .mgrid { display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.drow, .mrow { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--panel); padding: 5px 10px; text-align: left; font-size: 14px; }
+.drow i, .mrow .mt i { font-style: normal; font-family: var(--font-en); color: var(--warm); font-weight: 700; margin-right: 6px; }
+.drow span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drow b { font-size: 12.5px; white-space: nowrap; }
+.drow.g { border-color: var(--ok); } .drow.g b { color: var(--ok); }
+.drow.y { border-color: var(--gold); } .drow.y b { color: var(--gold); }
+.drow.r { border-color: var(--ng); } .drow.r b { color: var(--ng); }
+.mrow .mt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.mrow .mt em { font-style: normal; font-size: 11px; color: var(--ok); border: 1px solid var(--ok); border-radius: 3px; padding: 0 4px; margin-left: 4px; }
+.mrow .mb { flex: 0 0 38%; height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; display: flex; }
+.mrow .mb i { display: block; height: 100%; margin: 0; }
+.mrow .mb i.m, .legend i.m { background: var(--ok); } .mrow .mb i.l, .legend i.l { background: var(--gold); } .mrow .mb i.w, .legend i.w { background: var(--ng); } .mrow .mb i.n, .legend i.n { background: var(--line); }
+.mrow b { width: 3em; text-align: right; font-family: var(--font-en); font-size: 13px; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.legend i { display: inline-block; width: 12px; height: 8px; border-radius: 2px; margin-right: 4px; }
 .grid { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); min-height: 0; }
 .tile {
   position: relative; text-align: left; border: 1px solid var(--line); background: var(--panel); border-radius: var(--r);
@@ -287,6 +312,8 @@ svg.dia .en { font-family: var(--font-en); }
 .res .stampbig { font-family: var(--font-display); color: var(--warm); border: 4px solid var(--warm); border-radius: 50%; width: 110px; height: 110px; display: grid; place-items: center; font-size: 30px; font-weight: 800; transform: rotate(-12deg); animation: stampin .5s cubic-bezier(.2, 1.6, .5, 1); }
 @keyframes stampin { from { transform: rotate(-12deg) scale(2.4); opacity: 0; } to { transform: rotate(-12deg) scale(1); opacity: 1; } }
 .res .wrongs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: 640px; }
+.mbody .wrongs { display: flex; gap: 6px; flex-wrap: wrap; }
+.mbody .wrongs span { border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; font-size: 13px; background: var(--bg); }
 .res .wrongs span { border: 1px solid var(--line); border-radius: 3px; padding: 1px 8px; font-size: 13px; background: var(--bg); }
 
 /* ===== 演習ハブ・ツール・ゲーム（左に一覧、右に中身） ===== */
@@ -757,17 +784,19 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261028c"></script>
-<script src="js/music.js?v=20261028c"></script>
-<script src="js/core.js?v=20261028c"></script>
-<script src="js/figs.js?v=20261028c"></script>
-<script src="js/terms.js?v=20261028c"></script>
-<script src="js/terms_info.js?v=20261028c"></script>
-<script src="js/terms_pro.js?v=20261028c"></script>
-<script src="js/lessons.js?v=20261028c"></script>
-<script src="js/quiz.js?v=20261028c"></script>
-<script src="js/app.js?v=20261028c"></script>
-<script src="js/stage.js?v=20261028c"></script>
-<script src="js/game.js?v=20261028c"></script>
+<script src="js/config.js?v=20261028d"></script>
+<script src="js/music.js?v=20261028d"></script>
+<script src="js/core.js?v=20261028d"></script>
+<script src="js/figs.js?v=20261028d"></script>
+<script src="js/terms.js?v=20261028d"></script>
+<script src="js/terms_info.js?v=20261028d"></script>
+<script src="js/terms_pro.js?v=20261028d"></script>
+<script src="js/typenames.js?v=20261028d"></script>
+<script src="js/lessons.js?v=20261028d"></script>
+<script src="js/quiz.js?v=20261028d"></script>
+<script src="js/app.js?v=20261028d"></script>
+<script src="js/learn.js?v=20261028d"></script>
+<script src="js/stage.js?v=20261028d"></script>
+<script src="js/game.js?v=20261028d"></script>
 </body>
 </html>
