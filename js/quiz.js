@@ -1293,6 +1293,8 @@
   ].forEach(function (x) { x[0].split(',').forEach(function (id) { TIPS[id] = x[1]; }); });
   GK.Q = { T: T };
   GK.Q.TIPS = TIPS;
+  GK.Q.util = { mc: mc, tx: tx, tw: tw, pick: pick, ri: ri, shuffle: shuffle, N: N, add: function (id, u, st, gen) { T[id] = { u: u, st: st, gen: gen, id: id }; } };
+  GK.Q.addTips = function (m) { Object.keys(m).forEach(function (k) { m[k].split(',').forEach(function (id) { TIPS[id] = k; }); }); };
   Object.keys(T).forEach(function (k) { T[k].id = k; });
   // 1 問つくる
   GK.Q.make = function (id, R, st) {

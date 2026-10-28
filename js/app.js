@@ -341,7 +341,7 @@
     var body = $('#dbody');
     function draw() {
       var html = '';
-      if (DR.mode === 'mix') html += '<div class="frow"><span>単元</span><button type="button" class="btn ghost sm" data-dx="allu">全部</button><button type="button" class="btn ghost sm" data-dx="noneu">はずす</button></div><div class="upick">' + GK.UNITS.map(function (u) { return '<button type="button" data-du="' + u.id + '" aria-pressed="' + (DR.us.indexOf(u.id) >= 0) + '"><i>' + u.no + '</i>' + esc(u.title) + '</button>'; }).join('') + '</div>';
+      if (DR.mode === 'mix') html += '<div class="frow"><span>単元</span><button type="button" class="btn ghost sm" data-dx="allu">全部</button><button type="button" class="btn ghost sm" data-dx="noneu">はずす</button></div><div class="upick">' + GK.UNITS.concat(GK.HUNITS || []).map(function (u) { return '<button type="button" data-du="' + u.id + '" aria-pressed="' + (DR.us.indexOf(u.id) >= 0) + '"><i>' + u.no + '</i>' + esc(u.title) + '</button>'; }).join('') + '</div>';
       if (DR.mode === 'weak') html += wk.length ? '<p>まちがえた回数が多い 問題の種類から 出します。正解すると 少しずつ へります。</p><div class="upick">' + wk.slice(0, 12).map(function (k) { return '<button type="button" disabled style="opacity:1"><i>' + GK.UNIT[GK.Q.T[k].u].no + '</i>' + esc(GK.UNIT[GK.Q.T[k].u].title) + ' <small style="color:var(--warm)">×' + weak[k] + '</small></button>'; }).join('') + '</div>' : '<p>まだ 苦手な問題は ありません。演習で まちがえると ここに たまります。</p>';
       if (DR.mode === 'ear') html += '<p>🔊 音を聴いて答える問題だけを出します（音程・長音階／短音階・長調／短調・長三和音／短三和音・リズム・終わった感じ／続く感じ）。音が出る環境で どうぞ。</p>';
       if (DR.mode === 'all') html += '<p>' + GK.UNITS.length + ' 単元 すべてから 出題します。</p>';
@@ -355,7 +355,7 @@
       var b = e.target.closest('[data-dm],[data-du],[data-dn],[data-ds],[data-dx],#dgo'); if (!b) return;
       if (b.dataset.dm) { DR.mode = b.dataset.dm; $$('[data-dm]').forEach(function (x) { x.setAttribute('aria-current', x === b); }); }
       if (b.dataset.du) { var i = DR.us.indexOf(b.dataset.du); if (i >= 0) DR.us.splice(i, 1); else DR.us.push(b.dataset.du); }
-      if (b.dataset.dx === 'allu') DR.us = GK.UNITS.map(function (u) { return u.id; });
+      if (b.dataset.dx === 'allu') DR.us = GK.UNITS.concat(GK.HUNITS || []).map(function (u) { return u.id; });
       if (b.dataset.dx === 'noneu') DR.us = [];
       if (b.dataset.dn) DR.n = +b.dataset.dn;
       if (b.dataset.ds) DR.st = +b.dataset.ds;
@@ -386,15 +386,16 @@
   /* =========================================================
      🎹 さわって確かめる
      ========================================================= */
-  GK.route(/^tools(?:\/(kbd|circle|chord|terms))?$/, function (m) {
+  GK.route(/^tools(?:\/(kbd|circle|chord|terms|hlab))?$/, function (m) {
     var tab = m[1] || 'kbd';
     V.innerHTML = '<div class="split"><aside class="panel side"><h3>さわって確かめる</h3>' +
-      [['kbd', '🎹 鍵盤と五線', 'おした鍵盤が 楽譜に出る'], ['circle', '⭕ 五度圏と調号', '調をえらぶと 調号と音階'], ['chord', '🎶 和音・音程ビルダー', '根音と種類で 組み立てる'], ['terms', '📚 楽語じてん', GK.TERMS.length + ' 語を 調べる']].map(function (x) { return '<button type="button" class="it" data-go="#tools/' + x[0] + '" aria-current="' + (tab === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('') +
+      [['kbd', '🎹 鍵盤と五線', 'おした鍵盤が 楽譜に出る'], ['circle', '⭕ 五度圏と調号', '調をえらぶと 調号と音階'], ['chord', '🎶 和音・音程ビルダー', '根音と種類で 組み立てる'], ['terms', '📚 楽語じてん', GK.TERMS.length + ' 語を 調べる'], ['hlab', '🎼 和声エディタ', '4 声を 書いて 自動チェック']].map(function (x) { return '<button type="button" class="it" data-go="#tools/' + x[0] + '" aria-current="' + (tab === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('') +
       '</aside><section class="panel main"><div class="mbody" id="tbody"></div></section></div>';
     var body = $('#tbody');
     if (tab === 'kbd') { body.innerHTML = '<div class="toolw" id="tw"></div>'; F.render($('#tw'), { c: 'staffKbd', a: { clefs: true }, cap: '鍵盤をタップ（黒鍵は ♯ と ♭ の 2 つの名前を表示）' }); }
     else if (tab === 'circle') circleTool(body);
     else if (tab === 'terms') termsTool(body);
+    else if (tab === 'hlab') GK.harmLab(body);
     else chordTool(body);
   });
 

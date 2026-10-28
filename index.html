@@ -131,6 +131,27 @@ h2.ttl { font-family: var(--font-display); font-size: 22px; margin: 0; line-heig
 .tile .pips .mpc { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--muted); font-family: var(--font-en); line-height: 5px; }
 @media (max-width: 900px) { .gridw .grid { grid-template-columns: repeat(var(--c2, 3), minmax(0, 1fr)); grid-template-rows: repeat(var(--r2, 6), minmax(0, 1fr)); } }
 @media (max-width: 640px) { .gridw .grid { grid-template-columns: repeat(var(--c3, 2), minmax(0, 1fr)); grid-template-rows: repeat(var(--r3, 8), minmax(0, 1fr)); } .mtabs button { padding: 3px 10px; font-size: 12.5px; } }
+/* 和声エディタ */
+.hl { gap: 6px; min-height: 0; }
+.hl .out { font-size: 14px; gap: 10px; }
+.hl .out b { font-size: 16px; }
+.hgrid { flex: none; display: grid; grid-template-columns: 1.6em repeat(var(--n, 4), minmax(0, 1fr)); gap: 3px 4px; align-items: stretch; }
+.hgrid .hh { text-align: center; font-size: 14px; font-family: serif; color: var(--muted); }
+.hgrid .hv { align-self: center; text-align: center; font-family: var(--font-en); font-weight: 800; font-size: 14px; }
+.hc { display: flex; align-items: center; justify-content: space-between; gap: 1px; border: 1.5px solid var(--line); border-top: 3px solid var(--vc); border-radius: 6px; background: var(--panel); min-height: 36px; padding: 0 1px; min-width: 0; }
+.hc.fx { background: var(--chip); }
+.hc.err { border-color: var(--ng); background: var(--warm-soft); }
+.hc button { flex: none; width: 1.5em; align-self: stretch; font-size: 17px; font-weight: 800; color: var(--ink); background: transparent; border: 0; border-radius: 4px; }
+.hc button:active { background: var(--chip); }
+.hc span { flex: 1; min-width: 0; text-align: center; line-height: 1.1; display: flex; flex-direction: column; }
+.hc em { font-style: normal; font-weight: 800; font-size: 15px; }
+.hc small { font-size: 9.5px; color: var(--muted); }
+.hres { flex: none; max-height: 24%; overflow: auto; font-size: 13.5px; }
+.hres .hok { font-weight: 800; color: var(--ok); }
+.hres .hng { font-weight: 800; color: var(--ng); }
+.hres .hi { margin: 2px 0; line-height: 1.45; }
+.hres .hi.ng b { color: var(--ng); } .hres .hi.wn b { color: var(--gold); } .hres .hi.tip { color: var(--ink); }
+@media (max-width: 640px) { .hl .ctl .seg button { padding: 3px 7px; font-size: 12px; } .hc em { font-size: 13px; } .hc button { width: 1.2em; font-size: 15px; } .hl .out span { display: none; } .hl .out span:first-of-type { display: inline; } .hres { max-height: 22%; } }
 /* 学習サポート */
 .dgrid, .mgrid { display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
 .drow, .mrow { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--panel); padding: 5px 10px; text-align: left; font-size: 14px; }
@@ -784,19 +805,25 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261028d"></script>
-<script src="js/music.js?v=20261028d"></script>
-<script src="js/core.js?v=20261028d"></script>
-<script src="js/figs.js?v=20261028d"></script>
-<script src="js/terms.js?v=20261028d"></script>
-<script src="js/terms_info.js?v=20261028d"></script>
-<script src="js/terms_pro.js?v=20261028d"></script>
-<script src="js/typenames.js?v=20261028d"></script>
-<script src="js/lessons.js?v=20261028d"></script>
-<script src="js/quiz.js?v=20261028d"></script>
-<script src="js/app.js?v=20261028d"></script>
-<script src="js/learn.js?v=20261028d"></script>
-<script src="js/stage.js?v=20261028d"></script>
-<script src="js/game.js?v=20261028d"></script>
+<script src="js/config.js?v=20261028f"></script>
+<script src="js/music.js?v=20261028f"></script>
+<script src="js/core.js?v=20261028f"></script>
+<script src="js/figs.js?v=20261028f"></script>
+<script src="js/terms.js?v=20261028f"></script>
+<script src="js/terms_info.js?v=20261028f"></script>
+<script src="js/terms_pro.js?v=20261028f"></script>
+<script src="js/typenames.js?v=20261028f"></script>
+<script src="js/harmony.js?v=20261028f"></script>
+<script src="js/lessons.js?v=20261028f"></script>
+<script src="js/quiz.js?v=20261028f"></script>
+<script src="js/app.js?v=20261028f"></script>
+<script src="js/learn.js?v=20261028f"></script>
+<script src="js/harmony_units.js?v=20261028f"></script>
+<script src="js/harmony_ui.js?v=20261028f"></script>
+<script src="js/harmony_units2.js?v=20261028f"></script>
+<script src="js/harmony_units3.js?v=20261028f"></script>
+<script src="js/harmony_reg.js?v=20261028f"></script>
+<script src="js/stage.js?v=20261028f"></script>
+<script src="js/game.js?v=20261028f"></script>
 </body>
 </html>
