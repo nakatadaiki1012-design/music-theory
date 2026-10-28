@@ -150,7 +150,7 @@
 
   /* 🗺 学習マップ */
   function mapView() {
-    var units = GK.UNITS.concat(GK.HUNITS || []);
+    var units = GK.UNITS.concat(GK.HUNITS || [], GK.CPUNITS || []);
     var weak = []; units.forEach(function (u) { u.types.forEach(function (id) { if (GK.skillState(id) === 'weak') weak.push(id); }); });
     weak.sort(function (a, b) { return GK.skillScore(a) - GK.skillScore(b); });
     var html = '<div class="mhead"><h2 class="ttl">🗺 学習マップ</h2></div>' +

@@ -12,7 +12,7 @@
   var now = function () { return Date.now() + OFF; };
 
   /* ---------- 範囲 ---------- */
-  var GR = [['all', '全範囲', null], ['a', '音名・リズム', ['u01', 'u02', 'u03', 'u04']], ['b', '音程・音階', ['u05', 'u06', 'u07', 'u08']], ['c', '調・和音', ['u09', 'u10', 'u11', 'u12']], ['d', '楽語・記号', ['u13', 'u14', 'u15']], ['h', '🎹 和声法', ['h01', 'h02', 'h03', 'h04', 'h05', 'h06', 'h07', 'h08', 'h09']], ['units', '単元をえらぶ', null]];
+  var GR = [['all', '全範囲', null], ['a', '音名・リズム', ['u01', 'u02', 'u03', 'u04']], ['b', '音程・音階', ['u05', 'u06', 'u07', 'u08']], ['c', '調・和音', ['u09', 'u10', 'u11', 'u12']], ['d', '楽語・記号', ['u13', 'u14', 'u15']], ['h', '🎹 和声法', ['h01', 'h02', 'h03', 'h04', 'h05', 'h06', 'h07', 'h08', 'h09']], ['c', '🎶 対位法', ['c01', 'c02', 'c03', 'c04', 'c05', 'c06']], ['units', '単元をえらぶ', null]];
   var unitsOf = function (cfg) {
     if (cfg.m === 'units') { var us = (cfg.us || '').split(',').filter(function (u) { return GK.UNIT[u]; }); if (us.length) return us; }
     var g = GR.filter(function (x) { return x[0] === cfg.m; })[0];
@@ -56,7 +56,7 @@
     V.innerHTML = '<div class="gcards">' +
       '<section class="panel gcard"><h3>⏱ タイムアタック</h3><p class="note">時間がなくなるまで 何問とけるか。正解すると 時間がもどる（★が多い問題ほど たくさん）。続けて正解すると コンボで 点数アップ。</p>' +
       '<div class="frow"><span>範囲</span><div class="seg">' + GR.map(function (g) { return '<button type="button" data-tm="' + g[0] + '" aria-pressed="' + (TA.m === g[0]) + '">' + g[1] + '</button>'; }).join('') + '</div></div>' +
-      '<div class="frow" id="tus"' + (TA.m === 'units' ? '' : ' hidden') + '><div class="upick" style="width:100%">' + GK.UNITS.concat(GK.HUNITS || []).map(function (u) { return '<button type="button" data-tu="' + u.id + '" aria-pressed="' + (TA.us.split(',').indexOf(u.id) >= 0) + '"><i>' + u.no + '</i>' + esc(u.title) + '</button>'; }).join('') + '</div></div>' +
+      '<div class="frow" id="tus"' + (TA.m === 'units' ? '' : ' hidden') + '><div class="upick" style="width:100%">' + GK.UNITS.concat(GK.HUNITS || [], GK.CPUNITS || []).map(function (u) { return '<button type="button" data-tu="' + u.id + '" aria-pressed="' + (TA.us.split(',').indexOf(u.id) >= 0) + '"><i>' + u.no + '</i>' + esc(u.title) + '</button>'; }).join('') + '</div></div>' +
       '<div class="frow"><span>持ち時間</span><div class="seg">' + [60, 90, 120, 180].map(function (t) { return '<button type="button" data-tt="' + t + '" aria-pressed="' + (TA.t === t) + '">' + t + ' 秒</button>'; }).join('') + '</div></div>' +
       '<div class="frow" style="margin-top:auto"><button type="button" class="btn main big" id="taGo">▶ スタート</button><span class="note">ベスト <b style="font-family:var(--font-en);font-size:20px;color:var(--ink)">' + GK.fmtN(RW.best[TA.m] || 0) + '</b> 点</span></div></section>' +
       '<section class="panel gcard"><h3>🏆 クラス対戦</h3><p class="note">先生の部屋に 番号で参加。<b>タイムアタック型</b>（決めた時間で 何問とけるか）と <b>🎼 アンサンブル・クイズ</b>（1 問ずつ 全員で答えて、クラスで 曲を完成させる）が あります。</p>' +

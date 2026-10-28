@@ -162,14 +162,15 @@
      ホーム
      ========================================================= */
   // ホームの 3 つの タブ：🎼 楽典 ／ 🎹 和声法 ／ 🧰 道具と 学習サポート
-  GK.route(/^home(?:\/(theory|harm|tools))?$/, function (m) {
+  GK.route(/^home(?:\/(theory|harm|cp|tools))?$/, function (m) {
     var tab = m[1] || GK.store.get('homeTab', 'theory');
     if (tab === 'harm' && !(GK.HUNITS && GK.HUNITS.length)) tab = 'theory';
+    if (tab === 'cp' && !(GK.CPUNITS && GK.CPUNITS.length)) tab = 'theory';
     GK.store.set('homeTab', tab);
-    var list = tab === 'harm' ? GK.HUNITS : GK.UNITS, task = GK.store.get('task', null);
+    var list = tab === 'harm' ? GK.HUNITS : tab === 'cp' ? GK.CPUNITS : GK.UNITS, task = GK.store.get('task', null);
     var pass = list.filter(function (u) { return GK.prog(u.id).pass; }).length, seen = list.filter(function (u) { return GK.prog(u.id).seen; }).length;
     var next = list.filter(function (u) { return !GK.prog(u.id).pass; })[0] || list[0];
-    var due = GK.dueTypes ? GK.dueTypes().length : 0, hasH = GK.HUNITS && GK.HUNITS.length;
+    var due = GK.dueTypes ? GK.dueTypes().length : 0, hasH = GK.HUNITS && GK.HUNITS.length, hasC = GK.CPUNITS && GK.CPUNITS.length;
     var tile = function (u) {
       var p = GK.prog(u.id), mx = GK.unitMastery ? GK.unitMastery(u.id) : { pct: 0 };
       return '<button type="button" class="tile" data-go="#' + u.id + '"><span class="no">' + u.no + '</span><span class="tg">' + u.sym + '</span><b>' + esc(u.title) + '</b><small>' + esc(u.en) + '</small><div class="gl">' + esc(u.goal) + '</div>' +
@@ -184,9 +185,9 @@
       n = tiles.length; tiles = tiles.join('');
     } else { n = list.length; tiles = list.map(tile).join(''); }
     var cols = n > 16 ? Math.ceil(n / 4) : n > 9 ? 4 : 3, rows = Math.ceil(n / cols);
-    var tabs = [['theory', '🎼 楽典（' + GK.UNITS.length + ' 単元）'], hasH ? ['harm', '🎹 和声法（' + GK.HUNITS.length + ' 単元）'] : null, ['tools', '🧰 道具・復習' + (due ? ' ' + due : '')]].filter(Boolean);
+    var tabs = [['theory', '🎼 楽典（' + GK.UNITS.length + ' 単元）'], hasH ? ['harm', '🎹 和声法（' + GK.HUNITS.length + ' 単元）'] : null, hasC ? ['cp', '🎶 対位法（' + GK.CPUNITS.length + ' 単元）'] : null, ['tools', '🧰 道具・復習' + (due ? ' ' + due : '')]].filter(Boolean);
     V.innerHTML = '<div class="home"><aside class="panel hero">' +
-      '<h2 class="cname">' + (tab === 'harm' ? '和声法' : '楽典') + '</h2><p class="cdesc">' + (tab === 'harm' ? '四声部の 和音の つなぎ方を、楽譜と 音で 見て・聴いて・自分で 書いて 身につける' : '音名・リズム・音程・音階・調・和音・記号を、楽譜と図で 見て・聴いて・解いて 身につける') + '</p>' +
+      '<h2 class="cname">' + (tab === 'harm' ? '和声法' : tab === 'cp' ? '対位法' : '楽典') + '</h2><p class="cdesc">' + (tab === 'harm' ? '四声部の 和音の つなぎ方を、楽譜と 音で 見て・聴いて・自分で 書いて 身につける' : tab === 'cp' ? '2 つの メロディーを 同時に 歌わせる 技術。定旋律に 対位線を つけて、ルールと ひびきを 身につける' : '音名・リズム・音程・音階・調・和音・記号を、楽譜と図で 見て・聴いて・解いて 身につける') + '</p>' +
       '<div class="stats"><div class="stat"><b>' + pass + '<small>/' + list.length + '</small></b><small>合格した単元</small></div><div class="stat"><b>' + GK.fmtN(RW.drillOk) + '</b><small>演習の正解</small></div><div class="stat"><b>' + GK.levelOf(RW.coins).name + '</b><small>段位</small></div></div>' +
       (task ? '<div class="taskbox">📮 <span>課題 <b>' + task.units.filter(function (u) { return GK.prog(u).pass; }).length + '/' + task.units.length + '</b> 合格</span><button type="button" class="btn" data-go="#task">見る</button></div>' : '') +
       '<div class="acts"><button type="button" class="btn main" data-go="#' + next.id + '">▶ ' + (seen ? 'つづき' : 'はじめる') + '：' + esc(next.title) + '</button>' +
@@ -202,9 +203,9 @@
   /* =========================================================
      単元：💡 ポイント ／ 💪 演習 ／ 🏁 テスト
      ========================================================= */
-  GK.route(/^([uh]\d\d)(?:\/(p|x|t))?(?:\/(\d+))?$/, function (m) {
+  GK.route(/^([uhc]\d\d)(?:\/(p|x|t))?(?:\/(\d+))?$/, function (m) {
     var u = GK.UNIT[m[1]]; if (!u) { GK.go('#home'); return; }
-    var back = u.grp === 'harm' ? '#home/harm' : '#home/theory';
+    var back = '#home/' + (u.grp === 'harm' ? 'harm' : u.grp === 'cp' ? 'cp' : 'theory');
     var step = m[2] || 'p', p = GK.prog(u.id);
     V.innerHTML = '<div class="uhead"><button type="button" class="btn back" data-go="' + back + '">◀ 一覧</button><div class="ut"><small>楽典ラボ・' + u.no + '・' + esc(u.en) + '</small><h2>' + esc(u.title) + '</h2></div>' +
       '<nav class="steps">' + [['p', '💡 ポイント', p.seen], ['x', '💪 演習', p.prac >= 7], ['t', '🏁 テスト', p.pass]].map(function (s) { return '<button type="button" data-go="#' + u.id + '/' + s[0] + '" aria-current="' + (s[0] === step) + '">' + s[1] + (s[2] ? '<span class="ck">✓</span>' : '') + '</button>'; }).join('') + '</nav></div><div class="stage" id="stage"></div>';
@@ -323,7 +324,7 @@
     }
   }
   function nextBtn(u) {
-    var L = u.grp === 'harm' ? GK.HUNITS : GK.UNITS, i = L.indexOf(u), n = L[i + 1];
+    var L = u.grp === 'harm' ? GK.HUNITS : u.grp === 'cp' ? GK.CPUNITS : GK.UNITS, i = L.indexOf(u), n = L[i + 1];
     return n ? '<button type="button" class="btn main" data-go="#' + n.id + '">▶ 次の単元：' + esc(n.title) + '</button>' : '<button type="button" class="btn main" data-go="#game">🎮 ゲームで腕だめし</button>';
   }
 
@@ -341,7 +342,7 @@
     var body = $('#dbody');
     function draw() {
       var html = '';
-      if (DR.mode === 'mix') html += '<div class="frow"><span>単元</span><button type="button" class="btn ghost sm" data-dx="allu">全部</button><button type="button" class="btn ghost sm" data-dx="noneu">はずす</button></div><div class="upick">' + GK.UNITS.concat(GK.HUNITS || []).map(function (u) { return '<button type="button" data-du="' + u.id + '" aria-pressed="' + (DR.us.indexOf(u.id) >= 0) + '"><i>' + u.no + '</i>' + esc(u.title) + '</button>'; }).join('') + '</div>';
+      if (DR.mode === 'mix') html += '<div class="frow"><span>単元</span><button type="button" class="btn ghost sm" data-dx="allu">全部</button><button type="button" class="btn ghost sm" data-dx="noneu">はずす</button></div><div class="upick">' + GK.UNITS.concat(GK.HUNITS || [], GK.CPUNITS || []).map(function (u) { return '<button type="button" data-du="' + u.id + '" aria-pressed="' + (DR.us.indexOf(u.id) >= 0) + '"><i>' + u.no + '</i>' + esc(u.title) + '</button>'; }).join('') + '</div>';
       if (DR.mode === 'weak') html += wk.length ? '<p>まちがえた回数が多い 問題の種類から 出します。正解すると 少しずつ へります。</p><div class="upick">' + wk.slice(0, 12).map(function (k) { return '<button type="button" disabled style="opacity:1"><i>' + GK.UNIT[GK.Q.T[k].u].no + '</i>' + esc(GK.UNIT[GK.Q.T[k].u].title) + ' <small style="color:var(--warm)">×' + weak[k] + '</small></button>'; }).join('') + '</div>' : '<p>まだ 苦手な問題は ありません。演習で まちがえると ここに たまります。</p>';
       if (DR.mode === 'ear') html += '<p>🔊 音を聴いて答える問題だけを出します（音程・長音階／短音階・長調／短調・長三和音／短三和音・リズム・終わった感じ／続く感じ）。音が出る環境で どうぞ。</p>';
       if (DR.mode === 'all') html += '<p>' + GK.UNITS.length + ' 単元 すべてから 出題します。</p>';
@@ -355,7 +356,7 @@
       var b = e.target.closest('[data-dm],[data-du],[data-dn],[data-ds],[data-dx],#dgo'); if (!b) return;
       if (b.dataset.dm) { DR.mode = b.dataset.dm; $$('[data-dm]').forEach(function (x) { x.setAttribute('aria-current', x === b); }); }
       if (b.dataset.du) { var i = DR.us.indexOf(b.dataset.du); if (i >= 0) DR.us.splice(i, 1); else DR.us.push(b.dataset.du); }
-      if (b.dataset.dx === 'allu') DR.us = GK.UNITS.concat(GK.HUNITS || []).map(function (u) { return u.id; });
+      if (b.dataset.dx === 'allu') DR.us = GK.UNITS.concat(GK.HUNITS || [], GK.CPUNITS || []).map(function (u) { return u.id; });
       if (b.dataset.dx === 'noneu') DR.us = [];
       if (b.dataset.dn) DR.n = +b.dataset.dn;
       if (b.dataset.ds) DR.st = +b.dataset.ds;
@@ -386,16 +387,17 @@
   /* =========================================================
      🎹 さわって確かめる
      ========================================================= */
-  GK.route(/^tools(?:\/(kbd|circle|chord|terms|hlab))?$/, function (m) {
+  GK.route(/^tools(?:\/(kbd|circle|chord|terms|hlab|cplab))?$/, function (m) {
     var tab = m[1] || 'kbd';
     V.innerHTML = '<div class="split"><aside class="panel side"><h3>さわって確かめる</h3>' +
-      [['kbd', '🎹 鍵盤と五線', 'おした鍵盤が 楽譜に出る'], ['circle', '⭕ 五度圏と調号', '調をえらぶと 調号と音階'], ['chord', '🎶 和音・音程ビルダー', '根音と種類で 組み立てる'], ['terms', '📚 楽語じてん', GK.TERMS.length + ' 語を 調べる'], ['hlab', '🎼 和声エディタ', '4 声を 書いて 自動チェック']].map(function (x) { return '<button type="button" class="it" data-go="#tools/' + x[0] + '" aria-current="' + (tab === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('') +
+      [['kbd', '🎹 鍵盤と五線', 'おした鍵盤が 楽譜に出る'], ['circle', '⭕ 五度圏と調号', '調をえらぶと 調号と音階'], ['chord', '🎶 和音・音程ビルダー', '根音と種類で 組み立てる'], ['terms', '📚 楽語じてん', GK.TERMS.length + ' 語を 調べる'], ['hlab', '🎼 和声エディタ', '4 声を 書いて 自動チェック'], ['cplab', '🎶 対位法エディタ', '対位線を 書いて 自動チェック']].map(function (x) { return '<button type="button" class="it" data-go="#tools/' + x[0] + '" aria-current="' + (tab === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('') +
       '</aside><section class="panel main"><div class="mbody" id="tbody"></div></section></div>';
     var body = $('#tbody');
     if (tab === 'kbd') { body.innerHTML = '<div class="toolw" id="tw"></div>'; F.render($('#tw'), { c: 'staffKbd', a: { clefs: true }, cap: '鍵盤をタップ（黒鍵は ♯ と ♭ の 2 つの名前を表示）' }); }
     else if (tab === 'circle') circleTool(body);
     else if (tab === 'terms') termsTool(body);
     else if (tab === 'hlab') GK.harmLab(body);
+    else if (tab === 'cplab') GK.cpLab(body);
     else chordTool(body);
   });
 
