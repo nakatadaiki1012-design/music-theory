@@ -139,6 +139,19 @@ h2.ttl { font-family: var(--font-display); font-size: 22px; margin: 0; line-heig
 .hgrid .hh { text-align: center; font-size: 14px; font-family: serif; color: var(--muted); }
 .hgrid .hv { align-self: center; text-align: center; font-family: var(--font-en); font-weight: 800; font-size: 14px; }
 .hc { display: flex; align-items: center; justify-content: space-between; gap: 1px; border: 1.5px solid var(--line); border-top: 3px solid var(--vc); border-radius: 6px; background: var(--panel); min-height: 36px; padding: 0 1px; min-width: 0; }
+.hmain { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+.hleft { flex: none; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.hright { flex: none; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+@media (min-width: 900px) {
+  .hl { overflow: hidden; }
+  .hmain.hcol { display: flex; flex-direction: column; }
+  .hmain.hcol .hleft { flex: 1 1 0; } .hmain.hcol .hright { flex: none; max-height: 40%; }
+  .hmain { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, 1fr); gap: 14px; align-items: stretch; }
+  .hleft .hstaff { flex: 1 1 0; min-height: 260px; display: flex; align-items: center; justify-content: center; }
+  .hleft .hstaff svg { max-width: 100% !important; width: 100%; height: auto; }
+  .hright { overflow: auto; padding-right: 4px; }
+  .hright .hres { max-height: none; overflow: visible; }
+}
 .hpal { flex: none; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .hpal .lbl { font-size: 12px; color: var(--muted); margin: 0 2px 0 6px; }
 .hpal button { border: 1.5px solid var(--line); background: var(--panel); border-radius: 8px; padding: 3px 10px; font-weight: 800; font-size: 14px; }
@@ -154,7 +167,7 @@ h2.ttl { font-family: var(--font-display); font-size: 22px; margin: 0; line-heig
 .hc button { flex: none; width: 1.5em; align-self: stretch; font-size: 17px; font-weight: 800; color: var(--ink); background: transparent; border: 0; border-radius: 4px; }
 .hc button:active { background: var(--chip); }
 .hc span { flex: 1; min-width: 0; text-align: center; line-height: 1.1; display: flex; flex-direction: column; }
-.hc em { font-style: normal; font-weight: 800; font-size: 15px; }
+.hc em { white-space: nowrap; font-style: normal; font-weight: 800; font-size: 15px; }
 .hc small { font-size: 9.5px; color: var(--muted); }
 .hres { flex: none; max-height: 24%; overflow: auto; font-size: 13.5px; }
 .hres .hok { font-weight: 800; color: var(--ok); }
@@ -815,27 +828,27 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261028h"></script>
-<script src="js/music.js?v=20261028h"></script>
-<script src="js/core.js?v=20261028h"></script>
-<script src="js/figs.js?v=20261028h"></script>
-<script src="js/terms.js?v=20261028h"></script>
-<script src="js/terms_info.js?v=20261028h"></script>
-<script src="js/terms_pro.js?v=20261028h"></script>
-<script src="js/typenames.js?v=20261028h"></script>
-<script src="js/harmony.js?v=20261028h"></script>
-<script src="js/lessons.js?v=20261028h"></script>
-<script src="js/quiz.js?v=20261028h"></script>
-<script src="js/app.js?v=20261028h"></script>
-<script src="js/learn.js?v=20261028h"></script>
-<script src="js/harmony_units.js?v=20261028h"></script>
-<script src="js/harmony_ui.js?v=20261028h"></script>
-<script src="js/harmony_units2.js?v=20261028h"></script>
-<script src="js/harmony_units3.js?v=20261028h"></script>
-<script src="js/counterpoint.js?v=20261028h"></script>
-<script src="js/counterpoint_units.js?v=20261028h"></script>
-<script src="js/harmony_reg.js?v=20261028h"></script>
-<script src="js/stage.js?v=20261028h"></script>
-<script src="js/game.js?v=20261028h"></script>
+<script src="js/config.js?v=20261029a"></script>
+<script src="js/music.js?v=20261029a"></script>
+<script src="js/core.js?v=20261029a"></script>
+<script src="js/figs.js?v=20261029a"></script>
+<script src="js/terms.js?v=20261029a"></script>
+<script src="js/terms_info.js?v=20261029a"></script>
+<script src="js/terms_pro.js?v=20261029a"></script>
+<script src="js/typenames.js?v=20261029a"></script>
+<script src="js/harmony.js?v=20261029a"></script>
+<script src="js/lessons.js?v=20261029a"></script>
+<script src="js/quiz.js?v=20261029a"></script>
+<script src="js/app.js?v=20261029a"></script>
+<script src="js/learn.js?v=20261029a"></script>
+<script src="js/harmony_units.js?v=20261029a"></script>
+<script src="js/harmony_ui.js?v=20261029a"></script>
+<script src="js/harmony_units2.js?v=20261029a"></script>
+<script src="js/harmony_units3.js?v=20261029a"></script>
+<script src="js/counterpoint.js?v=20261029a"></script>
+<script src="js/counterpoint_units.js?v=20261029a"></script>
+<script src="js/harmony_reg.js?v=20261029a"></script>
+<script src="js/stage.js?v=20261029a"></script>
+<script src="js/game.js?v=20261029a"></script>
 </body>
 </html>

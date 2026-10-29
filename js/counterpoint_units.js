@@ -412,7 +412,7 @@
     body.innerHTML = '<div class="toolw hl"><div class="ctl"><div class="seg"><button type="button" data-ca="1" aria-pressed="' + S.above + '">上に つける</button><button type="button" data-ca="0" aria-pressed="' + !S.above + '">下に つける</button></div>' +
       '<div class="seg"><button type="button" data-cl="1" aria-pressed="' + (S.lv === 1) + '">みじかい</button><button type="button" data-cl="2" aria-pressed="' + (S.lv === 2) + '">ふつう</button><button type="button" data-cl="3" aria-pressed="' + (S.lv === 3) + '">ながい</button></div>' +
       '<button type="button" class="btn sm" id="cNew">🎲 新しい課題</button><button type="button" class="btn sm" id="cPlay">🔊 聴く</button><button type="button" class="btn sm" id="cModel">📖 お手本</button></div>' +
-      '<div class="out" id="cInfo"></div><div class="fig sc hstaff" id="cStaff" style="flex:1 1 0;min-height:200px"></div><div class="hgrid" id="cGrid"></div><div class="hres" id="cRes"></div></div>';
+      '<div class="out" id="cInfo"></div><div class="hmain hcol"><div class="hleft"><div class="fig sc hstaff" id="cStaff" style="min-height:200px"></div></div><div class="hright"><div class="hgrid" id="cGrid"></div><div class="hres" id="cRes"></div></div></div></div>';
     body.onclick = function (e) {
       var b = e.target.closest('[data-ca],[data-cl],#cNew,#cPlay,#cModel,[data-cc]'); if (!b) return;
       if (b.dataset.ca) { S.above = b.dataset.ca === '1'; newTask(); }

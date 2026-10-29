@@ -246,7 +246,9 @@
     svg.querySelectorAll('[fill="black"],[fill="#000"],[fill="#000000"]').forEach(function (e) { e.setAttribute('fill', 'currentColor'); });
     svg.querySelectorAll('[stroke="black"],[stroke="#000"],[stroke="#000000"]').forEach(function (e) { e.setAttribute('stroke', 'currentColor'); });
     // 和音記号・数字（バスの 下）／ 声部の 名前
-    var by = top + gap + 40 + 52, xs = sn[0].map(function (s) { return s.getAbsoluteX() + (s.getGlyphWidth ? s.getGlyphWidth() / 2 : 6); });
+    var botY = 0;   // 低音部の 音符と 符尾の いちばん 下（和音記号が 重ならない ように さげる）
+    [2, 3].forEach(function (j) { sn[j].forEach(function (s) { if (s instanceof V.GhostNote) return; var e = s.getStemExtents ? s.getStemExtents() : null, ys = s.getYs(); botY = Math.max(botY, ys[ys.length - 1] + 7, e ? Math.max(e.topY, e.baseY) : 0); }); });
+    var by = Math.max(top + gap + 40 + 52, botY + 20), xs = sn[0].map(function (s) { return s.getAbsoluteX() + (s.getGlyphWidth ? s.getGlyphWidth() / 2 : 6); });
     chords.forEach(function (c, i) { if (c.lab) M.svgText(svg, xs[i], by, c.lab, { size: 17, c: c.lc || undefined, font: 'serif' }); if (c.sub) M.svgText(svg, xs[i], by + 17, c.sub, { size: 10, c: '#7a7568', fixed: true }); });
     // まちがいの 印（線で むすぶ）
     (spec.marks || []).forEach(function (mk) {
@@ -258,7 +260,7 @@
       if (mk.t) { var m0 = (xs[mk.i] + xs[mk.j]) / 2; M.svgText(svg, m0, top + 30 - 14, mk.t, { size: 12, c: mk.c || '#d3302a' }); }
     });
     (spec.names ? sn : []).forEach(function (arr, j) { var s0 = arr[0]; if (s0 && !(s0 instanceof V.GhostNote)) M.svgText(svg, s0.getAbsoluteX() - 15, s0.getYs()[0] + 4, 'SATB'.charAt(j), { size: 11, c: H.VCOL[j], anchor: 'end', fixed: true }); });
-    chords.forEach(function (c, i) { (c.q || []).forEach(function (j) { M.svgText(svg, xs[i], top + 10 + (j < 2 ? 0 : gap - 2) + (j % 2) * 0, 'SATB'.charAt(j) + '？', { size: 15, c: H.VCOL[j] }); }); });
+    if (!spec.hideq) chords.forEach(function (c, i) { (c.q || []).forEach(function (j) { M.svgText(svg, xs[i], top + 10 + (j < 2 ? 0 : gap - 2) + (j % 2) * 0, 'SATB'.charAt(j) + '？', { size: 15, c: H.VCOL[j] }); }); });
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + Hh); svg.removeAttribute('width'); svg.removeAttribute('height'); svg.setAttribute('class', 'vf');
     svg.style.width = ''; svg.style.height = ''; svg.style.maxWidth = Math.round(W * (spec.zoom || 2.2)) + 'px'; svg.dataset.w = W;
     M.fit(svg, W, top + 40, top + gap + 80);

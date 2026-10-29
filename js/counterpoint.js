@@ -227,7 +227,9 @@
     svg.querySelectorAll('[fill="black"],[fill="#000"],[fill="#000000"]').forEach(function (e) { e.setAttribute('fill', 'currentColor'); });
     svg.querySelectorAll('[stroke="black"],[stroke="#000"],[stroke="#000000"]').forEach(function (e) { e.setAttribute('stroke', 'currentColor'); });
     // 音程の 数字（下の 五線の 下）
-    var by = top + gap + 40 + 54, xAt = {};
+    var botY = 0;
+    (above ? cfN : cpN).forEach(function (s) { if (s.isRest && s.isRest()) return; var e = s.getStemExtents ? s.getStemExtents() : null, ys = s.getYs(); botY = Math.max(botY, ys[ys.length - 1] + 7, e ? Math.max(e.topY, e.baseY) : 0); });
+    var by = Math.max(top + gap + 40 + 54, botY + 20), xAt = {};
     cfItems.forEach(function (x, i) { xAt[x.t] = cfN[i].getAbsoluteX() + 6; });
     tl.forEach(function (x, i) { if (!x.rest) xAt[x.t] = cpN[i].getAbsoluteX() + 6; });
     if (spec.lab !== false) {
