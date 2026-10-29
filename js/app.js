@@ -194,13 +194,13 @@
       '<h2 class="cname">' + (tab === 'harm' ? '和声法' : tab === 'cp' ? '対位法' : '楽典') + '</h2><p class="cdesc">' + (tab === 'harm' ? '四声部の 和音の つなぎ方を、楽譜と 音で 見て・聴いて・自分で 書いて 身につける' : tab === 'cp' ? '2 つの メロディーを 同時に 歌わせる 技術。定旋律に 対位線を つけて、ルールと ひびきを 身につける' : '音名・リズム・音程・音階・調・和音・記号を、楽譜と図で 見て・聴いて・解いて 身につける') + '</p>' +
       '<div class="stats"><div class="stat"><b>' + pass + '<small>/' + list.length + '</small></b><small>合格した単元</small></div><div class="stat"><b>' + GK.fmtN(RW.drillOk) + '</b><small>演習の正解</small></div><div class="stat"><b>' + GK.levelOf(RW.coins).name + '</b><small>段位</small></div></div>' +
       (task ? '<div class="taskbox">📮 <span>課題 <b>' + task.units.filter(function (u) { return GK.prog(u).pass; }).length + '/' + task.units.length + '</b> 合格</span><button type="button" class="btn" data-go="#task">見る</button></div>' : '') +
-      '<div class="acts">' + (tab === 'harm' ? '<button type="button" class="btn warm" data-go="#hlab">🎼 和声ラボ</button>' : tab === 'cp' ? '<button type="button" class="btn warm" data-go="#cplab">🎶 対位法ラボ</button>' : '') + '<button type="button" class="btn main" data-go="#' + next.id + '">▶ ' + (seen ? 'つづき' : 'はじめる') + '：' + esc(next.title) + '</button>' +
-      (due ? '<button type="button" class="btn warm" data-go="#learn/due">🔁 復習 ' + due + '</button>' : '<button type="button" class="btn" data-go="#learn/diag">🧭 力だめし</button>') +
-      '<button type="button" class="btn" data-go="#drill">💪 まとめて演習</button>' +
-      '<button type="button" class="btn" data-go="#game">🎮 ゲーム</button></div>' +
+      '<div class="acts">' + (tab === 'harm' ? '<button type="button" class="btn warm" data-go="#hlab">🎼 和声ラボへ</button>' : tab === 'cp' ? '<button type="button" class="btn warm" data-go="#cplab">🎶 対位法ラボへ</button>' : '') + '<button type="button" class="btn main" data-go="#' + next.id + '">▶ ' + (seen ? 'つづき' : 'はじめる') + '：' + esc(next.title) + '</button>' +
+      (tab !== 'theory' ? '' : due ? '<button type="button" class="btn warm" data-go="#learn/due">🔁 復習 ' + due + '</button>' : '<button type="button" class="btn" data-go="#learn/diag">🧭 力だめし</button>') +
+      '<button type="button" class="btn" data-go="#' + (tab === 'theory' ? 'drill' : 'drill/c/' + tab) + '">💪 まとめて演習</button>' +
+      '<button type="button" class="btn" data-go="#' + (tab === 'theory' ? 'game' : 'game/c/' + tab) + '">🎮 ゲーム</button></div>' +
       '<div class="heromini"><h3>1 単元 ＝ 3 ステップ</h3><div class="cycle"><ol><li><b>💡</b><b>ポイント</b><span>図と音で わかる</span></li><li><b>💪</b><b>演習</b><span>10 問。毎回ちがう問題</span></li><li><b>🏁</b><b>テスト</b><span>' + GK.TEST_N + ' 問中 ' + GK.PASS + ' 問で 合格</span></li></ol></div>' +
-      '<h3 style="margin-top:10px">🧠 わすれない しくみ</h3><div class="cycle"><ol><li><b>🔁</b><b>今日の復習</b><span>間をあけて 思い出す</span></li><li><b>🧭</b><b>力だめし</b><span>実力を はかる</span></li><li><b>🗺</b><b>学習マップ</b><span>身につき具合</span></li></ol></div></div>' +
-      '</aside><section class="gridw"><div class="mtabs">' + tabs.map(function (x) { return '<button type="button" data-go="#home/' + x[0] + '" aria-pressed="' + (x[0] === tab) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      (tab === 'theory' ? '<h3 style="margin-top:10px">🧠 わすれない しくみ</h3><div class="cycle"><ol><li><b>🔁</b><b>今日の復習</b><span>間をあけて 思い出す</span></li><li><b>🧭</b><b>力だめし</b><span>実力を はかる</span></li><li><b>🗺</b><b>学習マップ</b><span>身につき具合</span></li></ol></div>' : '<h3 style="margin-top:10px">' + (tab === 'harm' ? '🎼 和声ラボ' : '🎶 対位法ラボ') + '</h3><p class="note">' + (tab === 'harm' ? '五線に 4 声を 書くと、禁則を 自動で 採点。ソプラノ課題・バス課題・自由入力・自分で出題。' : '定旋律に 対位線を 書くと、協和・禁則を 自動で チェック。') + '<br>学んだ ことを ラボで 試そう。</p>') + '</div>' +
+      '</aside><section class="gridw"><div class="mtabs ccs">' + tabs.map(function (x) { return '<button type="button" data-c="' + x[0] + '" data-go="#home/' + x[0] + '" aria-pressed="' + (x[0] === tab) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
       '<div class="grid" style="--c1:' + cols + ';--r1:' + rows + ';--c2:3;--r2:' + Math.ceil(n / 3) + ';--c3:2;--r3:' + Math.ceil(n / 2) + '">' + tiles + '</div></section></div>';
   });
 
@@ -336,6 +336,10 @@
      💪 まとめて演習
      ========================================================= */
   var DR = GK.store.get('drillSel', { us: ['u01'], n: 10, st: 0, mode: 'mix' });
+  GK.route(/^drill\/c\/(harm|cp)$/, function (m) {
+    var L1 = m[1] === 'harm' ? GK.HUNITS : GK.CPUNITS;
+    DR.mode = 'mix'; DR.us = L1.map(function (u) { return u.id; }); GK.store.set('drillSel', DR); GK.go('#drill');
+  });
   GK.route(/^drill(?:\/(run))?$/, function (m) {
     var weak = GK.store.get('weak', {}), wk = Object.keys(weak).filter(function (k) { return GK.Q.T[k]; }).sort(function (a, b) { return weak[b] - weak[a]; });
     V.innerHTML = '<div class="split"><aside class="panel side">' +

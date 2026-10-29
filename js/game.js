@@ -12,7 +12,7 @@
   var now = function () { return Date.now() + OFF; };
 
   /* ---------- 範囲 ---------- */
-  var GR = [['all', '全範囲', null], ['a', '音名・リズム', ['u01', 'u02', 'u03', 'u04']], ['b', '音程・音階', ['u05', 'u06', 'u07', 'u08']], ['c', '調・和音', ['u09', 'u10', 'u11', 'u12']], ['d', '楽語・記号', ['u13', 'u14', 'u15']], ['h', '🎹 和声法', ['h01', 'h02', 'h03', 'h04', 'h05', 'h06', 'h07', 'h08', 'h09']], ['c', '🎶 対位法', ['c01', 'c02', 'c03', 'c04', 'c05', 'c06']], ['units', '単元をえらぶ', null]];
+  var GR = [['all', '全範囲', null], ['a', '音名・リズム', ['u01', 'u02', 'u03', 'u04']], ['b', '音程・音階', ['u05', 'u06', 'u07', 'u08']], ['c', '調・和音', ['u09', 'u10', 'u11', 'u12']], ['d', '楽語・記号', ['u13', 'u14', 'u15']], ['h', '🎹 和声法', ['h01', 'h02', 'h03', 'h04', 'h05', 'h06', 'h07', 'h08', 'h09']], ['cp', '🎶 対位法', ['c01', 'c02', 'c03', 'c04', 'c05', 'c06']], ['units', '単元をえらぶ', null]];
   var unitsOf = function (cfg) {
     if (cfg.m === 'units') { var us = (cfg.us || '').split(',').filter(function (u) { return GK.UNIT[u]; }); if (us.length) return us; }
     var g = GR.filter(function (x) { return x[0] === cfg.m; })[0];
@@ -49,6 +49,7 @@
      ゲームのトップ
      ========================================================= */
   var TA = GK.store.get('taSel', { m: 'all', us: '', t: 90 });
+  GK.route(/^game\/c\/(harm|cp)$/, function (m) { TA.m = m[1] === 'harm' ? 'h' : 'cp'; GK.store.set('taSel', TA); GK.go('#game'); });
   GK.route(/^game$/, function () { top(); });
   GK.route(/^join=(\d{4})$/, function (m) { top(m[1]); });
   function top(code) {

@@ -198,6 +198,9 @@
     GK.view.onclick = null;
     var h = decodeURIComponent(location.hash.slice(1)) || 'home';
     var tab = /^(drill)/.test(h) ? '#drill' : /^(tools)/.test(h) ? '#tools' : /^(game|ta$|host|join|battle|ens)/.test(h) ? '#game' : '#home';
+    var cs = /^(home\/harm|hlab|h\d\d)/.test(h) ? 'harm' : /^(home\/cp|cplab|c\d\d)/.test(h) ? 'cp' : /^(home\/theory|u\d\d|learn|tools)/.test(h) ? 'theory' : null;
+    if (cs) GK.store.set('course', cs);
+    document.body.dataset.course = cs || GK.store.get('course', 'theory');
     GK.$$('#cnav button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.go === tab ? 'true' : 'false'); });
     for (var i = 0; i < routes.length; i++) {
       var m = routes[i][0].exec(h);

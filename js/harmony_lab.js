@@ -92,7 +92,7 @@
      ===================================================== */
   GK.route(/^hlab(?:\/(sop|bass|free|make))?$/, function (m) {
     if (m[1]) { S.mode = m[1]; save(); }
-    V.innerHTML = '<div class="split"><aside class="panel side"><h3>🎼 和声ラボ</h3>' +
+    V.innerHTML = '<div class="split"><aside class="panel side"><div class="labsw"><button type="button" data-go="#hlab" aria-current="true">🎼 和声ラボ</button><button type="button" data-go="#cplab" aria-current="false">🎶 対位法ラボ</button></div><h3>🎼 和声ラボ</h3>' +
       MODES.map(function (x) { return '<button type="button" class="it" data-go="#hlab/' + x[0] + '" aria-current="' + (S.mode === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('') +
       '<button type="button" class="it" data-go="#home/harm"><b>◀ 和声法に もどる</b><small>授業・演習・テスト</small></button>' +
       '<p class="note" style="padding:6px 10px">クリア <b>' + stat().clears + '</b> 回（満点 <b>' + stat().perfect + '</b> 回）</p>' +
