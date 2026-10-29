@@ -42,8 +42,8 @@
     { g: '注意（⚠ ふつうは さける）', id: 'warn', ks: ['hidden', 'overlap', 'dblThird'], t: '隠伏・声部の 重なり・第3音の 重複', tip: 'ソプラノと バスが 同じ向きに 5度・8度へ（隠伏）、声部が 前の 位置を こえる、第3音を 重ねる ―― ふつうは さける。' }
   ];
   var STORE = function () { return GK.store.get('hlab', {}); };
-  var S = (function () { var o = STORE(); return { mode: o.mode || (o.type === 'bass' ? 'bass' : o.type === 'free' ? 'free' : 'sop'), lv: o.lv || 1, auto: o.auto !== false, fk: o.fk, fm: o.fm, fc: o.fc, mv: o.mv, ses: {} }; })();
-  var save = function () { GK.store.set('hlab', { mode: S.mode, lv: S.lv, auto: S.auto, fk: S.fk, fm: S.fm, fc: S.fc, mv: S.mv }); };
+  var S = (function () { var o = STORE(); return { mode: o.mode || (o.type === 'bass' ? 'bass' : o.type === 'free' ? 'free' : 'sop'), lv: o.lv || 1, auto: o.auto !== false, snap: o.snap !== false, fk: o.fk, fm: o.fm, fc: o.fc, mv: o.mv, ses: {} }; })();
+  var save = function () { GK.store.set('hlab', { mode: S.mode, lv: S.lv, auto: S.auto, snap: S.snap, fk: S.fk, fm: S.fm, fc: S.fc, mv: S.mv }); };
   var stat = function () { return GK.store.get('hlabStat', { clears: 0, perfect: 0 }); };
 
   function pick(a, R) { return a[Math.floor(R() * a.length)]; }
@@ -106,7 +106,7 @@
     var free = !!(Z.t.free || Z.t.make), make = !!Z.t.make;
     body.innerHTML = '<div class="hz">' +
       '<div class="hzbar" id="hzBar"></div><div class="hzaim" id="hzAim"></div>' +
-      '<div class="hzmain"><div class="hzl"><div class="hzstep" id="hzStep"></div><div class="fig sc hstaff" id="hzStaff"></div><div id="hzScore"></div></div>' +
+      '<div class="hzmain"><div class="hzl"><div class="hzstep" id="hzStep"></div><p class="hzcap">👆 五線を さわると その 高さの 音に なります。ドラッグで 動かせます（パソコンは ← → ↑ ↓ キーも）</p><div class="fig sc hstaff" id="hzStaff"></div><div id="hzScore"></div></div>' +
       '<div class="hzr"><div class="hzf" id="hzFocus"></div><div id="hzRules"></div><div id="hzModel"></div></div></div></div>';
 
     /* ----- バー ----- */
@@ -149,6 +149,10 @@
     function staff(vs, iss) {
       var t = Z.t, mk = H.marksOf(iss);
       geo = M.satb($('#hzStaff', body), { key: t.key, minor: t.minor, color: true, names: true, zoom: 2.6, sp: 58, hideq: make, marks: make ? [] : mk.marks, chords: t.chs.map(function (ch, i) { return { v: vs[i], lab: H.label(ch), sub: H.figure(ch), bad: make ? [] : mk.bad[i], q: make ? [0, 1, 2, 3].filter(function (x) { return x !== S.mv; }) : undefined }; }) });
+      if (geo && geo.svg && geo.notes && geo.notes[Z.sel.j] && geo.notes[Z.sel.j][Z.sel.i] && geo.notes[Z.sel.j][Z.sel.i].getYs && !(make && Z.sel.j !== S.mv)) {
+        var sn = geo.notes[Z.sel.j][Z.sel.i], ring = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        ring.setAttribute('cx', sn.getAbsoluteX() + 6); ring.setAttribute('cy', sn.getYs()[0]); ring.setAttribute('rx', 11); ring.setAttribute('ry', 8.5); ring.setAttribute('fill', 'none'); ring.setAttribute('stroke', '#e8b73a'); ring.setAttribute('stroke-width', 3); geo.svg.appendChild(ring);
+      }
       if (geo && geo.svg && geo.xs[Z.sel.i] != null) {
         var half = geo.xs.length > 1 ? Math.abs(geo.xs[1] - geo.xs[0]) / 2 : 30, r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         r.setAttribute('x', geo.xs[Z.sel.i] - half + 4); r.setAttribute('y', geo.y1 - 60); r.setAttribute('width', half * 2 - 8); r.setAttribute('height', geo.y2 - geo.y1 + 150);
@@ -176,6 +180,8 @@
         if (make && jj !== S.mv) return '';
         return '<button type="button" class="hzvb' + (j === jj ? ' sel' : '') + (bad ? ' ng' : '') + (lk ? ' lk' : '') + '" data-a="voice" data-v="' + jj + '" style="--vc:' + H.VCOL[jj] + '"' + (lk && !(j === jj) ? ' disabled' : '') + '><i>' + VCN[jj] + '</i><b>' + N(p) + '</b><small>' + (r < 0 ? '和音外' : ROLE[r]) + (lk ? ' 🔒' : '') + '</small></button>';
       }).join('') + '</div>';
+      // ▲▼ と 吸いつけ
+      if (!locked(j)) h += '<div class="hzud"><button type="button" class="btn" data-a="up">▲ 上の 音へ</button><button type="button" class="btn" data-a="down">▼ 下の 音へ</button><label class="hzauto"><input type="checkbox" data-a="snap"' + (S.snap ? ' checked' : '') + '> 和音の 音に 吸いつける</label></div>';
       // 候補ボタン
       if (!locked(j)) {
         var cands = H.voicePitches(t.key, t.minor, ch, j).slice().sort(function (a, b) { return mid(b.p) - mid(a.p); }), cur = vs[i][j], sug = Z.hint === 3 ? Z.sug : null;
@@ -192,7 +198,7 @@
       if (Z.hintTxt) h += '<div class="hzh">💡 ' + Z.hintTxt + '</div>';
       if (!make) h += '<div class="hzfa"><button type="button" class="btn sm" data-a="playcol">🔊 この 和音</button><label class="hzauto"><input type="checkbox" data-a="auto"' + (S.auto ? ' checked' : '') + '> 書いたら 次の 声部へ</label></div>';
       if (make) h += '<div class="hzfa"><span class="seg"><button type="button" data-a="mv" data-v="0" aria-pressed="' + (S.mv === 0) + '">ソプラノを 入力</button><button type="button" data-a="mv" data-v="3" aria-pressed="' + (S.mv === 3) + '">バスを 入力</button></span></div>';
-      h += '<div class="hzacc"><span>♯♭</span>' + ACC.map(function (a) { return '<button type="button" data-a="acc" data-v="' + (a[0] == null ? '' : a[0]) + '" aria-pressed="' + ((Z.acc == null ? null : Z.acc) === a[0]) + '">' + a[1] + '</button>'; }).join('') + '<small>（五線を タップした ときの 臨時記号）</small></div>';
+      if (!S.snap) h += '<div class="hzacc"><span>♯♭</span>' + ACC.map(function (a) { return '<button type="button" data-a="acc" data-v="' + (a[0] == null ? '' : a[0]) + '" aria-pressed="' + ((Z.acc == null ? null : Z.acc) === a[0]) + '">' + a[1] + '</button>'; }).join('') + '<small>（五線を タップした ときの 臨時記号）</small></div>';
       $('#hzFocus', body).innerHTML = h;
     }
 
@@ -248,9 +254,23 @@
       for (var q = j + 1; q < 4; q++) if (c(q)) { Z.sel.j = q; return; }
       if (i < t.chs.length - 1) { Z.sel.i = i + 1; for (q = 0; q < 4; q++) if (c(q)) { Z.sel.j = q; return; } }
     }
-    function setNote(i, j, p) {
+    var lastPlay = 0;
+    function setNote(i, j, p, quiet) {
       Z.v[i][j] = p; Z.done = false; Z.hint = 0; Z.hintTxt = ''; Z.sug = null;
-      M.play([[M.str(p), 0.9]], 100);
+      var now = Date.now(); if (!quiet || now - lastPlay > 140) { lastPlay = now; M.play([[M.str(p), 0.6]], 100); }
+    }
+    var dnOf = function (p) { return p.o * 7 + p.l; };
+    // タップした 高さ（音階の 番号）に いちばん 近い 和音の 音
+    function snapTo(i, j, dn) {
+      var t = Z.t, L = H.voicePitches(t.key, t.minor, t.chs[i], j), cur = Z.v[i][j], best = null, bd = 1e9;
+      L.forEach(function (c) { var d = Math.abs(dnOf(c.p) - dn) * 10 + Math.abs(mid(c.p) - mid(cur)) * 0.01; if (d < bd) { bd = d; best = c.p; } });
+      return best;
+    }
+    function stepNote(dir) {
+      var t = Z.t, i = Z.sel.i, j = Z.sel.j; if (Z.show || j === t.gv) return;
+      var L = H.voicePitches(t.key, t.minor, t.chs[i], j), cur = mid(Z.v[i][j]), nx = null;
+      if (dir > 0) { L.forEach(function (c) { if (mid(c.p) > cur && !nx) nx = c.p; }); } else { L.slice().reverse().forEach(function (c) { if (mid(c.p) < cur && !nx) nx = c.p; }); }
+      if (nx) { setNote(i, j, nx); Z.draw(); }
     }
     function hintNow() {
       var t = Z.t, vs = Z.v, iss = H.checkAll(t.key, t.minor, t.chs, vs).filter(function (x) { return x.ng; }).sort(function (a, b) { return a.j - b.j || a.i - b.i; });
@@ -290,6 +310,9 @@
       else if (a === 'rule') { Z.open = Z.open === v ? null : v; }
       else if (a === 'acc') { Z.acc = v === '' ? null : +v; }
       else if (a === 'auto') { S.auto = b.checked; save(); return; }
+      else if (a === 'snap') { S.snap = b.checked; save(); return; }
+      else if (a === 'up') { stepNote(1); return; }
+      else if (a === 'down') { stepNote(-1); return; }
       else if (a === 'lv') { S.lv = +v; save(); newSession(S.mode); rerender = true; }
       else if (a === 'new') { newSession(S.mode); rerender = true; }
       else if (a === 'reset') { var m0 = Z.t.model; Z.v = defaultVoices(t.key, t.minor, t.chs, t.gv, t.gv >= 0 ? Z.v : null); Z.done = false; Z.hintTxt = ''; Z.hint = 0; Z.show = false; Z.sel = { i: 0, j: firstFree(t.gv) }; }
@@ -309,21 +332,48 @@
       if (e.target.id === 'hzKey') { var a = e.target.value.split(','); S.fk = +a[0]; S.fm = a[1] === '1'; var cs = t.chs; save(); newSession(S.mode); S.ses[S.mode].t.chs = cs; S.ses[S.mode].v = defaultVoices(S.fk, S.fm, cs, -1, null); Z = S.ses[S.mode]; GK.harmLab(body); }
       else if (e.target.id === 'hzCh') { var kk = e.target.value, c = CHL.filter(function (x) { return chKey(x) === kk; })[0]; t.chs[Z.sel.i] = Object.assign({}, c); Z.v[Z.sel.i] = defaultVoices(t.key, t.minor, [t.chs[Z.sel.i]], -1, null)[0]; S.fc = t.chs; save(); Z.done = false; Z.draw(); }
     };
-    // 五線を タップして 音を 書く
-    $('#hzStaff', body).addEventListener('click', function (e) {
-      if (!geo || Z.show) return;
-      var t = Z.t, pt = M.svgPt(geo.svg, e), i = 0, bd = 1e9;
-      geo.xs.forEach(function (x, q) { if (Math.abs(x - pt.x) < bd) { bd = Math.abs(x - pt.x); i = q; } });
-      var j = make ? S.mv : Z.sel.j; Z.sel.i = i;
-      if (j === t.gv) { Z.hintTxt = 'その 声部は 最初から 書いてあります。ほかの 声部（S・A・T・B）を えらんで から タップしてね。'; Z.draw(); return; }
-      var bass = pt.y > (geo.y1 + (geo.y2 - 40)) / 2, dn = M.yToDiatonic(pt.y, bass ? geo.y2 : geo.y1, bass ? 'bass' : 'treble');
-      var acc = M.keyAcc(t.key)[dn.l] || 0, lt = H.lt(t.key, t.minor);
-      if (t.minor && dn.l === lt.l) acc = lt.a;
-      if (Z.acc != null) acc = Z.acc;
-      var p = { l: dn.l, a: acc, o: dn.o };
-      if (mid(p) < 36 || mid(p) > 84) { Z.hintTxt = 'その 高さは はんいの 外です。'; Z.draw(); return; }
-      Z.sel.j = j; setNote(i, j, p); Z.draw();
+    // 五線を さわる：さわった 列の いちばん 近い 声部が その 高さの 音に なる。指を ずらすと 追いかけ、はなすと 決まる
+    var box = $('#hzStaff', body), drag = null;
+    box.style.touchAction = 'none';
+    function colAt(pt) { var i = 0, bd = 1e9; geo.xs.forEach(function (x, q) { if (Math.abs(x - pt.x) < bd) { bd = Math.abs(x - pt.x); i = q; } }); return i; }
+    function apply(pt) {
+      var t = Z.t, i = drag.i, j = drag.j, tr = j < 2, dn = M.yToDiatonic(pt.y, tr ? geo.y1 : geo.y2, tr ? 'treble' : 'bass'), p;
+      if (S.snap) p = snapTo(i, j, dnOf(dn));
+      else { var acc = M.keyAcc(t.key)[dn.l] || 0, lt = H.lt(t.key, t.minor); if (t.minor && dn.l === lt.l) acc = lt.a; if (Z.acc != null) acc = Z.acc; p = { l: dn.l, a: acc, o: dn.o }; }
+      if (!p || mid(p) < 36 || mid(p) > 84) return;
+      if (mid(p) === mid(Z.v[i][j])) return;
+      setNote(i, j, p, true); Z.sel = { i: i, j: j }; Z.draw();
+    }
+    box.addEventListener('pointerdown', function (e) {
+      if (!geo || Z.show || e.button > 0) return;
+      var t = Z.t, pt = M.svgPt(geo.svg, e), i = colAt(pt), treble = pt.y < (geo.y1 + (geo.y2 - 40)) / 2;
+      var cands = (make ? [S.mv] : treble ? [0, 1] : [2, 3]).filter(function (j) { return j !== t.gv; });
+      if (!cands.length) { Z.hintTxt = 'そこの 声部は 最初から 書いてあります（かえられません）。ほかの 段を さわってね。'; Z.draw(); return; }
+      var best = cands[0], bd = 1e9;
+      cands.forEach(function (j) { var n = geo.notes[j][i], y = n && n.getYs ? n.getYs()[0] : 1e9; if (Math.abs(y - pt.y) < bd) { bd = Math.abs(y - pt.y); best = j; } });
+      e.preventDefault(); drag = { i: i, j: best, id: e.pointerId };
+      try { box.setPointerCapture(e.pointerId); } catch (x) { }
+      Z.sel = { i: i, j: best }; Z.hintTxt = ''; apply(pt); Z.draw();
     });
+    box.addEventListener('pointermove', function (e) { if (drag && geo) { e.preventDefault(); apply(M.svgPt(geo.svg, e)); } });
+    var endDrag = function (e) { if (!drag) return; var d = drag; drag = null; try { box.releasePointerCapture(d.id); } catch (x) { } M.play([[M.str(Z.v[d.i][d.j]), 0.9]], 100); Z.draw(); };
+    box.addEventListener('pointerup', endDrag); box.addEventListener('pointercancel', endDrag);
+    // キーボード（パソコン）：← → 和音、↑ ↓ 音、1〜4 または S A T B で 声部、Space で 聴く
+    if (GK._hzKey) document.removeEventListener('keydown', GK._hzKey);
+    GK._hzKey = function (e) {
+      if (!document.body.contains(body)) { document.removeEventListener('keydown', GK._hzKey); return; }
+      if (e.target.closest && e.target.closest('select,input,textarea')) return;
+      var t = Z.t, k = e.key, handled = true;
+      if (k === 'ArrowLeft') Z.sel.i = Math.max(0, Z.sel.i - 1);
+      else if (k === 'ArrowRight') Z.sel.i = Math.min(t.chs.length - 1, Z.sel.i + 1);
+      else if (k === 'ArrowUp') { stepNote(1); return e.preventDefault(); }
+      else if (k === 'ArrowDown') { stepNote(-1); return e.preventDefault(); }
+      else if (/^[1-4]$/.test(k) || /^[sat b]$/i.test(k) && k !== ' ') { var jj = /^[1-4]$/.test(k) ? +k - 1 : 'SATB'.indexOf(k.toUpperCase()); if (jj >= 0 && jj !== t.gv && !(make && jj !== S.mv)) Z.sel.j = jj; }
+      else if (k === ' ') { H.play([(Z.show && t.model ? t.model : Z.v)[Z.sel.i]]); return e.preventDefault(); }
+      else handled = false;
+      if (handled) { e.preventDefault(); Z.draw(); }
+    };
+    document.addEventListener('keydown', GK._hzKey);
     draw();
   };
 })();
