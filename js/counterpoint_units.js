@@ -396,7 +396,6 @@
   });
 
   /* =================== 対位法エディタ（第1類を 自分で 書く） =================== */
-  GK.HTOOLS.push({ go: '#tools/cplab', ic: '🎶', ttl: '対位法エディタ', en: 'Counterpoint Lab', gl: '対位線を 書いて 自動チェック' });
   var S = GK.store.get('cplab', { above: true, lv: 1 });
   function newTask() {
     var R = GK.rng(Math.floor(Math.random() * 1e9)), pools = CP.CFS.filter(function (p) { return S.lv === 1 ? p.length <= 7 : S.lv === 2 ? p.length <= 9 : true; }), b = null;
@@ -407,6 +406,13 @@
     b.cp = b.cf.map(function (c) { return { n: c + (S.above ? 2 : -2), b: 4 }; });
     b.show = false; b.done = false; S.t = b;
   }
+  GK.route(/^cplab$/, function () {
+    GK.view.innerHTML = '<div class="split"><aside class="panel side"><h3>🎶 対位法ラボ</h3>' +
+      '<p class="note" style="padding:6px 10px">定旋律に 第1類（1対1）の 対位線を つけよう。<br>① 上か 下か えらぶ ② 五線を タップして 音を 入れる（‹ › でも OK）③ ルール違反が 自動で 表示されます。</p>' +
+      '<button type="button" class="it" data-go="#home/cp"><b>◀ 対位法に もどる</b><small>授業・演習・テスト</small></button></aside><section class="panel main"><div class="mbody" id="cpbody"></div></section></div>';
+    GK.cpLab($('#cpbody'));
+  });
+  GK.route(/^tools\/cplab$/, function () { GK.go('#cplab'); });
   GK.cpLab = function (body) {
     if (!S.t) newTask();
     body.innerHTML = '<div class="toolw hl"><div class="ctl"><div class="seg"><button type="button" data-ca="1" aria-pressed="' + S.above + '">上に つける</button><button type="button" data-ca="0" aria-pressed="' + !S.above + '">下に つける</button></div>' +
