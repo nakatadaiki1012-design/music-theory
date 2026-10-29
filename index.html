@@ -139,6 +139,11 @@ h2.ttl { font-family: var(--font-display); font-size: 22px; margin: 0; line-heig
 .hgrid .hh { text-align: center; font-size: 14px; font-family: serif; color: var(--muted); }
 .hgrid .hv { align-self: center; text-align: center; font-family: var(--font-en); font-weight: 800; font-size: 14px; }
 .hc { display: flex; align-items: center; justify-content: space-between; gap: 1px; border: 1.5px solid var(--line); border-top: 3px solid var(--vc); border-radius: 6px; background: var(--panel); min-height: 36px; padding: 0 1px; min-width: 0; }
+.cswitch { display: flex; border: 2px solid var(--line); border-radius: 999px; overflow: hidden; margin-right: 4px; }
+.cswitch button { border: 0; background: var(--panel); padding: 3px 10px; font-size: 13px; font-weight: 800; color: var(--muted); white-space: nowrap; }
+.cswitch button + button { border-left: 1.5px solid var(--line); }
+.cswitch button[aria-pressed="true"] { background: var(--warm); color: #fff; }
+@media (max-width: 640px) { .cswitch .lbl { display: none; } .cswitch { margin-right: 0; } .cswitch button { padding: 3px 5px; font-size: 12px; } .brand { font-size: 14.5px !important; letter-spacing: 0; } .brand .clef { display: none; } .cnav button { padding: 4px 3px !important; } .top .tools { gap: 2px; } .top .ibtn { padding-left: 5px; padding-right: 5px; } }
 /* コース（楽典・和声法・対位法）ごとの 色 */
 body[data-course="harm"] { --warm: #2f6bb8; --warm-soft: rgba(47, 107, 184, .15); }
 body[data-course="cp"] { --warm: #2c8a5c; --warm-soft: rgba(44, 138, 92, .15); }
@@ -864,12 +869,13 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <header class="top">
   <h1 class="brand" id="brand" title="ホームへ"><span class="clef">𝄞</span>楽典<b>ラボ</b></h1>
   <nav class="cnav" id="cnav">
-    <button type="button" data-go="#home">📖<span class="lbl"> 授業</span></button>
-    <button type="button" data-go="#drill">💪<span class="lbl"> 演習</span></button>
-    <button type="button" data-go="#tools">🎹<span class="lbl"> さわる</span></button>
-    <button type="button" data-go="#game">🎮<span class="lbl"> ゲーム</span></button>
+    <button type="button" data-k="home" data-go="#home">📖<span class="lbl"> 授業</span></button>
+    <button type="button" data-k="drill" data-go="#drill">💪<span class="lbl"> 演習</span></button>
+    <button type="button" data-k="third" data-go="#tools">🎹<span class="lbl"> さわる</span></button>
+    <button type="button" data-k="game" data-go="#game">🎮<span class="lbl"> ゲーム</span></button>
   </nav>
   <div class="tools">
+    <div class="cswitch" id="cswitch" role="group" aria-label="コースを かえる"><button type="button" data-c="theory" data-go="#home/theory" title="楽典ラボ">🎼<span class="lbl"> 楽典</span></button><button type="button" data-c="harm" data-go="#home/harm" title="和声法ラボ">🎹<span class="lbl"> 和声法</span></button><button type="button" data-c="cp" data-go="#home/cp" title="対位法ラボ">🎶<span class="lbl"> 対位法</span></button></div>
     <button type="button" class="ibtn" id="taskBtn" data-go="#task" title="課題">📮<span class="lbl"></span></button>
     <button type="button" class="ibtn" id="coinBtn" data-go="#game" title="コイン・段位">🪙<b>0</b></button>
     <button type="button" class="ibtn" id="setBtn" title="設定">⚙</button>
@@ -879,27 +885,27 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261029d"></script>
-<script src="js/music.js?v=20261029d"></script>
-<script src="js/core.js?v=20261029d"></script>
-<script src="js/figs.js?v=20261029d"></script>
-<script src="js/terms.js?v=20261029d"></script>
-<script src="js/terms_info.js?v=20261029d"></script>
-<script src="js/terms_pro.js?v=20261029d"></script>
-<script src="js/typenames.js?v=20261029d"></script>
-<script src="js/harmony.js?v=20261029d"></script>
-<script src="js/lessons.js?v=20261029d"></script>
-<script src="js/quiz.js?v=20261029d"></script>
-<script src="js/app.js?v=20261029d"></script>
-<script src="js/learn.js?v=20261029d"></script>
-<script src="js/harmony_units.js?v=20261029d"></script>
-<script src="js/harmony_lab.js?v=20261029d"></script>
-<script src="js/harmony_units2.js?v=20261029d"></script>
-<script src="js/harmony_units3.js?v=20261029d"></script>
-<script src="js/counterpoint.js?v=20261029d"></script>
-<script src="js/counterpoint_units.js?v=20261029d"></script>
-<script src="js/harmony_reg.js?v=20261029d"></script>
-<script src="js/stage.js?v=20261029d"></script>
-<script src="js/game.js?v=20261029d"></script>
+<script src="js/config.js?v=20261029e"></script>
+<script src="js/music.js?v=20261029e"></script>
+<script src="js/core.js?v=20261029e"></script>
+<script src="js/figs.js?v=20261029e"></script>
+<script src="js/terms.js?v=20261029e"></script>
+<script src="js/terms_info.js?v=20261029e"></script>
+<script src="js/terms_pro.js?v=20261029e"></script>
+<script src="js/typenames.js?v=20261029e"></script>
+<script src="js/harmony.js?v=20261029e"></script>
+<script src="js/lessons.js?v=20261029e"></script>
+<script src="js/quiz.js?v=20261029e"></script>
+<script src="js/app.js?v=20261029e"></script>
+<script src="js/learn.js?v=20261029e"></script>
+<script src="js/harmony_units.js?v=20261029e"></script>
+<script src="js/harmony_lab.js?v=20261029e"></script>
+<script src="js/harmony_units2.js?v=20261029e"></script>
+<script src="js/harmony_units3.js?v=20261029e"></script>
+<script src="js/counterpoint.js?v=20261029e"></script>
+<script src="js/counterpoint_units.js?v=20261029e"></script>
+<script src="js/harmony_reg.js?v=20261029e"></script>
+<script src="js/stage.js?v=20261029e"></script>
+<script src="js/game.js?v=20261029e"></script>
 </body>
 </html>

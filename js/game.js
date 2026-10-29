@@ -49,7 +49,7 @@
      ゲームのトップ
      ========================================================= */
   var TA = GK.store.get('taSel', { m: 'all', us: '', t: 90 });
-  GK.route(/^game\/c\/(harm|cp)$/, function (m) { TA.m = m[1] === 'harm' ? 'h' : 'cp'; GK.store.set('taSel', TA); GK.go('#game'); });
+  GK.route(/^game\/c\/(theory|harm|cp)$/, function (m) { if (m[1] !== 'theory' || TA.m === 'h' || TA.m === 'cp') TA.m = m[1] === 'harm' ? 'h' : m[1] === 'cp' ? 'cp' : 'all'; GK.store.set('taSel', TA); GK.go('#game'); });
   GK.route(/^game$/, function () { top(); });
   GK.route(/^join=(\d{4})$/, function (m) { top(m[1]); });
   function top(code) {

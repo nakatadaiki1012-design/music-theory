@@ -193,15 +193,27 @@
   GK.onLeave = function (fn) { always.push(fn); };      // 画面をはなれるたびに いつも
   GK.onLeaveOnce = function (fn) { leaveFns.push(fn); }; // いまの画面を はなれる時だけ
   GK.go = function (h) { if (location.hash === h) GK.render(); else location.hash = h; };
+  var COURSES = {
+    theory: { brand: '楽典', home: '#home/theory', drill: '#drill/c/theory', game: '#game/c/theory', third: ['🎹', '#tools', 'さわる'] },
+    harm: { brand: '和声法', home: '#home/harm', drill: '#drill/c/harm', game: '#game/c/harm', third: ['🎼', '#hlab', 'ラボ'] },
+    cp: { brand: '対位法', home: '#home/cp', drill: '#drill/c/cp', game: '#game/c/cp', third: ['🎶', '#cplab', 'ラボ'] }
+  };
   GK.render = function () {
     leaveFns.splice(0).concat(always).forEach(function (f) { try { f(); } catch (e) { } });
     GK.view.onclick = null;
     var h = decodeURIComponent(location.hash.slice(1)) || 'home';
-    var tab = /^(drill)/.test(h) ? '#drill' : /^(tools)/.test(h) ? '#tools' : /^(game|ta$|host|join|battle|ens)/.test(h) ? '#game' : '#home';
-    var cs = /^(home\/harm|hlab|h\d\d)/.test(h) ? 'harm' : /^(home\/cp|cplab|c\d\d)/.test(h) ? 'cp' : /^(home\/theory|u\d\d|learn|tools)/.test(h) ? 'theory' : null;
+    var dc = /^(?:drill|game)\/c\/(theory|harm|cp)$/.exec(h), cs = dc ? dc[1] : /^(home\/harm|hlab|h\d\d)/.test(h) ? 'harm' : /^(home\/cp|cplab|c\d\d)/.test(h) ? 'cp' : /^(home\/theory|home\/tools|u\d\d|learn|tools)/.test(h) ? 'theory' : null;
     if (cs) GK.store.set('course', cs);
     document.body.dataset.course = cs || GK.store.get('course', 'theory');
-    GK.$$('#cnav button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.go === tab ? 'true' : 'false'); });
+    var ck = document.body.dataset.course, C = COURSES[ck] || COURSES.theory;
+    var tab = /^(drill)/.test(h) ? 'drill' : /^(tools|hlab|cplab)/.test(h) ? 'third' : /^(game|ta$|host|join|battle|ens)/.test(h) ? 'game' : 'home';
+    var br = GK.$('#brand'); if (br) br.innerHTML = '<span class="clef">𝄞</span>' + C.brand + '<b>ラボ</b>';
+    GK.$$('#cnav button').forEach(function (b) {
+      var k = b.dataset.k; b.dataset.go = k === 'third' ? C.third[1] : C[k];
+      var lb = b.querySelector('.lbl'); if (k === 'third') { b.firstChild.nodeValue = C.third[0]; if (lb) lb.textContent = ' ' + C.third[2]; }
+      b.setAttribute('aria-current', k === tab ? 'true' : 'false');
+    });
+    GK.$$('#cswitch button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.c === ck ? 'true' : 'false'); });
     for (var i = 0; i < routes.length; i++) {
       var m = routes[i][0].exec(h);
       if (m) { GK.view.innerHTML = ''; routes[i][1](m); return; }
