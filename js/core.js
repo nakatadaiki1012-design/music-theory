@@ -193,10 +193,12 @@
   GK.onLeave = function (fn) { always.push(fn); };      // 画面をはなれるたびに いつも
   GK.onLeaveOnce = function (fn) { leaveFns.push(fn); }; // いまの画面を はなれる時だけ
   GK.go = function (h) { if (location.hash === h) GK.render(); else location.hash = h; };
+  GK.courseKey = function () { return document.body.dataset.course || 'theory'; };
+  GK.courseUnits = function (c) { c = c || GK.courseKey(); return c === 'harm' ? GK.HUNITS : c === 'cp' ? GK.CPUNITS : GK.UNITS; };
   var COURSES = {
     theory: { brand: '楽典', home: '#home/theory', drill: '#drill/c/theory', game: '#game/c/theory', third: ['🎹', '#tools', 'さわる'] },
-    harm: { brand: '和声法', home: '#home/harm', drill: '#drill/c/harm', game: '#game/c/harm', third: ['🎼', '#hlab', 'ラボ'] },
-    cp: { brand: '対位法', home: '#home/cp', drill: '#drill/c/cp', game: '#game/c/cp', third: ['🎶', '#cplab', 'ラボ'] }
+    harm: { brand: '和声法', home: '#home/harm', drill: '#drill/c/harm', game: '#game/c/harm', third: ['✍️', '#hlab', '実践'] },
+    cp: { brand: '対位法', home: '#home/cp', drill: '#drill/c/cp', game: '#game/c/cp', third: ['✍️', '#cplab', '実践'] }
   };
   GK.render = function () {
     leaveFns.splice(0).concat(always).forEach(function (f) { try { f(); } catch (e) { } });

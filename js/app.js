@@ -185,8 +185,8 @@
       n = tiles.length; tiles = tiles.join('');
     } else {
       n = list.length; tiles = list.map(tile).join('');
-      if (tab === 'harm') { tiles += tool('#hlab', '🎼', '和声ラボ', 'Harmony Lab', '4 声を 書いて 自動採点（ソプラノ・バス課題）'); n++; }
-      if (tab === 'cp') { tiles += tool('#cplab', '🎶', '対位法ラボ', 'Counterpoint Lab', '対位線を 書いて 自動チェック'); n++; }
+      if (tab === 'harm') { tiles += tool('#hlab', '✍️', '実践', 'Practice', 'ソプラノ課題・バス課題・自由入力・自分で出題'); n++; }
+      if (tab === 'cp') { tiles += tool('#cplab', '✍️', '実践', 'Practice', '定旋律に 対位線を 書いて 自動チェック'); n++; }
     }
     var cols = n > 16 ? Math.ceil(n / 4) : n > 9 ? 4 : 3, rows = Math.ceil(n / cols);
     var tabs = (tab === 'theory' || tab === 'tools') ? [['theory', '🎼 楽典の 単元（' + GK.UNITS.length + '）'], ['tools', '🧰 道具・復習' + (due ? ' ' + due : '')]] : [];
@@ -194,12 +194,12 @@
       '<h2 class="cname">' + (tab === 'harm' ? '和声法' : tab === 'cp' ? '対位法' : '楽典') + '</h2><p class="cdesc">' + (tab === 'harm' ? '四声部の 和音の つなぎ方を、楽譜と 音で 見て・聴いて・自分で 書いて 身につける' : tab === 'cp' ? '2 つの メロディーを 同時に 歌わせる 技術。定旋律に 対位線を つけて、ルールと ひびきを 身につける' : '音名・リズム・音程・音階・調・和音・記号を、楽譜と図で 見て・聴いて・解いて 身につける') + '</p>' +
       '<div class="stats"><div class="stat"><b>' + pass + '<small>/' + list.length + '</small></b><small>合格した単元</small></div><div class="stat"><b>' + GK.fmtN(RW.drillOk) + '</b><small>演習の正解</small></div><div class="stat"><b>' + GK.levelOf(RW.coins).name + '</b><small>段位</small></div></div>' +
       (task ? '<div class="taskbox">📮 <span>課題 <b>' + task.units.filter(function (u) { return GK.prog(u).pass; }).length + '/' + task.units.length + '</b> 合格</span><button type="button" class="btn" data-go="#task">見る</button></div>' : '') +
-      '<div class="acts">' + (tab === 'harm' ? '<button type="button" class="btn warm" data-go="#hlab">🎼 和声ラボへ</button>' : tab === 'cp' ? '<button type="button" class="btn warm" data-go="#cplab">🎶 対位法ラボへ</button>' : '') + '<button type="button" class="btn main" data-go="#' + next.id + '">▶ ' + (seen ? 'つづき' : 'はじめる') + '：' + esc(next.title) + '</button>' +
+      '<div class="acts"><button type="button" class="btn main" data-go="#' + next.id + '">' + (tab === 'theory' ? '' : '📖 授業　') + '▶ ' + (seen ? 'つづき' : 'はじめる') + '：' + esc(next.title) + '</button>' +
       (tab !== 'theory' ? '' : due ? '<button type="button" class="btn warm" data-go="#learn/due">🔁 復習 ' + due + '</button>' : '<button type="button" class="btn" data-go="#learn/diag">🧭 力だめし</button>') +
-      '<button type="button" class="btn" data-go="#' + (tab === 'theory' ? 'drill' : 'drill/c/' + tab) + '">💪 まとめて演習</button>' +
+      '<button type="button" class="btn" data-go="#' + (tab === 'theory' ? 'drill' : 'drill/c/' + tab) + '">💪 演習</button>' + (tab === 'harm' ? '<button type="button" class="btn warm" data-go="#hlab">✍️ 実践（ソプラノ課題 など）</button>' : tab === 'cp' ? '<button type="button" class="btn warm" data-go="#cplab">✍️ 実践（対位線を 書く）</button>' : '') +
       '<button type="button" class="btn" data-go="#' + (tab === 'theory' ? 'game' : 'game/c/' + tab) + '">🎮 ゲーム</button></div>' +
       '<div class="heromini"><h3>1 単元 ＝ 3 ステップ</h3><div class="cycle"><ol><li><b>💡</b><b>ポイント</b><span>図と音で わかる</span></li><li><b>💪</b><b>演習</b><span>10 問。毎回ちがう問題</span></li><li><b>🏁</b><b>テスト</b><span>' + GK.TEST_N + ' 問中 ' + GK.PASS + ' 問で 合格</span></li></ol></div>' +
-      (tab === 'theory' ? '<h3 style="margin-top:10px">🧠 わすれない しくみ</h3><div class="cycle"><ol><li><b>🔁</b><b>今日の復習</b><span>間をあけて 思い出す</span></li><li><b>🧭</b><b>力だめし</b><span>実力を はかる</span></li><li><b>🗺</b><b>学習マップ</b><span>身につき具合</span></li></ol></div>' : '<h3 style="margin-top:10px">' + (tab === 'harm' ? '🎼 和声ラボ' : '🎶 対位法ラボ') + '</h3><p class="note">' + (tab === 'harm' ? '五線に 4 声を 書くと、禁則を 自動で 採点。ソプラノ課題・バス課題・自由入力・自分で出題。' : '定旋律に 対位線を 書くと、協和・禁則を 自動で チェック。') + '<br>学んだ ことを ラボで 試そう。</p>') + '</div>' +
+      (tab === 'theory' ? '<h3 style="margin-top:10px">🧠 わすれない しくみ</h3><div class="cycle"><ol><li><b>🔁</b><b>今日の復習</b><span>間をあけて 思い出す</span></li><li><b>🧭</b><b>力だめし</b><span>実力を はかる</span></li><li><b>🗺</b><b>学習マップ</b><span>身につき具合</span></li></ol></div>' : '<h3 style="margin-top:10px">✍️ 実践とは？</h3><p class="note">' + (tab === 'harm' ? '授業で 学んだ ことを、五線に 4 声を 書いて 試します。ソプラノ課題・バス課題・自由入力・自分で出題。禁則を 自動で 採点。' : '定旋律に 対位線を 書いて 試します。協和・禁則を 自動で チェック。') + '</p>') + '</div>' +
       '</aside><section class="gridw">' + (tabs.length ? '<div class="mtabs ccs">' + tabs.map(function (x) { return '<button type="button" data-c="' + x[0] + '" data-go="#home/' + x[0] + '" aria-pressed="' + (x[0] === tab) + '">' + x[1] + '</button>'; }).join('') + '</div>' : '') +
       '<div class="grid" style="--c1:' + cols + ';--r1:' + rows + ';--c2:3;--r2:' + Math.ceil(n / 3) + ';--c3:2;--r3:' + Math.ceil(n / 2) + '">' + tiles + '</div></section></div>';
   });
@@ -341,19 +341,22 @@
     DR.mode = 'mix'; DR.us = L1.map(function (u) { return u.id; }); GK.store.set('drillSel', DR); GK.go('#drill');
   });
   GK.route(/^drill(?:\/(run))?$/, function (m) {
-    var weak = GK.store.get('weak', {}), wk = Object.keys(weak).filter(function (k) { return GK.Q.T[k]; }).sort(function (a, b) { return weak[b] - weak[a]; });
+    var CK = GK.courseKey(), CU = GK.courseUnits(CK), cuIds = CU.map(function (u) { return u.id; }), CN = { theory: '楽典', harm: '和声法', cp: '対位法' }[CK];
+    if (DR.mode === 'ear' && CK !== 'theory') DR.mode = 'mix';
+    DR.us = DR.us.filter(function (u) { return cuIds.indexOf(u) >= 0; }); if (!DR.us.length) DR.us = cuIds.slice(0, 1);
+    var weak = GK.store.get('weak', {}), wk = Object.keys(weak).filter(function (k) { return GK.Q.T[k] && cuIds.indexOf(GK.Q.T[k].u) >= 0; }).sort(function (a, b) { return weak[b] - weak[a]; });
     V.innerHTML = '<div class="split"><aside class="panel side">' +
-      '<h3>演習</h3>' +
-      [['mix', '単元をえらぶ', '好きな単元を まぜて 出題'], ['weak', '🔁 苦手をやり直す', wk.length ? wk.length + ' 種類の 苦手な問題' : 'まちがえた問題が ここにたまる'], ['ear', '👂 聴いて答える', '音程・和音・リズム・終止'], ['all', '🎲 全単元ミックス', 'すべての範囲から']].map(function (x) { return '<button type="button" class="it" data-dm="' + x[0] + '" aria-current="' + (DR.mode === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('') +
+      '<h3>演習（' + CN + '）</h3>' +
+      [['mix', '単元をえらぶ', '好きな単元を まぜて 出題'], ['weak', '🔁 苦手をやり直す', wk.length ? wk.length + ' 種類の 苦手な問題' : 'まちがえた問題が ここにたまる'], ['ear', '👂 聴いて答える', '音程・和音・リズム・終止'], ['all', '🎲 全単元ミックス', CN + 'の すべての範囲から']].filter(function (x) { return !(x[0] === 'ear' && CK !== 'theory'); }).map(function (x) { return '<button type="button" class="it" data-dm="' + x[0] + '" aria-current="' + (DR.mode === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('') +
       '<h3 style="margin-top:auto">記録</h3><p class="note" style="padding:0 4px">演習で 正解 <b>' + GK.fmtN(RW.drillOk) + '</b> 問<br>聴く問題 正解 <b>' + RW.earOk + '</b> 問</p>' +
-      '</aside><section class="panel main"><div class="mhead"><h2 class="ttl">💪 まとめて演習</h2></div><div class="mbody" id="dbody"></div></section></div>';
+      '</aside><section class="panel main"><div class="mhead"><h2 class="ttl">💪 ' + CN + 'の 演習</h2></div><div class="mbody" id="dbody"></div></section></div>';
     var body = $('#dbody');
     function draw() {
       var html = '';
-      if (DR.mode === 'mix') html += '<div class="frow"><span>単元</span><button type="button" class="btn ghost sm" data-dx="allu">全部</button><button type="button" class="btn ghost sm" data-dx="noneu">はずす</button></div><div class="upick">' + GK.UNITS.concat(GK.HUNITS || [], GK.CPUNITS || []).map(function (u) { return '<button type="button" data-du="' + u.id + '" aria-pressed="' + (DR.us.indexOf(u.id) >= 0) + '"><i>' + u.no + '</i>' + esc(u.title) + '</button>'; }).join('') + '</div>';
+      if (DR.mode === 'mix') html += '<div class="frow"><span>単元</span><button type="button" class="btn ghost sm" data-dx="allu">全部</button><button type="button" class="btn ghost sm" data-dx="noneu">はずす</button></div><div class="upick">' + CU.map(function (u) { return '<button type="button" data-du="' + u.id + '" aria-pressed="' + (DR.us.indexOf(u.id) >= 0) + '"><i>' + u.no + '</i>' + esc(u.title) + '</button>'; }).join('') + '</div>';
       if (DR.mode === 'weak') html += wk.length ? '<p>まちがえた回数が多い 問題の種類から 出します。正解すると 少しずつ へります。</p><div class="upick">' + wk.slice(0, 12).map(function (k) { return '<button type="button" disabled style="opacity:1"><i>' + GK.UNIT[GK.Q.T[k].u].no + '</i>' + esc(GK.UNIT[GK.Q.T[k].u].title) + ' <small style="color:var(--warm)">×' + weak[k] + '</small></button>'; }).join('') + '</div>' : '<p>まだ 苦手な問題は ありません。演習で まちがえると ここに たまります。</p>';
       if (DR.mode === 'ear') html += '<p>🔊 音を聴いて答える問題だけを出します（音程・長音階／短音階・長調／短調・長三和音／短三和音・リズム・終わった感じ／続く感じ）。音が出る環境で どうぞ。</p>';
-      if (DR.mode === 'all') html += '<p>' + GK.UNITS.length + ' 単元 すべてから 出題します。</p>';
+      if (DR.mode === 'all') html += '<p>' + CN + 'の ' + CU.length + ' 単元 すべてから 出題します。</p>';
       html += '<div class="frow"><span>問題の数</span><div class="seg">' + [10, 20, 30].map(function (n) { return '<button type="button" data-dn="' + n + '" aria-pressed="' + (DR.n === n) + '">' + n + ' 問</button>'; }).join('') + '</div></div>' +
         '<div class="frow"><span>むずかしさ</span><div class="seg">' + [[0, 'だんだん'], [1, '★ やさしい'], [2, '★★ ふつう'], [3, '★★★ 挑戦']].map(function (x) { return '<button type="button" data-ds="' + x[0] + '" aria-pressed="' + (DR.st === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div></div>' +
         '<div class="frow" style="margin-top:auto"><button type="button" class="btn main big" id="dgo">▶ スタート</button></div>';
@@ -364,7 +367,7 @@
       var b = e.target.closest('[data-dm],[data-du],[data-dn],[data-ds],[data-dx],#dgo'); if (!b) return;
       if (b.dataset.dm) { DR.mode = b.dataset.dm; $$('[data-dm]').forEach(function (x) { x.setAttribute('aria-current', x === b); }); }
       if (b.dataset.du) { var i = DR.us.indexOf(b.dataset.du); if (i >= 0) DR.us.splice(i, 1); else DR.us.push(b.dataset.du); }
-      if (b.dataset.dx === 'allu') DR.us = GK.UNITS.concat(GK.HUNITS || [], GK.CPUNITS || []).map(function (u) { return u.id; });
+      if (b.dataset.dx === 'allu') DR.us = cuIds.slice();
       if (b.dataset.dx === 'noneu') DR.us = [];
       if (b.dataset.dn) DR.n = +b.dataset.dn;
       if (b.dataset.ds) DR.st = +b.dataset.ds;
@@ -373,7 +376,7 @@
       draw();
     };
     function start() {
-      var R = GK.rng(Math.floor(Math.random() * 1e9)), us = GK.UNITS.map(function (u) { return u.id; }), o = { ramp: !DR.st, st: DR.st || null, weak: true };
+      var R = GK.rng(Math.floor(Math.random() * 1e9)), us = cuIds.slice(), o = { ramp: !DR.st, st: DR.st || null, weak: true };
       if (DR.mode === 'mix') us = DR.us.slice();
       if (DR.mode === 'weak') o.types = wk.slice(0, 8);
       if (DR.mode === 'ear') o.types = Object.keys(GK.Q.T).filter(function (k) { return GK.Q.T[k].ear; });

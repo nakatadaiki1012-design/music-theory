@@ -407,9 +407,9 @@
     b.show = false; b.done = false; S.t = b;
   }
   GK.route(/^cplab$/, function () {
-    GK.view.innerHTML = '<div class="split"><aside class="panel side"><div class="labsw"><button type="button" data-go="#hlab" aria-current="false">🎼 和声ラボ</button><button type="button" data-go="#cplab" aria-current="true">🎶 対位法ラボ</button></div><h3>🎶 対位法ラボ</h3>' +
+    GK.view.innerHTML = '<div class="split"><aside class="panel side"><h3>✍️ 対位法の 実践</h3>' +
       '<p class="note" style="padding:6px 10px">定旋律に 第1類（1対1）の 対位線を つけよう。<br>① 上か 下か えらぶ ② 五線を タップして 音を 入れる（‹ › でも OK）③ ルール違反が 自動で 表示されます。</p>' +
-      '<button type="button" class="it" data-go="#home/cp"><b>◀ 対位法に もどる</b><small>授業・演習・テスト</small></button></aside><section class="panel main"><div class="mbody" id="cpbody"></div></section></div>';
+      '<button type="button" class="it" data-go="#home/cp"><b>◀ 対位法ラボの ホームへ</b><small>授業・演習・実践・ゲーム</small></button></aside><section class="panel main"><div class="mbody" id="cpbody"></div></section></div>';
     GK.cpLab($('#cpbody'));
   });
   GK.route(/^tools\/cplab$/, function () { GK.go('#cplab'); });
