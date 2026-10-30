@@ -169,6 +169,19 @@ body[data-course="cp"] { --warm: #2c8a5c; --warm-soft: rgba(44, 138, 92, .15); }
 .xwpiece { display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; padding-top: 6px; } .xwpiece svg { max-width: 100%; width: 100%; height: auto; }
 @media (max-width: 640px) { .xwpiece { overflow-x: auto !important; } .xwpiece svg { min-width: 680px; width: 680px; max-width: none; } }
 .xwr p { margin: 4px 0; line-height: 1.55; } .xwr .xwe { font-size: 13.5px; }
+/* スクロールを 少なく */
+.xpgrid { display: flex; flex-direction: column; gap: 8px; }
+.xq { padding: 6px 10px !important; } .xq h4 { font-size: 13px !important; margin-bottom: 3px !important; } .xrow { margin: 2px 0 !important; } .xrow b { min-width: 2.6em; font-size: 14px !important; } .xrow select { font-size: 13px !important; padding: 2px 4px !important; }
+@media (min-width: 900px) { .xpgrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(330px, 1fr); gap: 14px; align-items: start; } .xpr { display: flex; flex-direction: column; gap: 6px; } .xwpiece { position: sticky; top: 0; } }
+.hzaim p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 2px 0 0; font-size: 13px; }
+.hzvr { display: flex; gap: 6px; align-items: stretch; flex-wrap: wrap; } .hzud2 { display: flex; flex-direction: column; gap: 3px; } .hzud2 .btn { padding: 1px 12px; }
+.hzrl2 { display: flex; flex-wrap: wrap; gap: 4px; } .hzchip { display: inline-flex; align-items: center; gap: 4px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--panel); padding: 2px 9px; font-size: 12.5px; font-weight: 700; color: var(--ink); } .hzchip i { font-style: normal; font-weight: 800; } .hzchip em { font-style: normal; font-size: 11px; background: var(--ng); color: #fff; border-radius: 999px; padding: 0 5px; }
+.hzchip.ok i { color: var(--ok); } .hzchip.ng { border-color: var(--ng); background: rgba(211,48,42,.12); } .hzchip.ng i { color: var(--ng); } .hzchip.wn i { color: var(--gold); } .hzchip.wn em { background: var(--gold); } .hzchip.na { opacity: .5; } .hzchip.open { box-shadow: 0 0 0 2px var(--ink) inset; }
+.hzs1 { gap: 8px !important; flex-wrap: wrap; } .hzs1 b { font-size: 24px !important; } .hzs { padding: 6px 12px !important; } .hzmsg { font-weight: 700; font-size: 13.5px; }
+.hzf { padding: 8px 10px !important; gap: 4px !important; } .hzfi { font-size: 13px !important; }
+@media (max-height: 800px) { .hzcap { display: none; } .heromini h3:nth-of-type(2), .heromini .cycle:nth-of-type(2) { display: none; } }
+@media (max-width: 640px) { .hzaim p { display: none; } .hzaim b { font-size: 17px; } .hz { gap: 5px; } .xwpiece svg { min-width: 600px !important; width: 600px !important; } .xwh span { display: none; } }
+@media (min-width: 900px) { .hzl .hstaff svg { max-height: 290px !important; } .hmain.hcol .hstaff svg { max-height: 210px !important; } }
 /* 和声ラボ */
 .hz { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow: auto; }
 .hzbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -912,30 +925,30 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261030k"></script>
-<script src="js/music.js?v=20261030k"></script>
-<script src="js/core.js?v=20261030k"></script>
-<script src="js/figs.js?v=20261030k"></script>
-<script src="js/terms.js?v=20261030k"></script>
-<script src="js/terms_info.js?v=20261030k"></script>
-<script src="js/terms_pro.js?v=20261030k"></script>
-<script src="js/typenames.js?v=20261030k"></script>
-<script src="js/harmony.js?v=20261030k"></script>
-<script src="js/lessons.js?v=20261030k"></script>
-<script src="js/quiz.js?v=20261030k"></script>
-<script src="js/app.js?v=20261030k"></script>
-<script src="js/exam.js?v=20261030k"></script>
-<script src="js/exam2.js?v=20261030k"></script>
-<script src="js/learn.js?v=20261030k"></script>
-<script src="js/harmony_units.js?v=20261030k"></script>
-<script src="js/harmony_lab.js?v=20261030k"></script>
-<script src="js/harmony_units2.js?v=20261030k"></script>
-<script src="js/harmony_units3.js?v=20261030k"></script>
-<script src="js/harmony_units4.js?v=20261030k"></script>
-<script src="js/counterpoint.js?v=20261030k"></script>
-<script src="js/counterpoint_units.js?v=20261030k"></script>
-<script src="js/harmony_reg.js?v=20261030k"></script>
-<script src="js/stage.js?v=20261030k"></script>
-<script src="js/game.js?v=20261030k"></script>
+<script src="js/config.js?v=20261030m"></script>
+<script src="js/music.js?v=20261030m"></script>
+<script src="js/core.js?v=20261030m"></script>
+<script src="js/figs.js?v=20261030m"></script>
+<script src="js/terms.js?v=20261030m"></script>
+<script src="js/terms_info.js?v=20261030m"></script>
+<script src="js/terms_pro.js?v=20261030m"></script>
+<script src="js/typenames.js?v=20261030m"></script>
+<script src="js/harmony.js?v=20261030m"></script>
+<script src="js/lessons.js?v=20261030m"></script>
+<script src="js/quiz.js?v=20261030m"></script>
+<script src="js/app.js?v=20261030m"></script>
+<script src="js/exam.js?v=20261030m"></script>
+<script src="js/exam2.js?v=20261030m"></script>
+<script src="js/learn.js?v=20261030m"></script>
+<script src="js/harmony_units.js?v=20261030m"></script>
+<script src="js/harmony_lab.js?v=20261030m"></script>
+<script src="js/harmony_units2.js?v=20261030m"></script>
+<script src="js/harmony_units3.js?v=20261030m"></script>
+<script src="js/harmony_units4.js?v=20261030m"></script>
+<script src="js/counterpoint.js?v=20261030m"></script>
+<script src="js/counterpoint_units.js?v=20261030m"></script>
+<script src="js/harmony_reg.js?v=20261030m"></script>
+<script src="js/stage.js?v=20261030m"></script>
+<script src="js/game.js?v=20261030m"></script>
 </body>
 </html>

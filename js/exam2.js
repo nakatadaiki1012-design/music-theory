@@ -118,12 +118,11 @@
     var iv = P.pairs.map(function (p, q) { return '<div class="xrow"><b>' + JA[q] + ' ─ ' + JA[q] + '′</b>' + sel('iq' + q, QUAL, '長・短・完全…') + sel('id' + q, [1, 2, 3, 4, 5, 6, 7, 8].map(function (d) { return [d, d + '度']; }), '何度') + '<span class="xfb" id="fi' + q + '"></span></div>'; }).join('');
     var ky = P.secs.map(function (s, i) { return '<div class="xrow"><b>' + 'AB'.charAt(i) + '</b>' + sel('k' + i, KEYOPT, '調名') + '<span class="xfb" id="fk' + i + '"></span></div>'; }).join('');
     var cd = P.boxes.map(function (ci, q) { return '<div class="xrow"><b>' + LET[q] + '</b>' + sel('ct' + q, CTYPES.map(function (x) { return [x[0], x[1]]; }), '種類') + sel('cd' + q, [1, 2, 3, 4, 5, 6, 7].map(function (d) { return [d, ['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ'][d]]; }), '和音度') + sel('ci' + q, INVN.map(function (x, i) { return [i, x]; }), '位置') + '<span class="xfb" id="fc' + q + '"></span></div>'; }).join('');
-    body.innerHTML = '<div class="xw"><div class="xwh"><b>📜 課題楽曲（大譜表）</b><span>ひとつの 楽譜から 読みとる 問題</span></div>' +
-      '<div class="fig sc xwpiece" id="pFig"></div>' +
-      '<div class="xq"><h4>問1　赤く 囲んだ ア〜ウ の ２音間の 音程を 答えなさい。複音程は 単音程に 直して 答えること。<br><small>答えかた：左で「長・短・完全・増・減」から えらび、右で 度数。例）<b>長3度</b>・<b>完全5度</b>・<b>減7度</b></small></h4>' + iv + '</div>' +
-      '<div class="xq"><h4>問2　かっこ A・B の 部分の 調名を 答えなさい。</h4>' + ky + '</div>' +
-      '<div class="xq"><h4>問3　点線で 囲んだ a〜d の 和音の 種類・和音度・位置を 答えなさい。（和音度は 問2の 調で）</h4>' + cd + '</div>' +
-      '<div class="xwa"><button type="button" class="btn main" id="pGo">✔ 採点する</button><button type="button" class="btn" id="pNew">🎲 べつの 楽曲</button><button type="button" class="btn" id="pPlay">🔊 聴く</button></div><div id="pRes"></div></div>';
+    body.innerHTML = '<div class="xw xp"><div class="xwh"><b>📜 課題楽曲（大譜表）</b><span>ひとつの 楽譜から 読みとる 問題</span></div><div class="xpgrid"><div class="xpl"><div class="fig sc xwpiece" id="pFig"></div></div><div class="xpr">' +
+      '<div class="xq"><h4>問1　赤く 囲んだ ア〜ウ の ２音間の 音程。複音程は 単音程に。<br><small>答えかた：左で「長・短・完全・増・減」、右で 度数。例）長3度・完全5度</small></h4>' + iv + '</div>' +
+      '<div class="xq"><h4>問2　かっこ A・B の 部分の 調名。</h4>' + ky + '</div>' +
+      '<div class="xq"><h4>問3　点線で 囲んだ a〜d の 和音の 種類・和音度（問2の調で）・位置。</h4>' + cd + '</div>' +
+      '<div class="xwa"><button type="button" class="btn main" id="pGo">✔ 採点する</button><button type="button" class="btn" id="pNew">🎲 べつの 楽曲</button><button type="button" class="btn" id="pPlay">🔊 聴く</button></div><div id="pRes"></div></div></div></div>';
     var geo = drawPiece($('#pFig', body), P); GK.EXAM.dbgP = P;
     $('#pPlay', body).onclick = function () { M.play(P.cols.map(function (c, i) { return [c.v.map(function (p) { return M.str(p); }), 1.4]; }), 76); };
     $('#pNew', body).onclick = function () { run(body); };
