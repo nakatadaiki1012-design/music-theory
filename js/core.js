@@ -204,11 +204,11 @@
     leaveFns.splice(0).concat(always).forEach(function (f) { try { f(); } catch (e) { } });
     GK.view.onclick = null;
     var h = decodeURIComponent(location.hash.slice(1)) || 'home';
-    var dc = /^(?:drill|game)\/c\/(theory|harm|cp)$/.exec(h), cs = dc ? dc[1] : /^(home\/harm|hlab|h\d\d)/.test(h) ? 'harm' : /^(home\/cp|cplab|c\d\d)/.test(h) ? 'cp' : /^(home\/theory|home\/tools|u\d\d|learn|tools)/.test(h) ? 'theory' : null;
+    var dc = /^(?:drill|game)\/c\/(theory|harm|cp)$/.exec(h), cs = dc ? dc[1] : /^(home\/harm|hlab|h\d\d)/.test(h) ? 'harm' : /^(home\/cp|cplab|c\d\d)/.test(h) ? 'cp' : /^(home\/theory|home\/tools|u\d\d|learn|tools|exam)/.test(h) ? 'theory' : null;
     if (cs) GK.store.set('course', cs);
     document.body.dataset.course = cs || GK.store.get('course', 'theory');
     var ck = document.body.dataset.course, C = COURSES[ck] || COURSES.theory;
-    var tab = /^(drill)/.test(h) ? 'drill' : /^(tools|hlab|cplab)/.test(h) ? 'third' : /^(game|ta$|host|join|battle|ens)/.test(h) ? 'game' : 'home';
+    var tab = /^(drill|exam)/.test(h) ? 'drill' : /^(tools|hlab|cplab)/.test(h) ? 'third' : /^(game|ta$|host|join|battle|ens)/.test(h) ? 'game' : 'home';
     var br = GK.$('#brand'); if (br) br.innerHTML = '<span class="clef">𝄞</span>' + C.brand + '<b>ラボ</b>';
     GK.$$('#cnav button').forEach(function (b) {
       var k = b.dataset.k; b.dataset.go = k === 'third' ? C.third[1] : C[k];

@@ -138,7 +138,7 @@
       '<button type="button" class="it" data-go="#exam/piece" aria-current="' + (active === 'piece') + '"><b>📜 課題楽曲（大譜表）</b><small>音程・調名・和音を 楽譜から 読みとる</small></button>' +
       CATS.map(function (c) { return '<button type="button" class="it" data-go="#exam/write/' + c[0] + '" aria-current="' + (active === c[0]) + '"><b>' + c[1] + '</b><small>' + c[2] + '</small></button>'; }).join('') +
       '<button type="button" class="it" data-go="#exam/mock"><b>📝 選択式 ★3 模擬</b><small>20 問・★3 だけ</small></button>' +
-      '<button type="button" class="it" data-go="#home/theory"><b>◀ 楽典ラボの ホームへ</b></button>' +
+      '<button type="button" class="it" data-go="#drill"><b>◀ 演習へ もどる</b></button>' +
       '<p class="note" style="padding:6px 10px">書いた 問題 正解 <b>' + (GK.store.get('examW', { ok: 0 }).ok) + '</b> 問</p></aside>';
   };
   /* =====================================================
@@ -202,7 +202,7 @@
     var w = GK.store.get('examW', { ok: 0, sets: 0 }); w.ok += st.ok; w.sets = (w.sets || 0) + 1; GK.store.set('examW', w);
     var pt = st.ok * 3 + (st.ok === st.qs.length ? 5 : 0); GK.earn(pt); if (st.ok === st.qs.length) { GK.fx('fanfare'); GK.confetti && GK.confetti(30); }
     body.innerHTML = '<div class="xw"><div class="hzs ' + (st.ok >= 4 ? 'good' : '') + '"><div class="hzs1"><b>' + st.ok + '<small> / ' + st.qs.length + ' 問 正解</small></b></div><p>' + (st.ok === st.qs.length ? '🎉 ぜんぶ 正解！ 入試レベルの 記譜力です' : st.ok >= 4 ? '✅ 合格ライン（8 割）です' : st.ok >= 2 ? 'もう ひといき。まちがえた 種類を くりかえそう' : '解説を 読んで もう 1 セット') + '</p><p class="hzn">+' + pt + ' コイン</p></div>' +
-      '<div class="xwa"><button type="button" class="btn main" id="xAgain">▶ もう 1 セット</button><button type="button" class="btn" data-go="#home/theory">楽典ラボへ</button></div></div>';
+      '<div class="xwa"><button type="button" class="btn main" id="xAgain">▶ もう 1 セット</button><button type="button" class="btn" data-go="#drill">演習へ もどる</button></div></div>';
     $('#xAgain', body).onclick = function () { start(body); };
   }
 })();
