@@ -132,18 +132,22 @@
   }
 
   GK.EXAM.grade = grade;
+  GK.EXAM.side = function (active) {
+    return '<aside class="panel side"><h3>🎓 応用（入試形式）</h3>' +
+      '<p class="note" style="padding:0 10px 6px">音大入試の 楽典のように、<b>五線に 書く</b> 問題と、<b>実際の 楽譜を 読んで 答える</b> 問題です。</p>' +
+      '<button type="button" class="it" data-go="#exam/piece" aria-current="' + (active === 'piece') + '"><b>📜 課題楽曲（大譜表）</b><small>音程・調名・和音を 楽譜から 読みとる</small></button>' +
+      CATS.map(function (c) { return '<button type="button" class="it" data-go="#exam/write/' + c[0] + '" aria-current="' + (active === c[0]) + '"><b>' + c[1] + '</b><small>' + c[2] + '</small></button>'; }).join('') +
+      '<button type="button" class="it" data-go="#exam/mock"><b>📝 選択式 ★3 模擬</b><small>20 問・★3 だけ</small></button>' +
+      '<button type="button" class="it" data-go="#home/theory"><b>◀ 楽典ラボの ホームへ</b></button>' +
+      '<p class="note" style="padding:6px 10px">書いた 問題 正解 <b>' + (GK.store.get('examW', { ok: 0 }).ok) + '</b> 問</p></aside>';
+  };
   /* =====================================================
      ページ（#exam, #exam/write/<cat>）
      ===================================================== */
   var S = { cat: 'mix', round: null };
   GK.route(/^exam(?:\/write(?:\/(scale|interval|chord|trans|mix))?)?$/, function (m) {
     if (m[1]) S.cat = m[1];
-    V.innerHTML = '<div class="split"><aside class="panel side"><h3>🎓 応用（入試形式）</h3>' +
-      '<p class="note" style="padding:0 10px 6px">音大入試の 楽典のように、<b>五線に 音を 書いて</b> 答えます。5 問 1 セット。</p>' +
-      CATS.map(function (c) { return '<button type="button" class="it" data-go="#exam/write/' + c[0] + '" aria-current="' + (S.cat === c[0]) + '"><b>' + c[1] + '</b><small>' + c[2] + '</small></button>'; }).join('') +
-      '<button type="button" class="it" data-go="#exam/mock"><b>📝 選択式 ★3 模擬</b><small>20 問・★3 だけ</small></button>' +
-      '<button type="button" class="it" data-go="#home/theory"><b>◀ 楽典ラボの ホームへ</b></button>' +
-      '<p class="note" style="padding:6px 10px">書いた 問題 正解 <b>' + (GK.store.get('examW', { ok: 0 }).ok) + '</b> 問</p></aside><section class="panel main"><div class="mbody" id="xbody"></div></section></div>';
+    V.innerHTML = '<div class="split">' + GK.EXAM.side(S.cat) + '<section class="panel main"><div class="mbody" id="xbody"></div></section></div>';
     start($('#xbody'));
   });
   GK.route(/^exam\/mock$/, function () {

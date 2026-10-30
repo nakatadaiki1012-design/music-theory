@@ -160,6 +160,11 @@ body[data-course="cp"] { --warm: #2c8a5c; --warm-soft: rgba(44, 138, 92, .15); }
 .xwa { display: flex; flex-wrap: wrap; gap: 8px; } .xwa .btn { padding: 8px 16px; font-weight: 800; }
 .xwacc { flex-wrap: wrap; } .xwst { min-height: 140px; } .xwst svg, .xwsrc svg { max-width: 100%; }
 .xwr { border: 2px solid var(--line); border-radius: 12px; padding: 8px 12px; background: var(--panel); } .xwr.ok { border-color: var(--ok); background: #eef8ef; } .xwr.ng { border-color: var(--ng); }
+.xq { border: 1.5px solid var(--line); border-radius: 12px; padding: 8px 12px; background: var(--panel); } .xq h4 { margin: 0 0 6px; font-size: 14px; line-height: 1.5; }
+.xrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0; } .xrow b { min-width: 3.4em; font-size: 15px; } .xrow select { font-size: 14px; padding: 4px 6px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+.xfb { font-weight: 800; font-size: 13.5px; } .xfb.ok { color: var(--ok); } .xfb.ng { color: var(--ng); }
+.xwpiece { display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; padding-top: 6px; } .xwpiece svg { max-width: 100%; width: 100%; height: auto; }
+@media (max-width: 640px) { .xwpiece { overflow-x: auto !important; } .xwpiece svg { min-width: 680px; width: 680px; max-width: none; } }
 .xwr p { margin: 4px 0; line-height: 1.55; } .xwr .xwe { font-size: 13.5px; }
 /* 和声ラボ */
 .hz { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow: auto; }
@@ -904,29 +909,30 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261030e"></script>
-<script src="js/music.js?v=20261030e"></script>
-<script src="js/core.js?v=20261030e"></script>
-<script src="js/figs.js?v=20261030e"></script>
-<script src="js/terms.js?v=20261030e"></script>
-<script src="js/terms_info.js?v=20261030e"></script>
-<script src="js/terms_pro.js?v=20261030e"></script>
-<script src="js/typenames.js?v=20261030e"></script>
-<script src="js/harmony.js?v=20261030e"></script>
-<script src="js/lessons.js?v=20261030e"></script>
-<script src="js/quiz.js?v=20261030e"></script>
-<script src="js/app.js?v=20261030e"></script>
-<script src="js/exam.js?v=20261030e"></script>
-<script src="js/learn.js?v=20261030e"></script>
-<script src="js/harmony_units.js?v=20261030e"></script>
-<script src="js/harmony_lab.js?v=20261030e"></script>
-<script src="js/harmony_units2.js?v=20261030e"></script>
-<script src="js/harmony_units3.js?v=20261030e"></script>
-<script src="js/harmony_units4.js?v=20261030e"></script>
-<script src="js/counterpoint.js?v=20261030e"></script>
-<script src="js/counterpoint_units.js?v=20261030e"></script>
-<script src="js/harmony_reg.js?v=20261030e"></script>
-<script src="js/stage.js?v=20261030e"></script>
-<script src="js/game.js?v=20261030e"></script>
+<script src="js/config.js?v=20261030h"></script>
+<script src="js/music.js?v=20261030h"></script>
+<script src="js/core.js?v=20261030h"></script>
+<script src="js/figs.js?v=20261030h"></script>
+<script src="js/terms.js?v=20261030h"></script>
+<script src="js/terms_info.js?v=20261030h"></script>
+<script src="js/terms_pro.js?v=20261030h"></script>
+<script src="js/typenames.js?v=20261030h"></script>
+<script src="js/harmony.js?v=20261030h"></script>
+<script src="js/lessons.js?v=20261030h"></script>
+<script src="js/quiz.js?v=20261030h"></script>
+<script src="js/app.js?v=20261030h"></script>
+<script src="js/exam.js?v=20261030h"></script>
+<script src="js/exam2.js?v=20261030h"></script>
+<script src="js/learn.js?v=20261030h"></script>
+<script src="js/harmony_units.js?v=20261030h"></script>
+<script src="js/harmony_lab.js?v=20261030h"></script>
+<script src="js/harmony_units2.js?v=20261030h"></script>
+<script src="js/harmony_units3.js?v=20261030h"></script>
+<script src="js/harmony_units4.js?v=20261030h"></script>
+<script src="js/counterpoint.js?v=20261030h"></script>
+<script src="js/counterpoint_units.js?v=20261030h"></script>
+<script src="js/harmony_reg.js?v=20261030h"></script>
+<script src="js/stage.js?v=20261030h"></script>
+<script src="js/game.js?v=20261030h"></script>
 </body>
 </html>
