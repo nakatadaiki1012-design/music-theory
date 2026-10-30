@@ -154,6 +154,13 @@ body[data-course="cp"] { --warm: #2c8a5c; --warm-soft: rgba(44, 138, 92, .15); }
 .hero .cname { color: var(--warm); }
 .hero .acts .btn { white-space: normal; text-align: left; }
 .side .labsw { display: flex; gap: 6px; padding: 4px 10px 8px; flex-wrap: wrap; } .side .labsw button { flex: 1; white-space: nowrap; font-size: 12.5px; border: 2px solid var(--line); border-radius: 999px; background: var(--panel); padding: 5px 8px; font-weight: 800; font-size: 13px; } .side .labsw button[aria-current="true"] { background: var(--warm); border-color: var(--warm); color: #fff; }
+.xw { display: flex; flex-direction: column; gap: 8px; }
+.xwh { display: flex; gap: 12px; align-items: baseline; } .xwh b { font-size: 17px; } .xwh span { color: var(--muted); font-size: 12.5px; }
+.xwq { margin: 0; font-size: 15px; line-height: 1.6; }
+.xwa { display: flex; flex-wrap: wrap; gap: 8px; } .xwa .btn { padding: 8px 16px; font-weight: 800; }
+.xwacc { flex-wrap: wrap; } .xwst { min-height: 140px; } .xwst svg, .xwsrc svg { max-width: 100%; }
+.xwr { border: 2px solid var(--line); border-radius: 12px; padding: 8px 12px; background: var(--panel); } .xwr.ok { border-color: var(--ok); background: #eef8ef; } .xwr.ng { border-color: var(--ng); }
+.xwr p { margin: 4px 0; line-height: 1.55; } .xwr .xwe { font-size: 13.5px; }
 /* 和声ラボ */
 .hz { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow: auto; }
 .hzbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -897,28 +904,29 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261030d"></script>
-<script src="js/music.js?v=20261030d"></script>
-<script src="js/core.js?v=20261030d"></script>
-<script src="js/figs.js?v=20261030d"></script>
-<script src="js/terms.js?v=20261030d"></script>
-<script src="js/terms_info.js?v=20261030d"></script>
-<script src="js/terms_pro.js?v=20261030d"></script>
-<script src="js/typenames.js?v=20261030d"></script>
-<script src="js/harmony.js?v=20261030d"></script>
-<script src="js/lessons.js?v=20261030d"></script>
-<script src="js/quiz.js?v=20261030d"></script>
-<script src="js/app.js?v=20261030d"></script>
-<script src="js/learn.js?v=20261030d"></script>
-<script src="js/harmony_units.js?v=20261030d"></script>
-<script src="js/harmony_lab.js?v=20261030d"></script>
-<script src="js/harmony_units2.js?v=20261030d"></script>
-<script src="js/harmony_units3.js?v=20261030d"></script>
-<script src="js/harmony_units4.js?v=20261030d"></script>
-<script src="js/counterpoint.js?v=20261030d"></script>
-<script src="js/counterpoint_units.js?v=20261030d"></script>
-<script src="js/harmony_reg.js?v=20261030d"></script>
-<script src="js/stage.js?v=20261030d"></script>
-<script src="js/game.js?v=20261030d"></script>
+<script src="js/config.js?v=20261030e"></script>
+<script src="js/music.js?v=20261030e"></script>
+<script src="js/core.js?v=20261030e"></script>
+<script src="js/figs.js?v=20261030e"></script>
+<script src="js/terms.js?v=20261030e"></script>
+<script src="js/terms_info.js?v=20261030e"></script>
+<script src="js/terms_pro.js?v=20261030e"></script>
+<script src="js/typenames.js?v=20261030e"></script>
+<script src="js/harmony.js?v=20261030e"></script>
+<script src="js/lessons.js?v=20261030e"></script>
+<script src="js/quiz.js?v=20261030e"></script>
+<script src="js/app.js?v=20261030e"></script>
+<script src="js/exam.js?v=20261030e"></script>
+<script src="js/learn.js?v=20261030e"></script>
+<script src="js/harmony_units.js?v=20261030e"></script>
+<script src="js/harmony_lab.js?v=20261030e"></script>
+<script src="js/harmony_units2.js?v=20261030e"></script>
+<script src="js/harmony_units3.js?v=20261030e"></script>
+<script src="js/harmony_units4.js?v=20261030e"></script>
+<script src="js/counterpoint.js?v=20261030e"></script>
+<script src="js/counterpoint_units.js?v=20261030e"></script>
+<script src="js/harmony_reg.js?v=20261030e"></script>
+<script src="js/stage.js?v=20261030e"></script>
+<script src="js/game.js?v=20261030e"></script>
 </body>
 </html>

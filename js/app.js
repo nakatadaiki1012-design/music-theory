@@ -185,6 +185,7 @@
       n = tiles.length; tiles = tiles.join('');
     } else {
       n = list.length; tiles = list.map(tile).join('');
+      if (tab === 'theory') { tiles += tool('#exam', '🎓', '応用（入試形式）', 'Entrance Exam', '五線に 書く 記譜問題・★3 の 模擬'); n++; }
       if (tab === 'harm') { tiles += tool('#hlab', '✍️', '実践', 'Practice', 'ソプラノ課題・バス課題・自由入力・自分で出題'); n++; }
       if (tab === 'cp') { tiles += tool('#cplab', '✍️', '実践', 'Practice', '定旋律に 対位線を 書いて 自動チェック'); n++; }
     }
@@ -197,7 +198,7 @@
       '<div class="acts"><button type="button" class="btn main" data-go="#' + next.id + '">' + (tab === 'theory' ? '' : '📖 授業　') + '▶ ' + (seen ? 'つづき' : 'はじめる') + '：' + esc(next.title) + '</button>' +
       (tab !== 'theory' ? '' : due ? '<button type="button" class="btn warm" data-go="#learn/due">🔁 復習 ' + due + '</button>' : '<button type="button" class="btn" data-go="#learn/diag">🧭 力だめし</button>') +
       '<button type="button" class="btn" data-go="#' + (tab === 'theory' ? 'drill' : 'drill/c/' + tab) + '">💪 演習</button>' + (tab === 'harm' ? '<button type="button" class="btn warm" data-go="#hlab">✍️ 実践（ソプラノ課題 など）</button>' : tab === 'cp' ? '<button type="button" class="btn warm" data-go="#cplab">✍️ 実践（対位線を 書く）</button>' : '') +
-      '<button type="button" class="btn" data-go="#' + (tab === 'theory' ? 'game' : 'game/c/' + tab) + '">🎮 ゲーム</button></div>' +
+      '<button type="button" class="btn" data-go="#' + (tab === 'theory' ? 'game' : 'game/c/' + tab) + '">🎮 ゲーム</button>' + (tab === 'theory' ? '<button type="button" class="btn warm" data-go="#exam">🎓 応用（入試形式）</button>' : '') + '</div>' +
       '<div class="heromini"><h3>1 単元 ＝ 3 ステップ</h3><div class="cycle"><ol><li><b>💡</b><b>ポイント</b><span>図と音で わかる</span></li><li><b>💪</b><b>演習</b><span>10 問。毎回ちがう問題</span></li><li><b>🏁</b><b>テスト</b><span>' + GK.TEST_N + ' 問中 ' + GK.PASS + ' 問で 合格</span></li></ol></div>' +
       (tab === 'theory' ? '<h3 style="margin-top:10px">🧠 わすれない しくみ</h3><div class="cycle"><ol><li><b>🔁</b><b>今日の復習</b><span>間をあけて 思い出す</span></li><li><b>🧭</b><b>力だめし</b><span>実力を はかる</span></li><li><b>🗺</b><b>学習マップ</b><span>身につき具合</span></li></ol></div>' : '<h3 style="margin-top:10px">✍️ 実践とは？</h3><p class="note">' + (tab === 'harm' ? '授業で 学んだ ことを、五線に 4 声を 書いて 試します。ソプラノ課題・バス課題・自由入力・自分で出題。禁則を 自動で 採点。' : '定旋律に 対位線を 書いて 試します。協和・禁則を 自動で チェック。') + '</p>') + '</div>' +
       '</aside><section class="gridw">' + (tabs.length ? '<div class="mtabs ccs">' + tabs.map(function (x) { return '<button type="button" data-c="' + x[0] + '" data-go="#home/' + x[0] + '" aria-pressed="' + (x[0] === tab) + '">' + x[1] + '</button>'; }).join('') + '</div>' : '') +
@@ -337,6 +338,7 @@
      💪 まとめて演習
      ========================================================= */
   var DR = GK.store.get('drillSel', { us: ['u01'], n: 10, st: 0, mode: 'mix' });
+  GK.route(/^drill\/mock$/, function () { GK.store.set('course', 'theory'); DR.mode = 'all'; DR.n = 20; DR.st = 3; GK.store.set('drillSel', DR); GK.go('#drill'); });
   GK.route(/^drill\/c\/(theory|harm|cp)$/, function (m) {
     var L1 = m[1] === 'harm' ? GK.HUNITS : m[1] === 'cp' ? GK.CPUNITS : GK.UNITS;
     DR.mode = 'mix'; DR.us = L1.map(function (u) { return u.id; }); GK.store.set('drillSel', DR); GK.go('#drill');
