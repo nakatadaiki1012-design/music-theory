@@ -12,7 +12,7 @@
   var now = function () { return Date.now() + OFF; };
 
   /* ---------- 範囲 ---------- */
-  var GR = [['all', '全範囲', null], ['a', '音名・リズム', ['u01', 'u02', 'u03', 'u04']], ['b', '音程・音階', ['u05', 'u06', 'u07', 'u08']], ['c', '調・和音', ['u09', 'u10', 'u11', 'u12']], ['d', '楽語・記号', ['u13', 'u14', 'u15']], ['h', '🎹 和声法', ['h01', 'h02', 'h03', 'h04', 'h05', 'h06', 'h07', 'h08', 'h09']], ['cp', '🎶 対位法', ['c01', 'c02', 'c03', 'c04', 'c05', 'c06']], ['units', '単元をえらぶ', null]];
+  var GR = [['all', '全範囲', null], ['a', '音名・リズム', ['u01', 'u02', 'u03', 'u04']], ['b', '音程・音階', ['u05', 'u06', 'u07', 'u08']], ['c', '調・和音', ['u09', 'u10', 'u11', 'u12']], ['d', '楽語・記号', ['u13', 'u14', 'u15']], ['h', '🎹 和声法', GK.HUNITS.map(function (u) { return u.id; })], ['cp', '🎶 対位法', ['c01', 'c02', 'c03', 'c04', 'c05', 'c06']], ['units', '単元をえらぶ', null]];
   var grFor = function () { var ck = GK.courseKey(); return GR.filter(function (g) { return ck === 'harm' ? (g[0] === 'h' || g[0] === 'units') : ck === 'cp' ? (g[0] === 'cp' || g[0] === 'units') : !(g[0] === 'h' || g[0] === 'cp'); }); };
   var unitsOf = function (cfg) {
     if (cfg.m === 'units') { var us = (cfg.us || '').split(',').filter(function (u) { return GK.UNIT[u]; }); if (us.length) return us; }

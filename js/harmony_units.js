@@ -15,7 +15,7 @@
   var kname = function (key, minor) { return H.keyName(key, minor); };
   var rkey = function (R, minor) { return pick(minor ? H.KEYS.min : H.KEYS.maj, R); };
   var vtxt = function (v) { return v.map(function (p) { return N(p); }).join('・'); };
-  var KIND = { p5: '連続5度', p8: '連続8度', hidden: '隠伏5度・8度', lt: '導音の 解決の まちがい', sev: '第7音の 解決の まちがい', cross: '声部の 交差', space: '声部の 間隔が 広すぎる', dblLT: '導音の 重複', incomplete: '和音の 音が そろっていない', leap: '1 オクターブを こえる 跳躍', aug: '増・減の 音程の 進行', overlap: '声部の 重なり' };
+  var KIND = { p5: '連続5度', p8: '連続8度', hidden: '隠伏5度・8度', lt: '導音の 解決の まちがい', sev: '第7音の 解決の まちがい', nine: '第9音の 解決の まちがい', cross: '声部の 交差', space: '声部の 間隔が 広すぎる', dblLT: '導音の 重複', incomplete: '和音の 音が そろっていない', leap: '1 オクターブを こえる 跳躍', aug: '増・減の 音程の 進行', overlap: '声部の 重なり' };
   H.KIND = KIND;
   var fig = H.fig;
   var pairs = function (list, R) { return pick(list, R); };

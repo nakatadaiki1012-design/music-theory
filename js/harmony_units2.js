@@ -68,7 +68,7 @@
   });
   add('findTrans', 'h04', 2, function (R, st) {
     for (var t = 0; t < 40; t++) {
-      var key = rkey(R), pr = pick(H.PROGS.filter(function (p) { return p.chs.length >= 4 && p.lv <= (st >= 3 ? 3 : 2); }), R), chs = pr.chs, vs = H.solve(key, false, chs, null, R); if (!vs) continue;
+      var key = rkey(R), pr = pick(H.PROGS.filter(function (p) { return !p.adv && p.chs.length >= 4 && p.lv <= (st >= 3 ? 3 : 2); }), R), chs = pr.chs, vs = H.solve(key, false, chs, null, R); if (!vs) continue;
       var k = ri(0, chs.length - 2, R), br = H.breakAt(key, false, chs, vs, k, R); if (!br) continue;
       var lab = chs.slice(0, -1).map(function (c, i) { return tx(H.label(c) + ' → ' + H.label(chs[i + 1]), i); });
       var m = mc(R, lab[k], lab, Math.min(4, lab.length)), kind = br.issues[0].kind;

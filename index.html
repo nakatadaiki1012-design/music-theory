@@ -182,6 +182,17 @@ body[data-course="cp"] { --warm: #2c8a5c; --warm-soft: rgba(44, 138, 92, .15); }
 .hzh { background: #fff6d6; border: 1.5px solid #e8b73a; border-radius: 10px; padding: 6px 10px; font-size: 13.5px; line-height: 1.5; }
 .hzfa { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .hzauto { font-size: 12.5px; color: var(--muted); display: flex; gap: 4px; align-items: center; }
 .hzcap { margin: 0; font-size: 12px; color: var(--muted); }
+.hzkbd { overflow-x: auto; padding-bottom: 4px; flex: none; }
+.hzl > *, .hzr > * { flex-shrink: 0; }
+.pkw { position: relative; height: 96px; display: flex; user-select: none; touch-action: manipulation; }
+.pk { border: 1.5px solid var(--ink); font-family: inherit; padding: 0; cursor: pointer; }
+.pk.w { width: 30px; height: 96px; background: #fff; color: #222; border-radius: 0 0 6px 6px; display: flex; align-items: flex-end; justify-content: center; font-size: 10px; box-sizing: border-box; margin-right: 0; }
+.pk.w span { padding-bottom: 3px; }
+.pk.b { position: absolute; top: 0; width: 20px; height: 58px; background: #222; border-radius: 0 0 4px 4px; z-index: 2; }
+.pk.ct::after { content: '●'; position: absolute; font-size: 9px; color: #e8b73a; transform: translate(-50%, 0); }
+.pk.w.ct { position: relative; } .pk.w.ct::after { left: 50%; bottom: 20px; color: #2c8a5c; } .pk.b.ct::after { left: 50%; top: 40px; }
+.pk.on { background: #e8b73a !important; color: #222; }
+.hztip { position: fixed; z-index: 80; background: var(--ink); color: var(--panel); border-radius: 8px; padding: 2px 10px; font-weight: 800; font-size: 18px; pointer-events: none; }
 .hzud { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .hzud .btn { padding: 8px 14px; font-weight: 800; }
 .hzacc { display: flex; gap: 4px; align-items: center; font-size: 12px; color: var(--muted); } .hzacc button { border: 1.5px solid var(--line); background: var(--panel); border-radius: 8px; padding: 1px 9px; font-weight: 800; font-size: 14px; color: var(--ink); } .hzacc button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 .hzs { border: 2px solid var(--ink); border-radius: 12px; padding: 8px 12px; background: var(--panel); } .hzs.good { border-color: var(--ok); background: #eef8ef; }
@@ -193,8 +204,8 @@ body[data-course="cp"] { --warm: #2c8a5c; --warm-soft: rgba(44, 138, 92, .15); }
 .hzr1 > button i { font-style: normal; font-weight: 800; width: 1.2em; text-align: center; } .hzr1 > button span { flex: 1; } .hzr1 > button em { font-style: normal; font-size: 12px; color: var(--muted); }
 .hzr1.ok i { color: var(--ok); } .hzr1.ng { border-color: var(--ng); background: rgba(211, 48, 42, .13); } .hzr1.ng i, .hzr1.ng em { color: var(--ng); font-weight: 800; } .hzr1.wn i, .hzr1.wn em { color: var(--gold); } .hzr1.na { opacity: .55; }
 .hzrd { padding: 2px 10px 8px; font-size: 13px; } .hzrd p { margin: 3px 0; line-height: 1.5; } .hzrd .tip { color: var(--muted); } .hzrd .hi.ng b { color: var(--ng); } .hzrd .hi.wn b { color: var(--gold); }
-@media (min-width: 900px) { .hz { overflow: hidden; } .hzmain { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, 1fr); gap: 14px; } .hzl, .hzr { overflow: auto; min-height: 0; padding-right: 4px; } .hzl .hstaff { flex: none; min-height: 220px; } .hzl .hstaff svg { max-width: 100% !important; width: 100%; height: auto; } }
-@media (max-width: 899px) { .hzmain { flex: none; } .hzmain > *, .hzl > *, .hzr > * { flex: none; } .hzl, .hzr { display: contents; } #hzStep { order: 1; } #hzStaff { order: 2; } #hzFocus { order: 3; } #hzScore { order: 4; } #hzRules { order: 5; } #hzModel { order: 6; } }
+@media (min-width: 900px) { .hz { overflow: hidden; } .hzmain { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, 1fr); gap: 14px; } .hzl, .hzr { overflow: auto; min-height: 0; padding-right: 4px; } .hzl .hstaff { flex: none; min-height: 220px; } .hzl .hstaff svg { max-width: 100% !important; width: 100%; height: auto; max-height: 340px; } }
+@media (max-width: 899px) { .hzmain { flex: none; } .hzmain > *, .hzl > *, .hzr > * { flex: none; } .hzl, .hzr { display: contents; } #hzStep { order: 1; } #hzStaff { order: 2; } #hzKbd { order: 3; } #hzFocus { order: 4; } #hzScore { order: 5; } #hzRules { order: 6; } #hzModel { order: 7; } }
 @media (max-width: 640px) { .hzfn { display: none; } .hzaim b { font-size: 19px; } .hzfi { font-size: 13px; } .hzbar .btn.sm { padding: 3px 8px; font-size: 12.5px; } }
 .hmain { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
 .hleft { flex: none; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
@@ -886,27 +897,28 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261029f"></script>
-<script src="js/music.js?v=20261029f"></script>
-<script src="js/core.js?v=20261029f"></script>
-<script src="js/figs.js?v=20261029f"></script>
-<script src="js/terms.js?v=20261029f"></script>
-<script src="js/terms_info.js?v=20261029f"></script>
-<script src="js/terms_pro.js?v=20261029f"></script>
-<script src="js/typenames.js?v=20261029f"></script>
-<script src="js/harmony.js?v=20261029f"></script>
-<script src="js/lessons.js?v=20261029f"></script>
-<script src="js/quiz.js?v=20261029f"></script>
-<script src="js/app.js?v=20261029f"></script>
-<script src="js/learn.js?v=20261029f"></script>
-<script src="js/harmony_units.js?v=20261029f"></script>
-<script src="js/harmony_lab.js?v=20261029f"></script>
-<script src="js/harmony_units2.js?v=20261029f"></script>
-<script src="js/harmony_units3.js?v=20261029f"></script>
-<script src="js/counterpoint.js?v=20261029f"></script>
-<script src="js/counterpoint_units.js?v=20261029f"></script>
-<script src="js/harmony_reg.js?v=20261029f"></script>
-<script src="js/stage.js?v=20261029f"></script>
-<script src="js/game.js?v=20261029f"></script>
+<script src="js/config.js?v=20261030b"></script>
+<script src="js/music.js?v=20261030b"></script>
+<script src="js/core.js?v=20261030b"></script>
+<script src="js/figs.js?v=20261030b"></script>
+<script src="js/terms.js?v=20261030b"></script>
+<script src="js/terms_info.js?v=20261030b"></script>
+<script src="js/terms_pro.js?v=20261030b"></script>
+<script src="js/typenames.js?v=20261030b"></script>
+<script src="js/harmony.js?v=20261030b"></script>
+<script src="js/lessons.js?v=20261030b"></script>
+<script src="js/quiz.js?v=20261030b"></script>
+<script src="js/app.js?v=20261030b"></script>
+<script src="js/learn.js?v=20261030b"></script>
+<script src="js/harmony_units.js?v=20261030b"></script>
+<script src="js/harmony_lab.js?v=20261030b"></script>
+<script src="js/harmony_units2.js?v=20261030b"></script>
+<script src="js/harmony_units3.js?v=20261030b"></script>
+<script src="js/harmony_units4.js?v=20261030b"></script>
+<script src="js/counterpoint.js?v=20261030b"></script>
+<script src="js/counterpoint_units.js?v=20261030b"></script>
+<script src="js/harmony_reg.js?v=20261030b"></script>
+<script src="js/stage.js?v=20261030b"></script>
+<script src="js/game.js?v=20261030b"></script>
 </body>
 </html>

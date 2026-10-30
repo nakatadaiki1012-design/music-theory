@@ -23,12 +23,16 @@
   var SUB = '₀₁₂₃₄₅₆₇₈₉';
   var sub = function (s) { return s.split('').map(function (c) { return SUB.charAt(+c); }).join(''); };
   // 和音記号（転回形は 小さな 数字：Ⅰ₆・Ⅴ₇・Ⅴ₆₅）
-  H.label = function (ch) { var f = ch.sev ? ['7', '65', '43', '42'][ch.inv] : ['', '6', '64'][ch.inv]; return H.ROMAN[ch.d] + sub(f); };
-  H.figure = function (ch) { return ch.sev ? ['7', '6 5', '4 3', '4 2'][ch.inv] : ['', '6', '6 4'][ch.inv]; };
-  H.pcs = function (key, minor, ch) { return M.diatonic(key, minor, ch.d, ch.sev).map(function (p) { return { l: p.l, a: p.a }; }); };
+  H.label = function (ch) { if (ch.nine) return H.ROMAN[ch.d] + sub('9'); var f = ch.sev ? ['7', '65', '43', '42'][ch.inv] : ['', '6', '64'][ch.inv]; return H.ROMAN[ch.d] + sub(f); };
+  H.figure = function (ch) { if (ch.nine) return '9'; return ch.sev ? ['7', '6 5', '4 3', '4 2'][ch.inv] : ['', '6', '6 4'][ch.inv]; };
+  H.pcs = function (key, minor, ch) {
+    var r = M.diatonic(key, minor, ch.d, ch.sev || ch.nine).map(function (p) { return { l: p.l, a: p.a }; });
+    if (ch.nine) { var n9 = M.diatonic(key, minor, ch.d % 7 + 1, false)[0]; r.push({ l: n9.l, a: n9.a }); }   // 第9音：ひとつ上の 音階音
+    return r;
+  };
   H.tonic = function (key, minor) { var t = M.keyTonic(key, minor); return { l: t.l, a: t.a }; };
   H.lt = function (key, minor) { var s = M.scale(M.keyTonic(key, minor), minor ? 'harmonic' : 'major'); return { l: s[6].l, a: s[6].a }; };
-  H.role = function (ch, idx) { return ch.sev ? ['根音', '第3音', '第5音', '第7音'][idx] : ['根音', '第3音', '第5音'][idx]; };
+  H.role = function (ch, idx) { if (ch.nine) return ['根音', '第3音', '第5音', '第7音', '第9音'][idx]; return ch.sev ? ['根音', '第3音', '第5音', '第7音'][idx] : ['根音', '第3音', '第5音'][idx]; };
   H.keyName = function (key, minor) { return M.keyName(key, minor); };
   H.ctext = function (key, minor, ch) { var ps = H.pcs(key, minor, ch); return H.label(ch) + '（' + ps.map(N).join('・') + '）'; };
 
@@ -53,12 +57,13 @@
       else if (j < 2 && mid(v[j]) - mid(v[j + 1]) > 12) add('space', true, [j, j + 1], H.VNAME[j] + 'と' + H.VNAME[j + 1] + 'が 1 オクターブより はなれています');
     }
     // そろっているか
-    var need = ch.sev ? [0, 1, 3] : (prev && prev.sev && ch.d === 1 && ch.inv === 0) ? [0, 1] : [0, 1, 2];
+    var need = ch.nine ? [0, 1, 3, 4] : ch.sev ? [0, 1, 3] : (prev && prev.sev && ch.d === 1 && ch.inv === 0) ? [0, 1] : [0, 1, 2];
     need.forEach(function (q) { if (!cnt[q]) add('incomplete', true, [], H.role(ch, q) + '（' + N(pcs[q]) + '）が ありません' + (q === 1 ? '（第3音は 省略できません）' : '')); });
     // 重ねてはいけない音
     pcs.forEach(function (c, q) {
       if (cnt[q] > 1 && same(c, lt)) add('dblLT', true, [], '導音（' + N(lt) + '）を 重ねては いけません');
       else if (cnt[q] > 1 && ch.sev && q === 3) add('dbl7', true, [], '第7音（' + N(c) + '）を 重ねては いけません');
+      else if (cnt[q] > 1 && ch.nine && q === 4) add('dbl7', true, [], '第9音（' + N(c) + '）を 重ねては いけません');
     });
     if (ch.inv === 0 && !ch.sev && cnt[1] > 1 && !same(pcs[1], lt) && (ch.d === 1 || ch.d === 4 || ch.d === 5)) add('dblThird', false, [], '第3音を 重ねるのは ふつう さけます（根音を 重ねるのが 基本）');
     return out;
@@ -103,6 +108,11 @@
         var okInner = (j === 1 || j === 2) && ch1.d === 1 && !ch1.sev && [3, 4].indexOf(mid(p) - mid(v1[j])) >= 0;
         if (!okInner) add('lt', true, [j], H.VNAME[j] + 'の 導音（' + N(p) + '）は 半音 上の 主音（' + N(ton) + '）へ 進みます' + (j === 1 || j === 2 ? '（内声は Ⅰへの とき 3度 下へ 進んでも よい）' : ''));
       });
+    }
+    // 第 9 音の 解決（2度 下へ）
+    if (ch0.nine) {
+      var n9 = H.pcs(key, minor, ch0)[4];
+      v0.forEach(function (p, j) { if (!same(p, n9)) return; var d9 = mid(p) - mid(v1[j]); if (!(d9 === 1 || d9 === 2)) add('nine', true, [j], H.VNAME[j] + 'の 第9音（' + N(p) + '）は 2度 下へ 進みます'); });
     }
     // 第 7 音の 解決
     if (ch0.sev) {
@@ -182,7 +192,7 @@
   };
 
   /* ---------- 練習用の 進行 ---------- */
-  var C = function (d, inv, sev) { return { d: d, inv: inv || 0, sev: !!sev }; };
+  var C = function (d, inv, sev, nine) { return { d: d, inv: inv || 0, sev: !!sev || !!nine, nine: !!nine }; };
   H.PROGS = [
     { name: 'Ⅰ‐Ⅳ‐Ⅴ‐Ⅰ', chs: [C(1), C(4), C(5), C(1)], lv: 1 },
     { name: 'Ⅰ‐Ⅵ‐Ⅳ‐Ⅴ‐Ⅰ', chs: [C(1), C(6), C(4), C(5), C(1)], lv: 1 },
@@ -192,7 +202,19 @@
     { name: 'Ⅰ‐Ⅵ‐Ⅱ‐Ⅴ₇‐Ⅰ', chs: [C(1), C(6), C(2), C(5, 0, 1), C(1)], lv: 2, majorOnly: true },
     { name: 'Ⅰ‐Ⅴ₆‐Ⅰ‐Ⅳ‐Ⅴ‐Ⅰ', chs: [C(1), C(5, 1), C(1), C(4), C(5), C(1)], lv: 3 },
     { name: 'Ⅰ‐Ⅳ₆‐Ⅴ‐Ⅵ', chs: [C(1), C(4, 1), C(5), C(6)], lv: 3 },
-    { name: 'Ⅰ‐Ⅰ₆‐Ⅳ‐Ⅴ₇‐Ⅰ', chs: [C(1), C(1, 1), C(4), C(5, 0, 1), C(1)], lv: 3 }
+    { name: 'Ⅰ‐Ⅰ₆‐Ⅳ‐Ⅴ₇‐Ⅰ', chs: [C(1), C(1, 1), C(4), C(5, 0, 1), C(1)], lv: 3 },
+    { name: 'Ⅰ‐Ⅴ₆₅‐Ⅰ', chs: [C(1), C(5, 1, 1), C(1)], lv: 2, adv: true },
+    { name: 'Ⅰ‐Ⅴ₄₃‐Ⅰ', chs: [C(1), C(5, 2, 1), C(1)], lv: 3, adv: true },
+    { name: 'Ⅰ‐Ⅴ₄₂‐Ⅰ₆', chs: [C(1), C(5, 3, 1), C(1, 1)], lv: 3, adv: true },
+    { name: 'Ⅰ‐Ⅳ‐Ⅰ₆₄‐Ⅴ‐Ⅰ', chs: [C(1), C(4), C(1, 2), C(5), C(1)], lv: 2, adv: true },
+    { name: 'Ⅰ‐Ⅴ₆₄‐Ⅰ₆（経過）', chs: [C(1), C(5, 2), C(1, 1)], lv: 3, adv: true },
+    { name: 'Ⅰ‐Ⅳ₆₄‐Ⅰ（補助）', chs: [C(1), C(4, 2), C(1)], lv: 3, adv: true },
+    { name: 'Ⅰ‐Ⅱ₇‐Ⅴ‐Ⅰ', chs: [C(1), C(2, 0, 1), C(5), C(1)], lv: 2, adv: true },
+    { name: 'Ⅰ‐Ⅱ₆₅‐Ⅴ‐Ⅰ', chs: [C(1), C(2, 1, 1), C(5), C(1)], lv: 3, adv: true },
+    { name: 'Ⅰ‐Ⅱ₇‐Ⅴ₇‐Ⅰ', chs: [C(1), C(2, 0, 1), C(5, 0, 1), C(1)], lv: 3, adv: true },
+    { name: 'Ⅰ‐Ⅳ‐Ⅶ₆₅‐Ⅰ', chs: [C(1), C(4), C(7, 1, 1), C(1)], lv: 3, adv: true },
+    { name: 'Ⅰ‐Ⅵ‐Ⅳ₇‐Ⅴ‐Ⅰ', chs: [C(1), C(6), C(4, 0, 1), C(5), C(1)], lv: 3, adv: true },
+    { name: 'Ⅰ‐Ⅳ‐Ⅴ₉‐Ⅰ', chs: [C(1), C(4), C(5, 0, 1, 1), C(1)], lv: 3, adv: true }
   ];
   H.KEYS = { maj: [0, 1, -1, 2, -2, 3, -3], min: [0, 1, -1, 2, -2] }; // 調号（長調）／（短調）
   H.MINORS = true;
