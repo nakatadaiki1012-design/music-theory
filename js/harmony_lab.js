@@ -44,8 +44,19 @@
     { id: 'move', ks: ['leap', 'aug'], t: '跳躍・増減の 音程', tip: '1 オクターブを こえる 跳躍、増2度などの 動きは さける。' },
     { g: '注意（⚠ ふつうは さける）', id: 'warn', ks: ['hidden', 'overlap', 'dblThird'], t: '隠伏・声部の 重なり・第3音の 重複', tip: 'ソプラノと バスが 同じ向きに 5度・8度へ（隠伏）、声部が 前の 位置を こえる、第3音を 重ねる ―― ふつうは さける。' }
   ];
+  // 単元ごとの 実践課題に つかう 進行（H.PROGS の name）
+  var UP = {
+    h01: ['Ⅰ‐Ⅳ‐Ⅴ‐Ⅰ'], h02: ['Ⅰ‐Ⅳ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅳ‐Ⅰ‐Ⅴ‐Ⅰ'], h03: ['Ⅰ‐Ⅳ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅳ‐Ⅰ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅵ‐Ⅳ‐Ⅴ‐Ⅰ'], h04: ['Ⅰ‐Ⅳ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅵ‐Ⅳ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅳ‐Ⅴ₇‐Ⅰ'],
+    h05: ['Ⅰ‐Ⅳ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅳ‐Ⅰ₆₄‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅵ‐Ⅳ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅳ₆‐Ⅴ‐Ⅵ'], h06: ['Ⅰ‐Ⅴ₆‐Ⅰ‐Ⅳ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅳ₆‐Ⅴ‐Ⅵ', 'Ⅰ‐Ⅰ₆‐Ⅳ‐Ⅴ₇‐Ⅰ'], h07: ['Ⅰ‐Ⅳ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅳ‐Ⅴ₇‐Ⅰ'],
+    h08: ['Ⅰ‐Ⅵ‐Ⅳ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅱ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅳ‐Ⅴ₇‐Ⅰ', 'Ⅰ‐Ⅵ‐Ⅱ‐Ⅴ₇‐Ⅰ'], h09: ['Ⅰ‐Ⅳ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅵ‐Ⅳ‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅳ‐Ⅴ₇‐Ⅰ', 'Ⅰ‐Ⅱ‐Ⅴ‐Ⅰ'],
+    h10: ['Ⅰ‐Ⅴ₆₅‐Ⅰ', 'Ⅰ‐Ⅴ₄₃‐Ⅰ', 'Ⅰ‐Ⅴ₄₂‐Ⅰ₆'], h11: ['Ⅰ‐Ⅴ₆₄‐Ⅰ₆（経過）', 'Ⅰ‐Ⅳ₆₄‐Ⅰ（補助）', 'Ⅰ‐Ⅳ‐Ⅰ₆₄‐Ⅴ‐Ⅰ'],
+    h12: ['Ⅰ‐Ⅱ₇‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅱ₆₅‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅱ₇‐Ⅴ₇‐Ⅰ', 'Ⅰ‐Ⅳ‐Ⅶ₆₅‐Ⅰ', 'Ⅰ‐Ⅵ‐Ⅳ₇‐Ⅴ‐Ⅰ'], h13: ['Ⅰ‐Ⅳ‐Ⅴ₉‐Ⅰ', 'Ⅰ‐Ⅱ‐Ⅴ₉‐Ⅰ', 'Ⅰ‐Ⅵ‐Ⅴ₉‐Ⅰ'],
+    h14: ['Ⅰ‐Ⅳ‐Ⅴ₇‐Ⅰ', 'Ⅰ‐Ⅵ‐Ⅱ‐Ⅴ₇‐Ⅰ', 'Ⅰ‐Ⅱ₇‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅳ‐Ⅰ₆₄‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅴ₆₅‐Ⅰ', 'Ⅰ‐Ⅰ₆‐Ⅳ‐Ⅴ₇‐Ⅰ']
+  };
+  var unitProgs = function (u) { var nm = UP[u] || []; return H.PROGS.filter(function (p) { return nm.indexOf(p.name) >= 0; }); };
+  var sk = function () { return S.unit ? S.mode + '@' + S.unit : S.mode; };
   var STORE = function () { return GK.store.get('hlab', {}); };
-  var S = (function () { var o = STORE(); return { mode: o.mode || (o.type === 'bass' ? 'bass' : o.type === 'free' ? 'free' : 'sop'), lv: o.lv || 1, adv: o.adv || 'voice', kbd: !!o.kbd, snap: o.snap !== false, fk: o.fk, fm: o.fm, fc: o.fc, mv: o.mv, ses: {} }; })();
+  var S = (function () { var o = STORE(); return { mode: o.mode || (o.type === 'bass' ? 'bass' : o.type === 'free' ? 'free' : 'sop'), lv: o.lv || 1, adv: o.adv || 'voice', kbd: !!o.kbd, snap: o.snap !== false, fk: o.fk, fm: o.fm, fc: o.fc, mv: o.mv, unit: null, ses: {} }; })();
   var save = function () { GK.store.set('hlab', { mode: S.mode, lv: S.lv, adv: S.adv, kbd: S.kbd, snap: S.snap, fk: S.fk, fm: S.fm, fc: S.fc, mv: S.mv }); };
   var stat = function () { return GK.store.get('hlabStat', { clears: 0, perfect: 0 }); };
 
@@ -65,19 +76,20 @@
     var Z;
     if (mode === 'sop' || mode === 'bass') {
       var R = GK.rng(Math.floor(Math.random() * 1e9)), minor = S.lv >= 2 && R() < 0.3, ok = H.PROGS.filter(function (p) { return p.lv <= S.lv && p.lv >= Math.max(1, S.lv - 1) && !(minor && p.majorOnly); });
+      if (S.unit) { minor = S.unit === 'h09' || (S.unit === 'h14' && R() < 0.25); ok = unitProgs(S.unit).filter(function (p) { return !(minor && p.majorOnly); }); if (!ok.length) ok = unitProgs(S.unit); }
       var key = pick(minor ? H.KEYS.min : H.KEYS.maj, R), pr = pick(ok, R), model = null;
       for (var t = 0; t < 6 && !model; t++) { model = H.solve(key, minor, pr.chs, null, R); if (!model) pr = pick(ok, R); }
       var gv = mode === 'bass' ? 3 : 0;
-      Z = { t: { key: key, minor: minor, name: pr.name, chs: pr.chs, model: model, gv: gv, lv: S.lv }, v: defaultVoices(key, minor, pr.chs, gv, model) };
+      Z = { t: { key: key, minor: minor, name: pr.name, chs: pr.chs, model: model, gv: gv, lv: S.lv, unit: S.unit || null }, v: defaultVoices(key, minor, pr.chs, gv, model) };
     } else {
       var k = S.fk != null ? S.fk : 0, mn = !!S.fm, cs = (S.fc || [Ch(1), Ch(4), Ch(5), Ch(1)]).map(function (c) { return Object.assign({}, c); });
       if (mode === 'make' && S.mv == null) S.mv = 0;
       Z = { t: { key: k, minor: mn, name: mode === 'make' ? '出題づくり' : '自由入力', chs: cs, model: null, gv: -1, free: mode === 'free', make: mode === 'make' }, v: defaultVoices(k, mn, cs, -1, null) };
     }
     Z.sel = { i: 0, j: Z.t.make ? S.mv : firstFree(Z.t.gv) }; Z.hint = 0; Z.hints = 0; Z.acc = null; Z.open = null; Z.show = false; Z.done = false; Z.paid = false; Z.msg = '';
-    S.ses[mode] = Z; return Z;
+    S.ses[sk()] = Z; return Z;
   }
-  var sesOf = function () { return S.ses[S.mode] || newSession(S.mode); };
+  var sesOf = function () { return S.ses[sk()] || newSession(S.mode); };
   var score = function (iss) { var ng = H.ngCount(iss), wn = iss.length - ng; return Math.max(0, 100 - ng * 9 - wn * 3); };
   var roleOf = function (key, minor, ch, p) { var r = -1; H.pcs(key, minor, ch).forEach(function (c, q) { if (same(c, p)) r = q; }); return r; };
   var kinds = function (iss, ks) { return iss.filter(function (x) { return ks.indexOf(x.kind) >= 0; }); };
@@ -93,15 +105,17 @@
   /* =====================================================
      ページ（#hlab）
      ===================================================== */
-  GK.route(/^hlab(?:\/(sop|bass|free|make))?$/, function (m) {
-    if (m[1]) { S.mode = m[1]; save(); }
-    V.innerHTML = '<div class="split"><aside class="panel side"><h3>✍️ 和声の 実践</h3>' +
-      MODES.map(function (x) { return '<button type="button" class="it" data-go="#hlab/' + x[0] + '" aria-current="' + (S.mode === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('') +
+  GK.route(/^hlab\/u\/(h\d\d)(?:\/(sop|bass))?$/, function (m) { S.unit = m[1]; S.mode = m[2] || (S.mode === 'bass' ? 'bass' : 'sop'); save(); page(); });
+  GK.route(/^hlab(?:\/(sop|bass|free|make))?$/, function (m) { S.unit = null; if (m[1]) { S.mode = m[1]; save(); } page(); });
+  function page() {
+    var un = S.unit && GK.UNIT[S.unit], clr = (GK.store.get('hlabUnit', {})[S.unit] || 0);
+    V.innerHTML = '<div class="split"><aside class="panel side">' + (un ? '<h3>📖 ' + esc(un.no) + ' ' + esc(un.title) + ' の 実践</h3><button type="button" class="it" data-go="#hlab/u/' + S.unit + '/sop" aria-current="' + (S.mode === 'sop') + '"><b>🔴 ソプラノ課題</b><small>この単元の 和音進行で</small></button><button type="button" class="it" data-go="#hlab/u/' + S.unit + '/bass" aria-current="' + (S.mode === 'bass') + '"><b>🟣 バス課題</b><small>この単元の 和音進行で</small></button><button type="button" class="it" data-go="#' + S.unit + '"><b>◀ 授業にもどる</b><small>' + esc(un.goal) + '</small></button><button type="button" class="it" data-go="#hlab/sop"><b>✍️ 実践の トップへ</b><small>自由入力・自分で出題 など</small></button><p class="note" style="padding:6px 10px">この単元の クリア <b>' + clr + '</b> 回</p>' : '<h3>✍️ 和声の 実践</h3>') +
+      (un ? '' : MODES.map(function (x) { return '<button type="button" class="it" data-go="#hlab/' + x[0] + '" aria-current="' + (S.mode === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('')) + (un ? '' : '<p class="note" style="padding:2px 10px">単元ごとの 実践は、各単元の「✍️ 実践」から。</p>') +
       '<button type="button" class="it" data-go="#home/harm"><b>◀ 和声法ラボの ホームへ</b><small>授業・演習・実践・ゲーム</small></button>' +
       '<p class="note" style="padding:6px 10px">クリア <b>' + stat().clears + '</b> 回（満点 <b>' + stat().perfect + '</b> 回）</p>' +
       '</aside><section class="panel main"><div class="mbody" id="hbody"></div></section></div>';
     GK.harmLab($('#hbody'));
-  });
+  }
   GK.route(/^tools\/hlab$/, function () { GK.go('#hlab'); });
 
   GK.harmLab = function (body) {
@@ -119,6 +133,8 @@
       if (free) {
         b += '<select id="hzKey" aria-label="調">' + H.KEYS.maj.map(function (k) { return '<option value="' + k + ',0">' + esc(H.keyName(k, false)) + '</option>'; }).join('') + H.KEYS.min.map(function (k) { return '<option value="' + k + ',1">' + esc(H.keyName(k, true)) + '</option>'; }).join('') + '</select>' +
           '<button type="button" class="btn sm" data-a="add">＋ 和音</button><button type="button" class="btn sm" data-a="del">− 和音</button>';
+      } else if (t.unit) {
+        b += '<button type="button" class="btn sm" data-a="new">🎲 新しい課題</button>';
       } else {
         b += '<span class="seg">' + [1, 2, 3].map(function (l) { return '<button type="button" data-a="lv" data-v="' + l + '" aria-pressed="' + (S.lv === l) + '">' + ['やさしい', 'ふつう', 'むずかしい'][l - 1] + '</button>'; }).join('') + '</span><button type="button" class="btn sm" data-a="new">🎲 新しい課題</button>';
       }
@@ -135,7 +151,7 @@
       if (!free) h += '<span class="hzprog">' + esc(t.name) + '</span>';
       var txt = make ? '和音を えらんで、' + (S.mv === 0 ? 'ソプラノ' : 'バス') + 'の メロディーを 入れよう（和音の 音だけ）。できたら「この課題で 練習」。'
         : free ? '和音記号を えらんで、4 声を ぜんぶ 書いて みよう。自動で 採点します。'
-        : (t.gv === 0 ? '🔴 ソプラノは 与えられています。アルト・テノール・バスを 書こう。' : '🟣 バスは 与えられています。ソプラノ・アルト・テノールを 書こう。') + ' 🎯 ' + AIM[t.lv || S.lv];
+        : (t.gv === 0 ? '🔴 ソプラノは 与えられています。アルト・テノール・バスを 書こう。' : '🟣 バスは 与えられています。ソプラノ・アルト・テノールを 書こう。') + ' 🎯 ' + (t.unit && GK.UNIT[t.unit] ? '【' + GK.UNIT[t.unit].title + '】' + GK.UNIT[t.unit].goal : AIM[t.lv || S.lv]);
       $('#hzAim', body).innerHTML = h + '<p>' + esc(txt) + '</p>';
     }
 
@@ -221,7 +237,7 @@
         (!ng && !free ? '<button type="button" class="btn main" data-a="new">次の 課題へ ▶</button>' : '') + '</div>';
       if (!ng && !Z.done && !Z.show) {
         Z.done = true; GK.fx('fanfare');
-        if (!free && !t.custom && !Z.paid) { Z.paid = true; var st = stat(); st.clears++; if (stars === 3) st.perfect++; GK.store.set('hlabStat', st); GK.earn(stars === 3 ? 15 : stars === 2 ? 10 : 6); }
+        if (!free && !t.custom && !Z.paid) { Z.paid = true; if (t.unit) { var su = GK.store.get('hlabUnit', {}); su[t.unit] = (su[t.unit] || 0) + 1; GK.store.set('hlabUnit', su); } var st = stat(); st.clears++; if (stars === 3) st.perfect++; GK.store.set('hlabStat', st); GK.earn(stars === 3 ? 15 : stars === 2 ? 10 : 6); }
         if (stars === 3) GK.confetti && GK.confetti(30);
       }
       if (ng) Z.done = false;
@@ -344,7 +360,7 @@
       var model = H.solve(t.key, t.minor, t.chs, given, GK.rng(Math.floor(Math.random() * 1e9))), mode = mv === 0 ? 'sop' : 'bass';
       var N2 = { t: { key: t.key, minor: t.minor, name: 'じぶんの 課題', chs: t.chs, model: model, gv: mv, custom: true, lv: S.lv }, v: defaultVoices(t.key, t.minor, t.chs, mv, Z.v) };
       N2.sel = { i: 0, j: firstFree(mv) }; N2.hint = 0; N2.hints = 0; N2.acc = null; N2.show = false; N2.done = false; N2.paid = false;
-      S.ses[mode] = N2; S.mode = mode; save(); GK.go('#hlab/' + mode);
+      S.unit = null; S.ses[mode] = N2; S.mode = mode; save(); GK.go('#hlab/' + mode);
     }
     body.onclick = function (e) {
       var b = e.target.closest('[data-a]'); if (!b) return;
@@ -384,7 +400,7 @@
     };
     body.onchange = function (e) {
       var t = Z.t;
-      if (e.target.id === 'hzKey') { var a = e.target.value.split(','); S.fk = +a[0]; S.fm = a[1] === '1'; var cs = t.chs; save(); newSession(S.mode); S.ses[S.mode].t.chs = cs; S.ses[S.mode].v = defaultVoices(S.fk, S.fm, cs, -1, null); Z = S.ses[S.mode]; GK.harmLab(body); }
+      if (e.target.id === 'hzKey') { var a = e.target.value.split(','); S.fk = +a[0]; S.fm = a[1] === '1'; var cs = t.chs; save(); newSession(S.mode); S.ses[sk()].t.chs = cs; S.ses[sk()].v = defaultVoices(S.fk, S.fm, cs, -1, null); Z = S.ses[sk()]; GK.harmLab(body); }
       else if (e.target.dataset && e.target.dataset.a === 'adv') { S.adv = e.target.value; save(); }
       else if (e.target.id === 'hzCh') { pushH(); var kk = e.target.value, c = CHL.filter(function (x) { return chKey(x) === kk; })[0]; t.chs[Z.sel.i] = Object.assign({}, c); Z.v[Z.sel.i] = defaultVoices(t.key, t.minor, [t.chs[Z.sel.i]], -1, null)[0]; S.fc = t.chs; save(); Z.done = false; Z.draw(); }
     };

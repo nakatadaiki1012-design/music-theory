@@ -207,12 +207,13 @@
   /* =========================================================
      単元：💡 ポイント ／ 💪 演習 ／ 🏁 テスト
      ========================================================= */
-  GK.route(/^([uhc]\d\d)(?:\/(p|x|t))?(?:\/(\d+))?$/, function (m) {
+  GK.route(/^([uhc]\d\d)(?:\/(p|x|l|t))?(?:\/(\d+))?$/, function (m) {
     var u = GK.UNIT[m[1]]; if (!u) { GK.go('#home'); return; }
+    if (m[2] === 'l') { GK.go(u.grp === 'harm' ? '#hlab/u/' + u.id : u.grp === 'cp' ? '#cplab' : '#home'); return; }
     var back = '#home/' + (u.grp === 'harm' ? 'harm' : u.grp === 'cp' ? 'cp' : 'theory');
     var step = m[2] || 'p', p = GK.prog(u.id);
-    V.innerHTML = '<div class="uhead"><button type="button" class="btn back" data-go="' + back + '">◀ 一覧</button><div class="ut"><small>楽典ラボ・' + u.no + '・' + esc(u.en) + '</small><h2>' + esc(u.title) + '</h2></div>' +
-      '<nav class="steps">' + [['p', '💡 ポイント', p.seen], ['x', '💪 演習', p.prac >= 7], ['t', '🏁 テスト', p.pass]].map(function (s) { return '<button type="button" data-go="#' + u.id + '/' + s[0] + '" aria-current="' + (s[0] === step) + '">' + s[1] + (s[2] ? '<span class="ck">✓</span>' : '') + '</button>'; }).join('') + '</nav></div><div class="stage" id="stage"></div>';
+    V.innerHTML = '<div class="uhead"><button type="button" class="btn back" data-go="' + back + '">◀ 一覧</button><div class="ut"><small>' + (u.grp === 'harm' ? '和声法ラボ' : u.grp === 'cp' ? '対位法ラボ' : '楽典ラボ') + '・' + u.no + '・' + esc(u.en) + '</small><h2>' + esc(u.title) + '</h2></div>' +
+      '<nav class="steps">' + [['p', '💡 ポイント', p.seen], ['x', '💪 演習', p.prac >= 7]].concat(u.grp === 'harm' ? [['l', '✍️ 実践', (GK.store.get('hlabUnit', {})[u.id] || 0) > 0]] : u.grp === 'cp' ? [['l', '✍️ 実践', false]] : [], [['t', '🏁 テスト', p.pass]]).map(function (s) { return '<button type="button" data-go="#' + u.id + '/' + s[0] + '" aria-current="' + (s[0] === step) + '">' + s[1] + (s[2] ? '<span class="ck">✓</span>' : '') + '</button>'; }).join('') + '</nav></div><div class="stage" id="stage"></div>';
     var st = $('#stage');
     if (step === 'p') lesson(u, st, m[3] != null ? +m[3] : p.card || 0);
     else if (step === 'x') practice(u, st);
