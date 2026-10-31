@@ -80,7 +80,7 @@
     var geo = M.satb(el, { key: f1, minor: m1, color: false, names: false, zoom: 2.2, sp: 56, chords: P.cols.map(function (c) { return { v: c.v }; }) });
     var svg = geo.svg, xs = geo.xs, ns = 'http://www.w3.org/2000/svg', top = geo.y1 - 62, bot = geo.y2 + 36;
     var E = function (tag, at) { return M.svgEl(svg, tag, at); };
-    xs.forEach(function (x, i) { M.svgText(svg, x + 2, top - 6, CIRC[i], { size: 13, c: '#8a8578', fixed: true }); });
+    xs.forEach(function (x, i) { M.svgText(svg, x + 2, top - 6, CIRC[i], { size: 13, c: '#8a8578', fixed: true, cls: 'pnum' }); });
     // 小節線
     for (var i = 1; i < xs.length; i++) { var bx = (xs[i - 1] + xs[i]) / 2 + 3; E('line', { x1: bx, y1: geo.y1 - 40, x2: bx, y2: geo.y1 + 0, stroke: 'currentColor', 'stroke-width': 1 }); E('line', { x1: bx, y1: geo.y2 - 40, x2: bx, y2: geo.y2, stroke: 'currentColor', 'stroke-width': 1 }); }
     // 和音の 点線の 枠
@@ -183,14 +183,13 @@
       if (sl.kind === 'key') return M.keyName(sl.s.key, sl.s.minor);
       return sl.ty[1] + '・' + ROM[sl.c.ch.d] + '・' + INVN[sl.c.ch.inv] + '（' + M.keyName(sl.c.key, sl.c.minor) + ' の ' + H.label(sl.c.ch) + '）';
     };
-    var GT = ['', '問1 音程', '問2 調名', '問3 和音'];
 
-    body.innerHTML = '<div class="xw xp"><div class="xwh"><b>📜 課題楽曲（大譜表）</b><span>楽譜の 印を タップ → 下の ボタンで 答える</span></div><div class="xpgrid"><div class="xpl"><div class="fig sc xwpiece" id="pFig"></div></div><div class="xpr">' +
-      '<div class="xpslots" id="pSlots"></div><div class="xppad" id="pPad"></div>' +
-      '<div class="xwa"><button type="button" class="btn main" id="pGo"></button><button type="button" class="btn" id="pNew">🎲 べつの 楽曲</button><button type="button" class="btn" id="pPlay">🔊 全体を 聴く</button></div><div id="pRes"></div></div></div></div>';
+    body.innerHTML = '<div class="xw xp xpone"><div class="xpl"><div class="fig sc xwpiece" id="pFig"></div></div><div class="xpr">' +
+      '<div class="xpstrip"><button type="button" class="xpa" data-mv="-1" aria-label="まえ">◀</button><div class="xpdots" id="pSlots"></div><button type="button" class="xpa" data-mv="1" aria-label="つぎ">▶</button></div>' +
+      '<div class="xppad" id="pPad"></div>' +
+      '<div class="xpact"><button type="button" class="btn main" id="pGo"></button><button type="button" class="btn" id="pPlay">🔊 全体</button><button type="button" class="btn" id="pNew">🎲 べつの曲</button></div><div id="pRes"></div></div></div>';
     var fig = $('#pFig', body); drawPiece(fig, P); GK.EXAM.dbgP = P;
     var svg = fig.querySelector('svg'); svg.classList.add('pfocus');
-    svg.querySelectorAll('.pmk').forEach(function (g) { g.addEventListener('click', function () { pickSlot(g.getAttribute('data-slot')); }); });
 
     function chips(sl, k, opts, cls) {
       var a = A(sl.id), r = right(sl);
@@ -201,41 +200,39 @@
         return '<button type="button" class="' + c + '" data-k="' + k + '" data-v="' + esc(v) + '"' + (graded ? ' disabled' : '') + '>' + esc(o[1]) + '</button>';
       }).join('') + '</div>';
     }
-    function row(t, html) { return '<div class="xprow"><span class="xprl">' + t + '</span>' + html + '</div>'; }
+    function row(t, html) { return '<div class="xprow">' + (t ? '<span class="xprl">' + t + '</span>' : '') + html + '</div>'; }
     function drawSlots() {
-      var h = '';
-      [1, 2, 3].forEach(function (g) {
-        h += '<div class="xpg"><span class="xpgt">' + GT[g] + '</span><div class="xpgb">' + slots.filter(function (x) { return x.g === g; }).map(function (sl) {
-          var a = A(sl.id), c = 'xps' + (sl.id === cur ? ' cur' : '') + (done(sl) ? ' fill' : '') + (graded ? (isOk(sl) ? ' ok' : ' ng') : '');
-          return '<button type="button" class="' + c + '" data-s="' + sl.id + '"><b>' + sl.lab + (sl.kind === 'iv' ? '─' + sl.lab + '′' : '') + '</b><i>' + (graded ? (isOk(sl) ? '⭕ ' : '✕ ') : '') + esc(sum(sl, a)) + '</i></button>';
-        }).join('') + '</div></div>';
-      });
-      $('#pSlots', body).innerHTML = h;
+      $('#pSlots', body).innerHTML = [1, 2, 3].map(function (g) {
+        return '<span class="xpgrp">' + slots.filter(function (x) { return x.g === g; }).map(function (sl) {
+          var c = 'xpd' + (sl.id === cur ? ' cur' : '') + (done(sl) ? ' fill' : '') + (graded ? (isOk(sl) ? ' ok' : ' ng') : '');
+          return '<button type="button" class="' + c + '" data-s="' + sl.id + '">' + sl.lab + '</button>';
+        }).join('') + '</span>';
+      }).join('');
       var left = slots.filter(function (x) { return !done(x); }).length;
-      var go = $('#pGo', body); go.textContent = graded ? '✔ 採点ずみ' : left ? '✔ 採点する（のこり ' + left + '）' : '✔ 採点する'; go.disabled = graded;
+      var go = $('#pGo', body); go.textContent = graded ? '採点ずみ' : left ? '✔ 採点（あと ' + left + '）' : '✔ 採点する'; go.disabled = graded;
     }
+    function head(no, t, sub) { return '<div class="xpph"><span class="xpq">' + no + '</span><b>' + t + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '<button type="button" class="xph" id="pHear" aria-label="聴く">🔊</button></div>'; }
     function drawPad() {
       var sl = S(cur), h = '';
       if (sl.kind === 'iv') {
-        h = '<div class="xpph"><b>' + sl.lab + ' と ' + sl.lab + '′</b>（赤い 丸）の 2音の 音程。複音程は 単音程に。</div>' +
-          row('質', chips(sl, 'q', QUAL.slice(0, 5))) + row('度数', chips(sl, 'd', [1, 2, 3, 4, 5, 6, 7, 8].map(function (d) { return [d, d + '度']; }), 'n8'));
+        h = head('問1', sl.lab + ' と ' + sl.lab + '′ の 音程', '複音程は 単音程で') +
+          row('', chips(sl, 'q', QUAL.slice(0, 5))) + row('', chips(sl, 'd', [1, 2, 3, 4, 5, 6, 7, 8].map(function (d) { return [d, d + '度']; }), 'n8'));
       } else if (sl.kind === 'key') {
         var nm = function (m) { return KEYF.map(function (f) { return [f + ',' + m, M.keyName(f, !!m).replace(/[長短]調$/, '')]; }); };
-        h = '<div class="xpph"><b>かっこ ' + sl.lab + '</b>（楽譜の 下）の 部分の 調名。</div>' + row('長調', chips(sl, 'k', nm(0), 'kk')) + row('短調', chips(sl, 'k', nm(1), 'kk'));
+        var a0 = A(sl.id), md = a0.m !== undefined ? a0.m : a0.k !== undefined ? +String(a0.k).split(',')[1] : 0;
+        if (graded) md = sl.s.minor ? 1 : 0;
+        h = head('問2', sl.lab + ' の 調名', '') + '<div class="xpmode">' + ['長調', '短調'].map(function (t, m) { return '<button type="button" class="' + (m === md ? 'on' : '') + '" data-m="' + m + '"' + (graded ? ' disabled' : '') + '>' + t + '</button>'; }).join('') + '</div>' + row('', chips(sl, 'k', nm(md), 'kk'));
       } else {
-        h = '<div class="xpph"><b>和音 ' + sl.lab + '</b>（青い 点線）の 種類・和音度・位置。和音度は 問2 の 調で。</div>' +
-          row('種類', chips(sl, 't', CTYPES.map(function (x) { return [x[0], x[1].replace('の和音', '')]; }))) +
-          row('和音度', chips(sl, 'd', [1, 2, 3, 4, 5, 6, 7].map(function (d) { return [d, ROM[d]]; }), 'n7')) +
-          row('位置', chips(sl, 'i', INVS.map(function (x, i) { return [i, x]; })));
+        h = head('問3', '和音 ' + sl.lab, '和音度は 問2 の 調で') +
+          row('', chips(sl, 't', CTYPES.map(function (x) { return [x[0], x[1].replace('の和音', '')]; }))) +
+          row('', chips(sl, 'd', [1, 2, 3, 4, 5, 6, 7].map(function (d) { return [d, ROM[d]]; }), 'n7')) +
+          row('', chips(sl, 'i', INVS.map(function (x, i) { return [i, x]; })));
       }
-      if (graded) h += '<div class="xfb ' + (isOk(sl) ? 'ok">⭕ 正解！' : 'ng">✕ 正解は ' + esc(rightText(sl))) + '</div>';
-      h += '<div class="xpnav"><button type="button" class="btn" id="pPrev">◀ まえ</button><button type="button" class="btn" id="pHear">🔊 ここを 聴く</button><button type="button" class="btn" id="pNext">つぎ ▶</button></div>';
+      if (graded) h += '<div class="xfb ' + (isOk(sl) ? 'ok">⭕ 正解' : 'ng">✕ 正解は ' + esc(rightText(sl))) + '</div>';
       $('#pPad', body).innerHTML = h;
       $('#pPad', body).querySelectorAll('.xc').forEach(function (b) { b.onclick = function () { choose(b.getAttribute('data-k'), b.getAttribute('data-v')); }; });
-      var ix = slots.indexOf(sl);
-      $('#pPrev', body).onclick = function () { pickSlot(slots[(ix + slots.length - 1) % slots.length].id); };
-      $('#pNext', body).onclick = function () { pickSlot(slots[(ix + 1) % slots.length].id); };
       $('#pHear', body).onclick = function () { hear(sl); };
+      $('#pPad', body).querySelectorAll('.xpmode button').forEach(function (b) { b.onclick = function () { A(sl.id).m = +b.getAttribute('data-m'); drawPad(); }; });
     }
     function hear(sl) {
       if (sl.kind === 'iv') M.play([[[M.str(P.cols[sl.p.i1].v[sl.p.j1]), M.str(P.cols[sl.p.i2].v[sl.p.j2])], 1.6]]);
@@ -243,7 +240,8 @@
       else M.play(sl.s.vs.map(function (v) { return [v.map(function (p) { return M.str(p); }), 1.2]; }), 80);
     }
     function mark() {
-      svg.querySelectorAll('.pmk').forEach(function (g) { g.classList.toggle('on', g.getAttribute('data-slot') === cur); });
+      var sl0 = S(cur), sec = sl0.kind === 'ch' ? 'k' + sl0.c.si : '';
+      svg.querySelectorAll('.pmk').forEach(function (g) { var d = g.getAttribute('data-slot'); g.classList.toggle('on', d === cur); g.classList.toggle('on2', d === sec); });
       var g = svg.querySelector('.pmk.on');
       if (g && fig.scrollWidth > fig.clientWidth) { var r = g.getBoundingClientRect(), fr = fig.getBoundingClientRect(); if (r.left < fr.left + 20 || r.right > fr.right - 20) fig.scrollLeft += (r.left + r.width / 2) - (fr.left + fr.width / 2); }
     }
@@ -259,7 +257,8 @@
         if (nx) timer = setTimeout(function () { pickSlot(nx.id); }, 350);
       }
     }
-    $('#pSlots', body).addEventListener('click', function (e) { var b = e.target.closest('.xps'); if (b) pickSlot(b.getAttribute('data-s')); });
+    $('#pSlots', body).addEventListener('click', function (e) { var b = e.target.closest('.xpd'); if (b) pickSlot(b.getAttribute('data-s')); });
+    body.querySelectorAll('.xpa').forEach(function (b) { b.onclick = function () { var ix = slots.indexOf(S(cur)); pickSlot(slots[(ix + slots.length + (+b.getAttribute('data-mv'))) % slots.length].id); }; });
     $('#pPlay', body).onclick = function () { M.play(P.cols.map(function (c) { return [c.v.map(function (p) { return M.str(p); }), 1.4]; }), 76); };
     $('#pNew', body).onclick = function () { run(body); };
     $('#pGo', body).onclick = function () {
@@ -267,7 +266,7 @@
       var got = slots.filter(isOk).length, tot = slots.length;
       var pts = got + (got === tot ? 5 : 0); GK.earn(pts); var w = GK.store.get('examW', { ok: 0, sets: 0 }); w.ok += got; GK.store.set('examW', w); if (got === tot) { GK.fx('fanfare'); GK.confetti && GK.confetti(30); }
       var bad = slots.filter(function (x) { return !isOk(x); });
-      $('#pRes', body).innerHTML = '<div class="xwr ' + (got >= tot * 0.8 ? 'ok' : 'ng') + '"><b>' + got + ' / ' + tot + ' 問 正解</b>' + (got === tot ? ' 🎉 ぜんぶ 正解！' : got >= tot * 0.8 ? '　合格ライン（8 割）です' : '　まちがいを 見なおそう') + '<p class="xwe">' + (bad.length ? '✕ の ところを タップすると、正解が 見られます。' : '') + '音程は 低い音から 数え、♯♭ で 質を あわせる。調名は 臨時記号（導音）と 和音から。和音は 構成音を 積みなおして 根音を さがす。（+' + pts + ' コイン）</p></div>';
+      $('#pRes', body).innerHTML = '<div class="xpres ' + (got >= tot * 0.8 ? 'ok' : 'ng') + '"><b>' + got + ' / ' + tot + ' 正解</b>' + (got === tot ? '🎉 ぜんぶ 正解！' : '<span>赤い 丸を タップで 答えを 確認</span>') + '<span>+' + pts + ' コイン</span></div>';
       pickSlot(bad.length ? bad[0].id : cur);
     };
     pickSlot(cur);
