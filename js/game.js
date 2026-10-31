@@ -202,6 +202,8 @@
       onPick: function (k, ok) {
         if (G.over) return;
         G.res.push({ q: q, pick: k, ok: ok });
+        // ゲームの 結果も 学習の 記録へ（まちがえた 種類は「苦手」に、4 択は 復習の 予定にも）
+        if (q.t) { GK.noteMiss && GK.noteMiss(q.t, ok); if (!q.fmt && GK.skillNote) GK.skillNote(q.t, ok); }
         var pop = '';
         if (ok) {
           G.combo++; G.ok++; G.maxCombo = Math.max(G.maxCombo, G.combo);
@@ -273,7 +275,7 @@
     setTimeout(function () { GK.STAGE.applause(Math.min(1, 0.3 + GK.STAGE.stationOf(g.ok) * 0.08 + (nb ? 0.3 : 0))); }, 300);
     V.innerHTML = '<section class="panel res arena"><p class="note">🚂 旅の記録・' + esc(rangeName(g.cfg)) + (ruleOf(g.cfg) !== 'time' ? '・' + RULES.filter(function (r) { return r[0] === ruleOf(g.cfg); })[0][1] + (ruleOf(g.cfg) === 'sprint' ? (g.ok >= SPRINT ? '（' + g.dur.toFixed(1) + ' 秒・タイムボーナス +' + (g.sprintBonus || 0) + '）' : '（ゴールならず）') : '') : '') + '・⏱ ' + (mm ? mm + ' 分 ' : '') + ss + ' 秒 つづいた</p>' + GK.STAGE.curtain(g) + '<div class="big" id="fsc">0<small> 点</small></div>' +
       '<p class="msg">' + (nb ? '🎉 ベスト更新！' : 'ベスト ' + GK.fmtN(best) + ' 点') + '　正解 ' + g.ok + ' 問・最大 ' + g.maxCombo + ' コンボ</p><p>📏 <b>' + g.ok + ' 問正解 ≒ ' + ruler(g.ok) + '</b></p>' +
-      '<div class="acts"><button type="button" class="btn" id="rep">🔊 あなたの演奏を聴く</button>' + (g.res.length ? '<button type="button" class="btn" id="rv">📖 ' + (g.ng ? 'まちがえた ' + g.ng + ' 問の解説' : '解説を見る') + '</button>' : '') + '<button type="button" class="btn" id="brag">📣 自慢する</button><button type="button" class="btn main" data-go="#ta">▶ もう一度</button><button type="button" class="btn ghost" data-go="#game">◀ ゲームのトップ</button></div></section>';
+      '<div class="acts"><button type="button" class="btn" id="rep">🔊 あなたの演奏を聴く</button>' + (g.ng ? '<button type="button" class="btn warm" data-go="#drill/weak">🔁 まちがえた 種類を 練習</button>' : '') + (g.res.length ? '<button type="button" class="btn" id="rv">📖 ' + (g.ng ? 'まちがえた ' + g.ng + ' 問の解説' : '解説を見る') + '</button>' : '') + '<button type="button" class="btn" id="brag">📣 自慢する</button><button type="button" class="btn main" data-go="#ta">▶ もう一度</button><button type="button" class="btn ghost" data-go="#game">◀ ゲームのトップ</button></div></section>';
     // 点数を カウントアップで 見せる
     var fsc = $('#fsc'), t0 = Date.now(), ct = setInterval(function () { var k = Math.min(1, (Date.now() - t0) / 1200), v = Math.round(g.score * (1 - Math.pow(1 - k, 3))); if (!fsc.isConnected) { clearInterval(ct); return; } fsc.innerHTML = GK.fmtN(v) + '<small> 点</small>'; if (k >= 1) clearInterval(ct); }, 30);
     $('#rep').onclick = function () { GK.STAGE.replay(g); };

@@ -24,6 +24,13 @@
     }
     seen[right.k] = 1;
     pool.forEach(function (w) { if (list.length < n - 1 && !seen[w.k]) { seen[w.k] = 1; list.push(w); } });
+    // 正解だけ 目立って 長い（説明つき）ときは かっこ書きを はずす（「いちばん長いのが 正解」を 防ぐ）
+    if (plain(right) && list.length && list.every(plain)) {
+      var mx = Math.max.apply(null, list.map(len));
+      if (len(right) > mx * 1.3 + 2) { var t2 = String(right.t).replace(/（[^）]*）/g, '').replace(/[\s　]+$/, ''); if (t2.replace(/<[^>]+>/g, '').trim().length >= 2) right = { k: right.k, t: t2, w: right.w };
+        var bs = String(right.t).match(/<b>[^<]*<\/b>/g);
+        if (len(right) > mx * 1.3 + 2 && bs && bs.length) { var t3 = bs.join(' '); if (t3.replace(/<[^>]+>/g, '').trim().length >= 2) right = { k: right.k, t: t3, w: right.w }; } }
+    }
     var all = shuffle([right].concat(list), R);
     return { ch: all.map(function (x) { return x.fig ? { fig: x.fig, k: x.k } : x.t; }), a: all.indexOf(right), why: all.map(function (x) { return x.w || ''; }) };
   }
@@ -391,9 +398,11 @@
   T.halfWhole = {
     u: 'u05', st: 1, gen: function (R) {
       var p = pick(nat('C4', 'B4'), R); p.a = pick([0, 0, 1, -1], R);
-      var q = M.P(p.l + 1, pick([0, 0, 1, -1], R), p.o);
+      // 半音か 全音かを 先に 半々で きめる（答えの かたよりを なくす）
+      var want = R() < 0.5 ? 1 : 2, q = M.P(p.l + 1, 0, p.o);
+      q.a = want - (M.midi(q) - M.midi(p));
+      if (Math.abs(q.a) > 1) { p.a = 0; q.a = want - (M.midi(q) - M.midi(p)); }
       var s = M.midi(q) - M.midi(p);
-      if (s !== 1 && s !== 2) { q.a += s < 1 ? 1 - s : 2 - s; q.a = Math.max(-1, Math.min(1, q.a)); s = M.midi(q) - M.midi(p); }
       if (s !== 1 && s !== 2) { p = { l: 2, a: 0, o: 4 }; q = { l: 3, a: 0, o: 4 }; s = 1; }
       var ans = s === 1 ? '半音' : '全音';
       var mk = {}; mk[M.midi(p)] = { c: C.red }; mk[M.midi(q)] = { c: C.red };

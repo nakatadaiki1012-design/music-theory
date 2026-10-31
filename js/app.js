@@ -93,6 +93,7 @@
     GK.store.set('weak', w);
   }
 
+  GK.noteMiss = noteMiss;
   // まちがえた楽語（楽語じてんの「⚠ 苦手」と 演習の出題に使う）
   function noteTerm(t, ok) {
     var w = GK.store.get('weakT', {});
@@ -337,6 +338,7 @@
      💪 まとめて演習
      ========================================================= */
   var DR = GK.store.get('drillSel', { us: ['u01'], n: 10, st: 0, mode: 'mix' });
+  GK.route(/^drill\/weak$/, function () { DR.mode = 'weak'; GK.store.set('drillSel', DR); GK.go('#drill'); });
   GK.route(/^drill\/mock$/, function () { GK.store.set('course', 'theory'); DR.mode = 'all'; DR.n = 20; DR.st = 3; GK.store.set('drillSel', DR); GK.go('#drill'); });
   GK.route(/^drill\/c\/(theory|harm|cp)$/, function (m) {
     var L1 = m[1] === 'harm' ? GK.HUNITS : m[1] === 'cp' ? GK.CPUNITS : GK.UNITS;

@@ -157,7 +157,7 @@
         if ([0, 1, 2].every(function (j) { var d = mid(v1[j]) - mid(pc.v0[j]); return d && (d > 0) !== (bd > 0); })) best = v1;
       });
       if (!best) continue;
-      var vs = [pc.v0, best], opts = ['バスと 反対の 向きに 動く', 'バスと 同じ向きに 動く', '共通音を 保って 動かない', '1 声だけ 動く'], m = mc(R, tx(opts[0]), opts.map(function (x) { return tx(x); }));
+      var vs = [pc.v0, best], opts = ['バスと 反対向きに 動く', 'バスと 同じ向きに 動く', '共通音を 保って 動かない', 'ソプラノ だけ 動く'], m = mc(R, tx(opts[0]), opts.map(function (x) { return tx(x); }));
       return { q: kname(key) + '。<b>' + H.label(chs[0]) + ' → ' + H.label(chs[1]) + '</b>。共通音が ない とき、上の 3 声（S・A・T）は バスに 対して どう 動く？', fig: fig(key, false, chs, vs, { zoom: 2.4 }), ch: m.ch, a: m.a, ex: H.label(chs[0]) + ' と ' + H.label(chs[1]) + ' に 共通音は ない。こんな とき 上の 3 声を <b>バスと 反対の 向き</b> に 動かすと、連続5度・8度を さけられて きれいに つながる。', exFig: fig(key, false, chs, vs, { marks: [], zoom: 2.4 }) };
     }
     throw new Error('contraryQ');
