@@ -58,6 +58,24 @@
   var DRAIN0 = 60, DRAINK = 90, HARD_END = 300; // HARD_END：念のため 5 分で 必ず終わり
   var drainRate = function (sec) { return 1 + Math.max(0, sec - DRAIN0) / DRAINK; };
   // 問題：はじめの 8 問は ★1 の種類だけ、22 問目までは ★2 まで、そのあとは 全部（だんだん むずかしく）
+  // 出し方を かえる：○✕（この答えで 正しい？）・2 択。文字の 選択肢の 問題だけ
+  function vary(q, R, fmt) {
+    if (fmt === 'four' || !q || q.ch.length < 3 || q.ch.some(function (c) { return c && c.fig; })) return q;
+    var r = R();
+    if (r < 0.62) return q;
+    var w = []; q.ch.forEach(function (_, i) { if (i !== q.a) w.push(i); });
+    var o = Object.assign({}, q); o.why = null; o.st = Math.max(1, q.st - 1);
+    if (r < 0.81) {
+      var c = R() < 0.5 ? q.a : w[Math.floor(R() * w.length)];
+      o.q = '<span class="fmt">⭕✕</span> ' + q.q + '<span class="claim">👉 答えは「<b>' + q.ch[c] + '</b>」？</span>';
+      o.ch = ['⭕ 正しい', '✕ ちがう']; o.a = c === q.a ? 0 : 1; o.fmt = 'tf';
+      o.ex = (c === q.a ? '「' + q.ch[c] + '」で 正しい。' : '「' + q.ch[c] + '」は ちがう。正しい 答えは <b>' + q.ch[q.a] + '</b>。') + q.ex;
+    } else {
+      var x = w[Math.floor(R() * w.length)], first = R() < 0.5;
+      o.q = '<span class="fmt">2択</span> ' + q.q; o.ch = first ? [q.ch[q.a], q.ch[x]] : [q.ch[x], q.ch[q.a]]; o.a = first ? 0 : 1; o.fmt = 'two';
+    }
+    return o;
+  }
   function makeQs(cfg, seed) {
     var R = GK.rng(seed), T = GK.Q.T, groups = cfgGroups(cfg, false), out = [], bags = groups.map(function () { return []; }), recent = [], seen = {}, order = GK.shuffle(groups.map(function (_, i) { return i; }), R), gp = 0;
     var all = [].concat.apply([], groups);
@@ -73,7 +91,7 @@
       bags[g] = bags[g].filter(function (id) { return pool.indexOf(id) >= 0; });
       if (!bags[g].length) bags[g] = GK.shuffle(pool.slice(), R);
       var id = bags[g].pop(); recent.push(id); if (recent.length > 7) recent.shift();
-      try { out.push(GK.Q.fresh(id, R, Math.max(T[id].st, tr), seen)); } catch (e) { console.error(id, e); }
+      try { out.push(vary(GK.Q.fresh(id, R, Math.max(T[id].st, tr), seen), R, cfg.fmt)); } catch (e) { console.error(id, e); }
     }
     return out;
   }
@@ -82,6 +100,11 @@
      ゲームのトップ
      ========================================================= */
   var TA = GK.store.get('taSel', { m: 'all', us: '', t: 90 });
+  // ひとりで あそぶ ルール
+  var RULES = [['time', '⏱ タイムアタック', '時間内に 何問 とけるか'], ['sudden', '💀 サドンデス', '1 問 まちがえたら 終わり。1 問ごとに 時間制限'], ['sprint', '🏁 20問スプリント', '20 問 正解するまでの タイム（まちがえると +5 秒）']];
+  var SPRINT = 20;
+  var ruleOf = function (cfg) { return cfg.rule || 'time'; };
+  var bestKey = function (cfg) { return cfg.m + (ruleOf(cfg) !== 'time' ? '|' + ruleOf(cfg) : '') + (cfg.fmt === 'four' ? '|4' : ''); };
   GK.route(/^game\/c\/(theory|harm|cp)$/, function (m) { if (m[1] !== 'theory' || TA.m === 'h' || TA.m === 'cp') TA.m = m[1] === 'harm' ? 'h' : m[1] === 'cp' ? 'cp' : 'all'; GK.store.set('taSel', TA); GK.go('#game'); });
   GK.route(/^game$/, function () { top(); });
   GK.route(/^join=(\d{4})$/, function (m) { top(m[1]); });
@@ -92,15 +115,19 @@
       '<section class="panel gcard"><h3>⏱ タイムアタック</h3><p class="note">時間がなくなるまで 何問とけるか。正解すると 時間がもどる（★が多い問題ほど たくさん）。続けて正解すると コンボで 点数アップ。</p>' +
       '<div class="frow"><span>範囲</span><div class="seg">' + grFor().map(function (g) { return '<button type="button" data-tm="' + g[0] + '" aria-pressed="' + (TA.m === g[0]) + '">' + g[1] + '</button>'; }).join('') + '</div></div>' +
       '<div class="frow" id="tus"' + (TA.m === 'units' ? '' : ' hidden') + '><div class="upick" style="width:100%">' + GK.courseUnits().map(function (u) { return '<button type="button" data-tu="' + u.id + '" aria-pressed="' + (TA.us.split(',').indexOf(u.id) >= 0) + '"><i>' + u.no + '</i>' + esc(u.title) + '</button>'; }).join('') + '</div></div>' +
-      '<div class="frow"><span>持ち時間</span><div class="seg">' + [60, 90, 120, 180].map(function (t) { return '<button type="button" data-tt="' + t + '" aria-pressed="' + (TA.t === t) + '">' + t + ' 秒</button>'; }).join('') + '</div></div>' +
-      '<div class="frow" style="margin-top:auto"><button type="button" class="btn main big" id="taGo">▶ スタート</button><span class="note">ベスト <b style="font-family:var(--font-en);font-size:20px;color:var(--ink)">' + GK.fmtN(RW.best[TA.m] || 0) + '</b> 点</span></div></section>' +
+      '<div class="frow"><span>ルール</span><div class="seg">' + RULES.map(function (r) { return '<button type="button" data-tr="' + r[0] + '" title="' + r[2] + '" aria-pressed="' + ((TA.rule || 'time') === r[0]) + '">' + r[1] + '</button>'; }).join('') + '</div></div>' +
+      '<div class="frow"><span>出し方</span><div class="seg">' + [['mix', '🎲 いろいろ（4択・⭕✕・2択）'], ['four', '4択だけ']].map(function (f) { return '<button type="button" data-tf="' + f[0] + '" aria-pressed="' + ((TA.fmt || 'mix') === f[0]) + '">' + f[1] + '</button>'; }).join('') + '</div></div>' +
+      '<div class="frow" id="ttm"' + ((TA.rule || 'time') === 'time' ? '' : ' hidden') + '><span>持ち時間</span><div class="seg">' + [60, 90, 120, 180].map(function (t) { return '<button type="button" data-tt="' + t + '" aria-pressed="' + (TA.t === t) + '">' + t + ' 秒</button>'; }).join('') + '</div></div>' +
+      '<div class="frow" style="margin-top:auto"><button type="button" class="btn main big" id="taGo">▶ スタート</button><span class="note">ベスト <b style="font-family:var(--font-en);font-size:20px;color:var(--ink)">' + GK.fmtN(RW.best[bestKey({ m: TA.m, rule: TA.rule, fmt: TA.fmt })] || 0) + '</b> 点</span></div></section>' +
       '<section class="panel gcard"><h3>🏆 クラス対戦</h3><p class="note">先生の部屋に 番号で参加。<b>タイムアタック型</b>（決めた時間で 何問とけるか）と <b>🎼 アンサンブル・クイズ</b>（1 問ずつ 全員で答えて、クラスで 曲を完成させる）が あります。</p>' +
       '<input class="in" id="jcode" inputmode="numeric" maxlength="4" placeholder="部屋番号" value="' + esc(code || '') + '">' +
       '<input class="in" id="jnick" maxlength="12" placeholder="ニックネーム" value="' + esc(S.nick || '') + '">' +
       '<div class="frow"><button type="button" class="btn main" id="jGo">参加する ▶</button></div>' +
       '<div class="frow" style="margin-top:auto;border-top:1px dashed var(--line);padding-top:10px"><span>先生</span><button type="button" class="btn" id="mkRoom">🏫 タイムアタック型</button><button type="button" class="btn" id="mkEns">🎼 アンサンブル・クイズ</button><button type="button" class="btn ghost" id="rwB">🏅 ' + lv.name + '・バッジ ' + Object.keys(RW.badges).length + '/' + GK.BADGES.length + '</button></div></section></div>';
     V.onclick = function (e) {
-      var b = e.target.closest('[data-tm],[data-tt],[data-tu],#taGo,#jGo,#mkRoom,#mkEns,#rwB'); if (!b) return;
+      var b = e.target.closest('[data-tm],[data-tt],[data-tu],[data-tr],[data-tf],#taGo,#jGo,#mkRoom,#mkEns,#rwB'); if (!b) return;
+      if (b.dataset.tr) { TA.rule = b.dataset.tr; $$('[data-tr]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); $('#ttm').hidden = TA.rule !== 'time'; }
+      if (b.dataset.tf) { TA.fmt = b.dataset.tf; $$('[data-tf]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); }
       if (b.dataset.tm) { TA.m = b.dataset.tm; $$('[data-tm]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); $('#tus').hidden = TA.m !== 'units'; }
       if (b.dataset.tt) { TA.t = +b.dataset.tt; $$('[data-tt]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); }
       if (b.dataset.tu) { var us = TA.us ? TA.us.split(',') : [], i = us.indexOf(b.dataset.tu); if (i >= 0) us.splice(i, 1); else us.push(b.dataset.tu); TA.us = us.join(','); b.setAttribute('aria-pressed', i < 0); }
@@ -131,6 +158,10 @@
   GK.onLeave(function () { stopGame(); G = null; });
   function timeLeft() {
     if (G.mode === 'battle') return Math.max(0, G.startAt + G.cfg.t * 1000 - now());
+    if (G.forceEnd) return 0;
+    var rule = ruleOf(G.cfg);
+    if (rule === 'sudden') return G.qstart ? Math.max(0, G.qlim - (now() - G.qstart)) : G.qlim || 12000;
+    if (rule === 'sprint') return 1e9;
     var t = now();
     if (G.started && t > G.last) { G.left -= (t - G.last) * drainRate((t - G.startAt) / 1000); G.last = t; }
     return Math.max(0, G.left);
@@ -145,26 +176,27 @@
       return;
     }
     if (!G.started) { G.started = true; G.last = now(); GK.fx('go'); showQ(); }
-    var left = timeLeft(), max = G.mode === 'battle' ? G.cfg.t * 1000 : Math.max(G.cfg.t * 1000, 1);
+    var left = timeLeft(), rule = G.mode === 'battle' ? 'time' : ruleOf(G.cfg), max = G.mode === 'battle' ? G.cfg.t * 1000 : rule === 'sudden' ? (G.qlim || 12000) : Math.max(G.cfg.t * 1000, 1);
     // ゲージ：同じ値なら さわらない（チカチカ防止）。赤は 10 秒を切ったら、12 秒を こえたら もどす
     var bar = $('#gbar', G.box);
     if (bar && isFinite(left)) {
-      var pc = (Math.round(Math.min(100, left / max * 100) * 2) / 2) + '%';
+      var pc = (rule === 'sprint' ? Math.round(G.ok / SPRINT * 100) : Math.round(Math.min(100, left / max * 100) * 2) / 2) + '%';
       if (bar.firstChild.style.width !== pc) bar.firstChild.style.width = pc;
-      if (left < 10000) bar.classList.add('low'); else if (left > 12000) bar.classList.remove('low');
+      if (rule === 'sprint') bar.classList.remove('low'); else if (left < (rule === 'sudden' ? 3000 : 10000)) bar.classList.add('low'); else if (left > (rule === 'sudden' ? 3500 : 12000)) bar.classList.remove('low');
     }
-    var tm = $('#gtm', G.box), dr = G.mode === 'battle' ? 1 : drainRate((now() - G.startAt) / 1000);
-    var th = Math.ceil(left / 1000) + '秒' + (dr > 1.05 ? '<small>accel. ×' + dr.toFixed(1) + '</small>' : '');
+    var tm = $('#gtm', G.box), dr = G.mode === 'battle' || rule !== 'time' ? 1 : drainRate((now() - G.startAt) / 1000);
+    var th = rule === 'sprint' ? '🏁 ' + ((now() - G.startAt) / 1000 + (G.pen || 0)).toFixed(1) + '秒<small>あと ' + Math.max(0, SPRINT - G.ok) + ' 問</small>' : rule === 'sudden' ? '💀 ' + Math.ceil(left / 1000) + '秒<small>' + G.ok + ' 問 連続</small>' : Math.ceil(left / 1000) + '秒' + (dr > 1.05 ? '<small>accel. ×' + dr.toFixed(1) + '</small>' : '');
     if (tm && tm.dataset.h !== th) { tm.dataset.h = th; tm.innerHTML = th; }
     GK.STAGE.tick(G, left);
-    if (G.mode !== 'battle' && t - G.startAt > HARD_END * 1000) left = 0;
-    if (left <= 0 && !G.over) { G.over = true; clearInterval(G.timer); G.dur = (now() - G.startAt) / 1000; GK.fx('whistle'); G.hooks.end && G.hooks.end(G); }
+    if (G.mode !== 'battle' && t - G.startAt > (rule === 'time' ? HARD_END : 900) * 1000) left = 0;
+    if (left <= 0 && !G.over) { G.over = true; clearInterval(G.timer); G.dur = (now() - G.startAt) / 1000;
+      if (rule === 'sprint') { G.dur += G.pen || 0; if (G.ok >= SPRINT) { var tb = Math.max(0, Math.round((240 - G.dur) * 25)); G.score += tb; G.sprintBonus = tb; } } GK.fx('whistle'); G.hooks.end && G.hooks.end(G); }
   }
   function showQ() {
     var gq = $('#gq', G.box), q = G.qs[G.i % G.qs.length];
     gq.innerHTML = '<div class="qz" style="padding:6px 0 0"></div>';
     G.qel = gq.firstChild;
-    G.qstart = now();
+    G.qstart = now(); G.qlim = (6 + (q.st || 1) * 3 + (q.fmt === 'tf' ? -2 : 0)) * 1000;
     GK.drawQ(G.qel, q, {
       top: '<span>第 ' + (G.i + 1) + ' 問</span>', noFb: true,
       onPick: function (k, ok) {
@@ -175,7 +207,8 @@
           G.combo++; G.ok++; G.maxCombo = Math.max(G.maxCombo, G.combo);
           var ff = GK.STAGE.ffOn(G), pts = Math.round(q.st * 30 * mult(G.combo) * (ff ? 2 : 1));
           G.score += pts; pop = '+' + pts + ' 点' + (ff ? '（ff ×2）' : '');
-          if (G.mode !== 'battle') {
+          if (G.mode !== 'battle' && ruleOf(G.cfg) === 'sprint' && G.ok >= SPRINT) { G.forceEnd = true; pop += '　🏁 ゴール！'; }
+          if (G.mode !== 'battle' && ruleOf(G.cfg) === 'time') {
             var b = bonusSec(q.st, G.ok - 1) + (G.combo % 10 === 0 ? COMBO_BONUS : 0);
             G.left = Math.min(Math.max(G.cfg.t * 1000, timeLeft()), timeLeft() + b * 1000); G.last = now();
             pop += '　+' + b + '秒';
@@ -184,7 +217,12 @@
           GK.STAGE.correct(G, G.qel.querySelector('.ch button.ok'));
         } else {
           G.combo = 0; G.ng++; pop = '';
-          if (G.mode !== 'battle') { G.left = timeLeft() - PENALTY * 1000; G.last = now(); pop += '−' + PENALTY + ' 秒'; }
+          if (G.mode !== 'battle') {
+            var rl = ruleOf(G.cfg);
+            if (rl === 'sudden') { G.forceEnd = true; pop = '💀 ゲームオーバー'; }
+            else if (rl === 'sprint') { G.pen = (G.pen || 0) + 5; pop = '+5 秒'; }
+            else { G.left = timeLeft() - PENALTY * 1000; G.last = now(); pop += '−' + PENALTY + ' 秒'; }
+          }
           G.qel.classList.add('flash-ng');
           GK.STAGE.wrong(G);
         }
@@ -222,18 +260,18 @@
 
   /* ---------- ⏱ タイムアタック ---------- */
   GK.route(/^ta$/, function () {
-    var cfg = { m: TA.m, us: TA.us, t: TA.t };
+    var cfg = { m: TA.m, us: TA.us, t: TA.t, rule: TA.rule || 'time', fmt: TA.fmt || 'mix' };
     newGame(V, cfg, Math.floor(Math.random() * 1e9), 'solo', now() + 3000, { end: soloEnd });
   });
   function soloEnd(g) {
-    var best = RW.best[g.cfg.m] || 0, nb = g.score > best;
-    if (nb) RW.best[g.cfg.m] = g.score;
+    var bk = bestKey(g.cfg), best = RW.best[bk] || 0, nb = g.score > best;
+    if (nb) RW.best[bk] = g.score;
     RW.taBest = Math.max(RW.taBest, g.score); RW.maxCombo = Math.max(RW.maxCombo, g.maxCombo);
     GK.rwSave(); GK.earn(Math.floor(g.score / 20)); GK.checkBadges();
     if (nb && g.score > 0) GK.confetti(60);
     var mm = Math.floor(g.dur / 60), ss = Math.round(g.dur % 60);
     setTimeout(function () { GK.STAGE.applause(Math.min(1, 0.3 + GK.STAGE.stationOf(g.ok) * 0.08 + (nb ? 0.3 : 0))); }, 300);
-    V.innerHTML = '<section class="panel res arena"><p class="note">🚂 旅の記録・' + esc(rangeName(g.cfg)) + '・⏱ ' + (mm ? mm + ' 分 ' : '') + ss + ' 秒 つづいた</p>' + GK.STAGE.curtain(g) + '<div class="big" id="fsc">0<small> 点</small></div>' +
+    V.innerHTML = '<section class="panel res arena"><p class="note">🚂 旅の記録・' + esc(rangeName(g.cfg)) + (ruleOf(g.cfg) !== 'time' ? '・' + RULES.filter(function (r) { return r[0] === ruleOf(g.cfg); })[0][1] + (ruleOf(g.cfg) === 'sprint' ? (g.ok >= SPRINT ? '（' + g.dur.toFixed(1) + ' 秒・タイムボーナス +' + (g.sprintBonus || 0) + '）' : '（ゴールならず）') : '') : '') + '・⏱ ' + (mm ? mm + ' 分 ' : '') + ss + ' 秒 つづいた</p>' + GK.STAGE.curtain(g) + '<div class="big" id="fsc">0<small> 点</small></div>' +
       '<p class="msg">' + (nb ? '🎉 ベスト更新！' : 'ベスト ' + GK.fmtN(best) + ' 点') + '　正解 ' + g.ok + ' 問・最大 ' + g.maxCombo + ' コンボ</p><p>📏 <b>' + g.ok + ' 問正解 ≒ ' + ruler(g.ok) + '</b></p>' +
       '<div class="acts"><button type="button" class="btn" id="rep">🔊 あなたの演奏を聴く</button>' + (g.res.length ? '<button type="button" class="btn" id="rv">📖 ' + (g.ng ? 'まちがえた ' + g.ng + ' 問の解説' : '解説を見る') + '</button>' : '') + '<button type="button" class="btn" id="brag">📣 自慢する</button><button type="button" class="btn main" data-go="#ta">▶ もう一度</button><button type="button" class="btn ghost" data-go="#game">◀ ゲームのトップ</button></div></section>';
     // 点数を カウントアップで 見せる
@@ -297,7 +335,7 @@
 
   /* ---------- 先生：部屋 ---------- */
   function makeRoom() {
-    var cfg = { m: TA.m === 'units' && !TA.us ? 'all' : TA.m, us: TA.us || '', t: 90 };
+    var cfg = { m: TA.m === 'units' && !TA.us ? 'all' : TA.m, us: TA.us || '', t: 90, fmt: TA.fmt || 'mix' };
     var tryOne = function (n) {
       var code = String(1000 + Math.floor(Math.random() * 9000));
       return api('GET', ROOM(code)).then(function (v) {
@@ -312,7 +350,8 @@
   function genrePanel(cfg, busy, ens) {
     var gs = cfgGenres(cfg);
     return '<p class="gh">出題する ジャンル' + (gs.length ? '（' + gs.length + ' 個）' : '（えらばない ＝ 全範囲）') + '</p><div class="gchips">' + GENRES.map(function (g) { return '<button type="button" data-hg="' + g[0] + '" aria-pressed="' + (gs.indexOf(g[0]) >= 0) + '"' + (busy ? ' disabled' : '') + '>' + g[1] + '</button>'; }).join('') + '<button type="button" data-hg="-" class="gclr"' + (busy || !gs.length ? ' disabled' : '') + '>✕ はずす</button></div>' +
-      '<p class="gh">むずかしさ</p><div class="seg">' + [0, 1, 2, 3].map(function (s) { return '<button type="button" data-hs="' + s + '" aria-pressed="' + ((cfg.st || 0) === s) + '"' + (busy ? ' disabled' : '') + '>' + ST_NAME[s] + '</button>'; }).join('') + '</div>';
+      '<p class="gh">むずかしさ</p><div class="seg">' + [0, 1, 2, 3].map(function (s) { return '<button type="button" data-hs="' + s + '" aria-pressed="' + ((cfg.st || 0) === s) + '"' + (busy ? ' disabled' : '') + '>' + ST_NAME[s] + '</button>'; }).join('') + '</div>' +
+      '<p class="gh">出し方</p><div class="seg">' + [['mix', '🎲 いろいろ（4択・⭕✕・2択）'], ['four', '4択だけ']].map(function (f) { return '<button type="button" data-hf="' + f[0] + '" aria-pressed="' + ((cfg.fmt || 'mix') === f[0]) + '"' + (busy ? ' disabled' : '') + '>' + f[1] + '</button>'; }).join('') + '</div>';
   }
   // 部屋の 設定を 書きかえる（すぐ 画面にも 反映する）
   function patchCfg(Hh, pt, redraw) {
@@ -363,9 +402,10 @@
       '<div class="hbtns"><button type="button" class="btn ghost sm" id="hCopy">🔗 参加リンク</button><button type="button" class="btn ghost sm" id="hClose">部屋を閉じる</button></div>';
     if (!hadQR) drawQR($('#qr', el), joinUrl(H.code));
     el.onclick = function (e) {
-      var b = e.target.closest('[data-hm],[data-ht],[data-hg],[data-hs],#hGo,#hCopy,#hClose'); if (!b) return;
+      var b = e.target.closest('[data-hm],[data-ht],[data-hg],[data-hs],[data-hf],#hGo,#hCopy,#hClose'); if (!b) return;
       if (b.dataset.hg) patchCfg(H, genrePatch(H.room.cfg, b.dataset.hg), drawHostL);
       if (b.dataset.hs) patchCfg(H, { st: +b.dataset.hs }, drawHostL);
+      if (b.dataset.hf) patchCfg(H, { fmt: b.dataset.hf }, drawHostL);
       if (b.dataset.hm) api('PATCH', ROOM(H.code) + '/cfg', { m: b.dataset.hm, g: null });
       if (b.dataset.ht) api('PATCH', ROOM(H.code) + '/cfg', { t: +b.dataset.ht });
       if (b.id === 'hGo') { H.tab = 'now'; api('PATCH', ROOM(H.code), { state: 'play', round: (r.round || 0) + 1, seed: Math.floor(Math.random() * 1e9), startAt: Math.round(now() + 5000) }).catch(function () { GK.toast('スタートできませんでした'); }); }
@@ -524,7 +564,7 @@
       var g = groups[i % groups.length], pool = g.filter(function (id) { return !used[id]; }); if (!pool.length) { pool = g; used = {}; }
       var id = pool[Math.floor(R() * pool.length)]; used[id] = 1; types.push(id);
     }
-    return GK.Q.set([], cfg.n, R, { types: GK.shuffle(types, R), noEar: !cfg.ear, ramp: !(cfg.st > 0), st: cfg.st > 0 ? cfg.st : undefined });
+    return GK.Q.set([], cfg.n, R, { types: GK.shuffle(types, R), noEar: !cfg.ear, ramp: !(cfg.st > 0), st: cfg.st > 0 ? cfg.st : undefined }).map(function (q) { return vary(q, R, cfg.fmt); });
   }
   var ansOf = function (p, qi) { return p && p.a ? p.a[qi] : null; };
   // クラスで集めた音（h：'1' ＝ 音、'0' ＝ 休符）の楽譜
@@ -550,7 +590,7 @@
   /* ---------- 先生 ---------- */
   var ENS = GK.store.get('ensSel', { m: 'all', us: '', n: 7, sec: 20, ear: false });
   function makeEnsRoom() {
-    var cfg = { kind: 'ens', m: TA.m === 'units' && !TA.us ? 'all' : TA.m, us: TA.us || '', n: ENS.n, sec: ENS.sec, ear: !!ENS.ear };
+    var cfg = { kind: 'ens', m: TA.m === 'units' && !TA.us ? 'all' : TA.m, us: TA.us || '', n: ENS.n, sec: ENS.sec, ear: !!ENS.ear, fmt: TA.fmt || 'mix' };
     var tryOne = function (n) {
       var code = String(1000 + Math.floor(Math.random() * 9000));
       return api('GET', ROOM(code)).then(function (v) {
@@ -596,9 +636,10 @@
       '<div class="hbtns"><button type="button" class="btn ghost sm" id="hCopy">🔗 参加リンク</button><button type="button" class="btn ghost sm" id="hClose">部屋を閉じる</button></div>';
     if (!hadQR) drawQR($('#qr', el), joinUrl(EH.code));
     el.onclick = function (e) {
-      var b = e.target.closest('[data-ec],[data-hg],[data-hs],#eGo,#hCopy,#hClose'); if (!b) return;
+      var b = e.target.closest('[data-ec],[data-hg],[data-hs],[data-hf],#eGo,#hCopy,#hClose'); if (!b) return;
       if (b.dataset.hg) patchCfg(EH, genrePatch(EH.room.cfg, b.dataset.hg), ensHostL);
       if (b.dataset.hs) patchCfg(EH, { st: +b.dataset.hs }, ensHostL);
+      if (b.dataset.hf) patchCfg(EH, { fmt: b.dataset.hf }, ensHostL);
       if (b.dataset.ec) {
         var kv = b.dataset.ec.split(':'), v = kv[0] === 'm' ? kv[1] : kv[0] === 'ear' ? kv[1] === 'true' : +kv[1], o = {}; o[kv[0]] = v;
         ENS[kv[0]] = v; GK.store.set('ensSel', ENS); api('PATCH', ROOM(EH.code) + '/cfg', o);
