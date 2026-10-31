@@ -970,6 +970,35 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 }
 @media print { .top, .foot { display: none; } }
 @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* 課題楽曲：タップで 答える */
+.pfocus .pmk { cursor: pointer; transition: opacity .2s; } .pfocus .pmk:not(.on) { opacity: .45; } .pfocus .pmk.on { opacity: 1; }
+.pfocus .pmk.on ellipse, .pfocus .pmk.on rect:not(.phit), .pfocus .pmk.on path { stroke-width: 3.4; } .pfocus .pmk.on rect[stroke-dasharray] { fill: rgba(45,111,176,.08); }
+.xpslots { display: flex; flex-direction: column; gap: 4px; }
+.xpg { display: flex; align-items: center; gap: 6px; } .xpgt { font-size: 12px; font-weight: 800; color: var(--muted); min-width: 4.8em; }
+.xpgb { display: flex; flex-wrap: wrap; gap: 5px; flex: 1; }
+.xps { display: flex; flex-direction: column; align-items: flex-start; gap: 0; min-width: 74px; padding: 4px 9px; border: 1.5px dashed var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); cursor: pointer; font: inherit; text-align: left; }
+.xps b { font-size: 14px; } .xps i { font-style: normal; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.xps.fill { border-style: solid; } .xps.fill i { color: var(--ink); font-weight: 700; }
+.xps.cur { border: 2.5px solid var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.xps.ok { background: color-mix(in srgb, var(--ok) 12%, var(--bg)); border-color: var(--ok); } .xps.ng { background: color-mix(in srgb, var(--ng) 10%, var(--bg)); border-color: var(--ng); }
+.xppad { border: 2px solid var(--accent); border-radius: 12px; padding: 8px 10px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; }
+.xpph { font-size: 13.5px; line-height: 1.5; } .xpph b { color: var(--accent); font-size: 15px; }
+.xprow { display: flex; gap: 6px; align-items: flex-start; } .xprl { font-size: 12px; font-weight: 800; color: var(--muted); min-width: 3.4em; padding-top: 8px; }
+.xpc { display: flex; flex-wrap: wrap; gap: 5px; flex: 1; }
+.xpc .xc { min-height: 36px; min-width: 44px; padding: 4px 10px; border: 1.5px solid var(--line); border-radius: 9px; background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.xpc.n8 .xc, .xpc.n7 .xc { min-width: 40px; padding: 4px 6px; } .xpc.kk .xc { min-width: 46px; padding: 4px 6px; font-size: 13.5px; }
+.xpc .xc:hover:not([disabled]) { border-color: var(--accent); } .xpc .xc.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.xpc .xc.ok { background: var(--ok); border-color: var(--ok); color: var(--bg); opacity: 1; } .xpc .xc.ng { background: var(--ng); border-color: var(--ng); color: var(--bg); text-decoration: line-through; opacity: 1; }
+.xpc .xc[disabled] { cursor: default; opacity: .5; } .xpc .xc[disabled].ok, .xpc .xc[disabled].ng { opacity: 1; }
+.xpnav { display: flex; gap: 6px; justify-content: space-between; } .xpnav .btn { padding: 5px 10px; font-size: 13px; }
+@media (max-width: 899px) {
+  .xpl { position: sticky; top: -10px; z-index: 3; background: var(--panel); margin: 0 -4px; padding: 0 4px 2px; border-bottom: 1.5px solid var(--line); }
+  .xpslots { flex-direction: row; overflow-x: auto; gap: 8px; padding-bottom: 2px; scrollbar-width: thin; }
+  .xpg { flex: none; gap: 4px; } .xpgt { min-width: 0; font-size: 11px; writing-mode: horizontal-tb; } .xpgb { flex-wrap: nowrap; gap: 4px; }
+  .xps { min-width: 0; padding: 3px 7px; } .xps i { font-size: 11px; }
+}
+@media (max-width: 640px) { .xwpiece svg { min-width: 540px !important; width: 540px !important; } .xpc .xc { min-height: 40px; } .xpph { font-size: 13px; } .xp .xwh { display: none; } }
 </style>
 </head>
 <body>
@@ -993,33 +1022,33 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261031q"></script>
-<script src="js/music.js?v=20261031q"></script>
-<script src="js/core.js?v=20261031q"></script>
-<script src="js/figs.js?v=20261031q"></script>
-<script src="js/terms.js?v=20261031q"></script>
-<script src="js/terms_info.js?v=20261031q"></script>
-<script src="js/terms_pro.js?v=20261031q"></script>
-<script src="js/typenames.js?v=20261031q"></script>
-<script src="js/harmony.js?v=20261031q"></script>
-<script src="js/lessons.js?v=20261031q"></script>
-<script src="js/quiz.js?v=20261031q"></script>
-<script src="js/quiz_more.js?v=20261031q"></script>
-<script src="js/app.js?v=20261031q"></script>
-<script src="js/exam.js?v=20261031q"></script>
-<script src="js/exam2.js?v=20261031q"></script>
-<script src="js/motivate.js?v=20261031q"></script>
-<script src="js/learn.js?v=20261031q"></script>
-<script src="js/harmony_units.js?v=20261031q"></script>
-<script src="js/harmony_lab.js?v=20261031q"></script>
-<script src="js/harmony_units2.js?v=20261031q"></script>
-<script src="js/harmony_units3.js?v=20261031q"></script>
-<script src="js/harmony_units4.js?v=20261031q"></script>
-<script src="js/counterpoint.js?v=20261031q"></script>
-<script src="js/counterpoint_units.js?v=20261031q"></script>
-<script src="js/harmony_reg.js?v=20261031q"></script>
-<script src="js/quiz_more2.js?v=20261031q"></script>
-<script src="js/stage.js?v=20261031q"></script>
-<script src="js/game.js?v=20261031q"></script>
+<script src="js/config.js?v=20261031r"></script>
+<script src="js/music.js?v=20261031r"></script>
+<script src="js/core.js?v=20261031r"></script>
+<script src="js/figs.js?v=20261031r"></script>
+<script src="js/terms.js?v=20261031r"></script>
+<script src="js/terms_info.js?v=20261031r"></script>
+<script src="js/terms_pro.js?v=20261031r"></script>
+<script src="js/typenames.js?v=20261031r"></script>
+<script src="js/harmony.js?v=20261031r"></script>
+<script src="js/lessons.js?v=20261031r"></script>
+<script src="js/quiz.js?v=20261031r"></script>
+<script src="js/quiz_more.js?v=20261031r"></script>
+<script src="js/app.js?v=20261031r"></script>
+<script src="js/exam.js?v=20261031r"></script>
+<script src="js/exam2.js?v=20261031r"></script>
+<script src="js/motivate.js?v=20261031r"></script>
+<script src="js/learn.js?v=20261031r"></script>
+<script src="js/harmony_units.js?v=20261031r"></script>
+<script src="js/harmony_lab.js?v=20261031r"></script>
+<script src="js/harmony_units2.js?v=20261031r"></script>
+<script src="js/harmony_units3.js?v=20261031r"></script>
+<script src="js/harmony_units4.js?v=20261031r"></script>
+<script src="js/counterpoint.js?v=20261031r"></script>
+<script src="js/counterpoint_units.js?v=20261031r"></script>
+<script src="js/harmony_reg.js?v=20261031r"></script>
+<script src="js/quiz_more2.js?v=20261031r"></script>
+<script src="js/stage.js?v=20261031r"></script>
+<script src="js/game.js?v=20261031r"></script>
 </body>
 </html>

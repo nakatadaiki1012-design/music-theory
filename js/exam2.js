@@ -84,25 +84,31 @@
     // 小節線
     for (var i = 1; i < xs.length; i++) { var bx = (xs[i - 1] + xs[i]) / 2 + 3; E('line', { x1: bx, y1: geo.y1 - 40, x2: bx, y2: geo.y1 + 0, stroke: 'currentColor', 'stroke-width': 1 }); E('line', { x1: bx, y1: geo.y2 - 40, x2: bx, y2: geo.y2, stroke: 'currentColor', 'stroke-width': 1 }); }
     // 和音の 点線の 枠
+    var G = function (slot) { var g = M.svgEl(svg, 'g', { 'class': 'pmk', 'data-slot': slot }), f = function (tag, at) { return M.svgEl(g, tag, at); }; f.el = g; return f; };
     P.boxes.forEach(function (ci, q) {
       if (o.boxes && o.boxes.indexOf(q) < 0) return;
-      var x = xs[ci] + 2; E('rect', { x: x - 24, y: top + 6, width: 48, height: bot - top - 4, rx: 6, fill: 'none', stroke: '#2d6fb0', 'stroke-width': 1.8, 'stroke-dasharray': '5 4' });
-      E('circle', { cx: x, cy: top + 6, r: 10, fill: '#fff', stroke: '#2d6fb0', 'stroke-width': 1.5 }); M.svgText(svg, x, top + 11, LET[q], { size: 13, c: '#2d6fb0', fixed: true });
+      var E = G('c' + q);
+      var x = xs[ci] + 2; E('rect', { x: x - 24, y: top + 6, width: 48, height: bot - top - 4, fill: 'transparent', stroke: 'none', 'class': 'phit' }); E('rect', { x: x - 24, y: top + 6, width: 48, height: bot - top - 4, rx: 6, fill: 'none', stroke: '#2d6fb0', 'stroke-width': 1.8, 'stroke-dasharray': '5 4' });
+      E('circle', { cx: x, cy: top + 6, r: 10, fill: 'var(--panel, #fff)', stroke: '#2d6fb0', 'stroke-width': 1.5 }); M.svgText(E.el, x, top + 11, LET[q], { size: 13, c: '#2d6fb0', fixed: true });
     });
     // 部分（調）の かっこ
     P.secs.forEach(function (sc, si) {
       if (o.secs === false) return;
+      var E = G('k' + si);
       var a = xs[sc.start] - 24, b = xs[sc.start + sc.chs.length - 1] + 28, y = bot + 14;
+      E('rect', { x: a, y: y - 14, width: b - a, height: 30, fill: 'transparent', stroke: 'none', 'class': 'phit' });
       E('path', { d: 'M' + a + ' ' + (y - 8) + ' V' + y + ' H' + b + ' V' + (y - 8), fill: 'none', stroke: 'currentColor', 'stroke-width': 1.4 });
-      var mx = (a + b) / 2; E('rect', { x: mx - 11, y: y - 10, width: 22, height: 20, fill: 'var(--panel, #fff)', stroke: 'currentColor', 'stroke-width': 1.3 }); M.svgText(svg, mx, y + 5, 'AB'.charAt(si), { size: 14, c: 'currentColor', fixed: true });
+      var mx = (a + b) / 2; E('rect', { x: mx - 11, y: y - 10, width: 22, height: 20, fill: 'var(--panel, #fff)', stroke: 'currentColor', 'stroke-width': 1.3 }); M.svgText(E.el, mx, y + 5, 'AB'.charAt(si), { size: 14, c: 'currentColor', fixed: true });
     });
     // 2 音の 目じるし
     P.pairs.forEach(function (p, q) {
       if (o.pairs && o.pairs.indexOf(q) < 0) return;
+      var E = G('i' + q);
       [[p.i1, p.j1, JA[q]], [p.i2, p.j2, JA[q] + '′']].forEach(function (z) {
         var n = geo.notes[z[1]][z[0]]; if (!n || !n.getYs) return; var cx = n.getAbsoluteX() + 6, cy = n.getYs()[0];
+        E('circle', { cx: cx, cy: cy, r: 17, fill: 'transparent', stroke: 'none', 'class': 'phit' });
         E('ellipse', { cx: cx, cy: cy, rx: 12, ry: 9.5, fill: 'none', stroke: '#c0392b', 'stroke-width': 2.2 });
-        M.svgText(svg, cx + (z[1] % 2 === 0 ? 18 : -18), cy - 12 + (z[1] % 2 === 0 ? 0 : 26), z[2], { size: 14, c: '#c0392b', fixed: true });
+        M.svgText(E.el, cx + (z[1] % 2 === 0 ? 18 : -18), cy - 12 + (z[1] % 2 === 0 ? 0 : 26), z[2], { size: 14, c: '#c0392b', fixed: true });
       });
     });
     M.fit(svg, +svg.dataset.w, geo.y1 - 40, geo.y2 + 50);
@@ -110,8 +116,6 @@
   }
 
   /* ---------- ページ ---------- */
-  var sel = function (id, opts, ph) { return '<select data-q="' + id + '"><option value="">' + (ph || '—') + '</option>' + opts.map(function (o) { return '<option value="' + o[0] + '">' + esc(o[1]) + '</option>'; }).join('') + '</select>'; };
-  var KEYOPT = (function () { var r = []; MAJK.concat([-5, 5]).forEach(function (f) { r.push([f + ',0', M.keyName(f, false)]); }); MINK.concat([-5, 5]).forEach(function (f) { r.push([f + ',1', M.keyName(f, true)]); }); return r; })();
   GK.route(/^exam\/piece$/, function () {
     V.innerHTML = '<div class="split">' + GK.EXAM.side('piece') + '<section class="panel main"><div class="mbody" id="pbody"></div></section></div>';
     run($('#pbody'));
@@ -148,29 +152,124 @@
   });
   Object.assign(GK.TYPE_NAME, { pieceIv: '楽譜の 2音の 音程', pieceKey: '楽譜の 調名', pieceChord: '楽譜の 和音' });
 
+  /* ---------- 課題楽曲ページ：答えは タップで 選ぶ ---------- */
+  var INVS = ['基本', '第1転回', '第2転回', '第3転回'];
+  var KEYF = [0, 1, 2, 3, 4, 5, -1, -2, -3, -4, -5];
   function run(body) {
-    var P = genPiece(GK.rng(Math.floor(Math.random() * 1e9))), graded = false;
-    var iv = P.pairs.map(function (p, q) { return '<div class="xrow"><b>' + JA[q] + ' ─ ' + JA[q] + '′</b>' + sel('iq' + q, QUAL, '長・短・完全…') + sel('id' + q, [1, 2, 3, 4, 5, 6, 7, 8].map(function (d) { return [d, d + '度']; }), '何度') + '<span class="xfb" id="fi' + q + '"></span></div>'; }).join('');
-    var ky = P.secs.map(function (s, i) { return '<div class="xrow"><b>' + 'AB'.charAt(i) + '</b>' + sel('k' + i, KEYOPT, '調名') + '<span class="xfb" id="fk' + i + '"></span></div>'; }).join('');
-    var cd = P.boxes.map(function (ci, q) { return '<div class="xrow"><b>' + LET[q] + '</b>' + sel('ct' + q, CTYPES.map(function (x) { return [x[0], x[1]]; }), '種類') + sel('cd' + q, [1, 2, 3, 4, 5, 6, 7].map(function (d) { return [d, ['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ'][d]]; }), '和音度') + sel('ci' + q, INVN.map(function (x, i) { return [i, x]; }), '位置') + '<span class="xfb" id="fc' + q + '"></span></div>'; }).join('');
-    body.innerHTML = '<div class="xw xp"><div class="xwh"><b>📜 課題楽曲（大譜表）</b><span>ひとつの 楽譜から 読みとる 問題</span></div><div class="xpgrid"><div class="xpl"><div class="fig sc xwpiece" id="pFig"></div></div><div class="xpr">' +
-      '<div class="xq"><h4>問1　赤く 囲んだ ア〜ウ の ２音間の 音程。複音程は 単音程に。<br><small>答えかた：左で「長・短・完全・増・減」、右で 度数。例）長3度・完全5度</small></h4>' + iv + '</div>' +
-      '<div class="xq"><h4>問2　かっこ A・B の 部分の 調名。</h4>' + ky + '</div>' +
-      '<div class="xq"><h4>問3　点線で 囲んだ a〜d の 和音の 種類・和音度（問2の調で）・位置。</h4>' + cd + '</div>' +
-      '<div class="xwa"><button type="button" class="btn main" id="pGo">✔ 採点する</button><button type="button" class="btn" id="pNew">🎲 べつの 楽曲</button><button type="button" class="btn" id="pPlay">🔊 聴く</button></div><div id="pRes"></div></div></div></div>';
-    var geo = drawPiece($('#pFig', body), P); GK.EXAM.dbgP = P;
-    $('#pPlay', body).onclick = function () { M.play(P.cols.map(function (c, i) { return [c.v.map(function (p) { return M.str(p); }), 1.4]; }), 76); };
+    var P = genPiece(GK.rng(Math.floor(Math.random() * 1e9))), graded = false, ans = {}, cur = 'i0', timer = 0;
+    var slots = [];
+    P.pairs.forEach(function (p, q) { slots.push({ id: 'i' + q, g: 1, lab: JA[q], kind: 'iv', p: p, need: ['q', 'd'] }); });
+    P.secs.forEach(function (s, i) { slots.push({ id: 'k' + i, g: 2, lab: 'AB'.charAt(i), kind: 'key', s: s, need: ['k'] }); });
+    P.boxes.forEach(function (ci, q) { slots.push({ id: 'c' + q, g: 3, lab: LET[q], kind: 'ch', ci: ci, c: P.cols[ci], ty: P.types[ci], need: ['t', 'd', 'i'] }); });
+    var S = function (id) { return slots.filter(function (x) { return x.id === id; })[0]; };
+    var A = function (id) { return ans[id] || (ans[id] = {}); };
+    var done = function (sl) { var a = A(sl.id); return sl.need.every(function (k) { return a[k] !== undefined; }); };
+    var right = function (sl) {
+      if (sl.kind === 'iv') return { q: sl.p.q, d: sl.p.deg };
+      if (sl.kind === 'key') return { k: sl.s.key + ',' + (sl.s.minor ? 1 : 0) };
+      return { t: sl.ty[0], d: sl.c.ch.d, i: sl.c.ch.inv };
+    };
+    var isOk = function (sl) { var r = right(sl), a = A(sl.id); return sl.need.every(function (k) { return String(a[k]) === String(r[k]); }); };
+    var qn = function (q) { var h = QUAL.filter(function (x) { return x[0] === q; })[0]; return h ? h[1] : '？'; };
+    var tyn = function (t) { var h = CTYPES.filter(function (x) { return x[0] === t; })[0]; return h ? h[1].replace('の和音', '') : '？'; };
+    var kn = function (k) { if (k === undefined) return '？'; var z = String(k).split(','); return M.keyName(+z[0], z[1] === '1'); };
+    var sum = function (sl, a) {
+      if (sl.kind === 'iv') return (a.q !== undefined ? qn(a.q) : '？') + (a.d !== undefined ? a.d : '？') + '度';
+      if (sl.kind === 'key') return kn(a.k);
+      return (a.t !== undefined ? tyn(a.t) : '？') + '・' + (a.d !== undefined ? ROM[a.d] : '？') + '・' + (a.i !== undefined ? INVS[a.i] : '？');
+    };
+    var rightText = function (sl) {
+      if (sl.kind === 'iv') return M.QN[sl.p.q] + sl.p.deg + '度' + (sl.p.comp ? '（複音程 ' + sl.p.raw.name + ' を 単音程に）' : '');
+      if (sl.kind === 'key') return M.keyName(sl.s.key, sl.s.minor);
+      return sl.ty[1] + '・' + ROM[sl.c.ch.d] + '・' + INVN[sl.c.ch.inv] + '（' + M.keyName(sl.c.key, sl.c.minor) + ' の ' + H.label(sl.c.ch) + '）';
+    };
+    var GT = ['', '問1 音程', '問2 調名', '問3 和音'];
+
+    body.innerHTML = '<div class="xw xp"><div class="xwh"><b>📜 課題楽曲（大譜表）</b><span>楽譜の 印を タップ → 下の ボタンで 答える</span></div><div class="xpgrid"><div class="xpl"><div class="fig sc xwpiece" id="pFig"></div></div><div class="xpr">' +
+      '<div class="xpslots" id="pSlots"></div><div class="xppad" id="pPad"></div>' +
+      '<div class="xwa"><button type="button" class="btn main" id="pGo"></button><button type="button" class="btn" id="pNew">🎲 べつの 楽曲</button><button type="button" class="btn" id="pPlay">🔊 全体を 聴く</button></div><div id="pRes"></div></div></div></div>';
+    var fig = $('#pFig', body); drawPiece(fig, P); GK.EXAM.dbgP = P;
+    var svg = fig.querySelector('svg'); svg.classList.add('pfocus');
+    svg.querySelectorAll('.pmk').forEach(function (g) { g.addEventListener('click', function () { pickSlot(g.getAttribute('data-slot')); }); });
+
+    function chips(sl, k, opts, cls) {
+      var a = A(sl.id), r = right(sl);
+      return '<div class="xpc' + (cls ? ' ' + cls : '') + '">' + opts.map(function (o) {
+        var v = String(o[0]), c = 'xc';
+        if (String(a[k]) === v) c += ' on';
+        if (graded) { if (String(r[k]) === v) c += ' ok'; else if (String(a[k]) === v) c += ' ng'; }
+        return '<button type="button" class="' + c + '" data-k="' + k + '" data-v="' + esc(v) + '"' + (graded ? ' disabled' : '') + '>' + esc(o[1]) + '</button>';
+      }).join('') + '</div>';
+    }
+    function row(t, html) { return '<div class="xprow"><span class="xprl">' + t + '</span>' + html + '</div>'; }
+    function drawSlots() {
+      var h = '';
+      [1, 2, 3].forEach(function (g) {
+        h += '<div class="xpg"><span class="xpgt">' + GT[g] + '</span><div class="xpgb">' + slots.filter(function (x) { return x.g === g; }).map(function (sl) {
+          var a = A(sl.id), c = 'xps' + (sl.id === cur ? ' cur' : '') + (done(sl) ? ' fill' : '') + (graded ? (isOk(sl) ? ' ok' : ' ng') : '');
+          return '<button type="button" class="' + c + '" data-s="' + sl.id + '"><b>' + sl.lab + (sl.kind === 'iv' ? '─' + sl.lab + '′' : '') + '</b><i>' + (graded ? (isOk(sl) ? '⭕ ' : '✕ ') : '') + esc(sum(sl, a)) + '</i></button>';
+        }).join('') + '</div></div>';
+      });
+      $('#pSlots', body).innerHTML = h;
+      var left = slots.filter(function (x) { return !done(x); }).length;
+      var go = $('#pGo', body); go.textContent = graded ? '✔ 採点ずみ' : left ? '✔ 採点する（のこり ' + left + '）' : '✔ 採点する'; go.disabled = graded;
+    }
+    function drawPad() {
+      var sl = S(cur), h = '';
+      if (sl.kind === 'iv') {
+        h = '<div class="xpph"><b>' + sl.lab + ' と ' + sl.lab + '′</b>（赤い 丸）の 2音の 音程。複音程は 単音程に。</div>' +
+          row('質', chips(sl, 'q', QUAL.slice(0, 5))) + row('度数', chips(sl, 'd', [1, 2, 3, 4, 5, 6, 7, 8].map(function (d) { return [d, d + '度']; }), 'n8'));
+      } else if (sl.kind === 'key') {
+        var nm = function (m) { return KEYF.map(function (f) { return [f + ',' + m, M.keyName(f, !!m).replace(/[長短]調$/, '')]; }); };
+        h = '<div class="xpph"><b>かっこ ' + sl.lab + '</b>（楽譜の 下）の 部分の 調名。</div>' + row('長調', chips(sl, 'k', nm(0), 'kk')) + row('短調', chips(sl, 'k', nm(1), 'kk'));
+      } else {
+        h = '<div class="xpph"><b>和音 ' + sl.lab + '</b>（青い 点線）の 種類・和音度・位置。和音度は 問2 の 調で。</div>' +
+          row('種類', chips(sl, 't', CTYPES.map(function (x) { return [x[0], x[1].replace('の和音', '')]; }))) +
+          row('和音度', chips(sl, 'd', [1, 2, 3, 4, 5, 6, 7].map(function (d) { return [d, ROM[d]]; }), 'n7')) +
+          row('位置', chips(sl, 'i', INVS.map(function (x, i) { return [i, x]; })));
+      }
+      if (graded) h += '<div class="xfb ' + (isOk(sl) ? 'ok">⭕ 正解！' : 'ng">✕ 正解は ' + esc(rightText(sl))) + '</div>';
+      h += '<div class="xpnav"><button type="button" class="btn" id="pPrev">◀ まえ</button><button type="button" class="btn" id="pHear">🔊 ここを 聴く</button><button type="button" class="btn" id="pNext">つぎ ▶</button></div>';
+      $('#pPad', body).innerHTML = h;
+      $('#pPad', body).querySelectorAll('.xc').forEach(function (b) { b.onclick = function () { choose(b.getAttribute('data-k'), b.getAttribute('data-v')); }; });
+      var ix = slots.indexOf(sl);
+      $('#pPrev', body).onclick = function () { pickSlot(slots[(ix + slots.length - 1) % slots.length].id); };
+      $('#pNext', body).onclick = function () { pickSlot(slots[(ix + 1) % slots.length].id); };
+      $('#pHear', body).onclick = function () { hear(sl); };
+    }
+    function hear(sl) {
+      if (sl.kind === 'iv') M.play([[[M.str(P.cols[sl.p.i1].v[sl.p.j1]), M.str(P.cols[sl.p.i2].v[sl.p.j2])], 1.6]]);
+      else if (sl.kind === 'ch') M.play([[sl.c.v.map(function (p) { return M.str(p); }), 2]]);
+      else M.play(sl.s.vs.map(function (v) { return [v.map(function (p) { return M.str(p); }), 1.2]; }), 80);
+    }
+    function mark() {
+      svg.querySelectorAll('.pmk').forEach(function (g) { g.classList.toggle('on', g.getAttribute('data-slot') === cur); });
+      var g = svg.querySelector('.pmk.on');
+      if (g && fig.scrollWidth > fig.clientWidth) { var r = g.getBoundingClientRect(), fr = fig.getBoundingClientRect(); if (r.left < fr.left + 20 || r.right > fr.right - 20) fig.scrollLeft += (r.left + r.width / 2) - (fr.left + fr.width / 2); }
+    }
+    function pickSlot(id) { clearTimeout(timer); cur = id; drawSlots(); drawPad(); mark(); }
+    function choose(k, v) {
+      if (graded) return;
+      var sl = S(cur), a = A(cur), was = done(sl);
+      a[k] = v; GK.fx && GK.fx('tap');
+      drawSlots(); drawPad();
+      if (!was && done(sl)) {
+        var ix = slots.indexOf(sl), nx = null;
+        for (var t = 1; t < slots.length; t++) { var c = slots[(ix + t) % slots.length]; if (!done(c)) { nx = c; break; } }
+        if (nx) timer = setTimeout(function () { pickSlot(nx.id); }, 350);
+      }
+    }
+    $('#pSlots', body).addEventListener('click', function (e) { var b = e.target.closest('.xps'); if (b) pickSlot(b.getAttribute('data-s')); });
+    $('#pPlay', body).onclick = function () { M.play(P.cols.map(function (c) { return [c.v.map(function (p) { return M.str(p); }), 1.4]; }), 76); };
     $('#pNew', body).onclick = function () { run(body); };
     $('#pGo', body).onclick = function () {
-      if (graded) return; graded = true;
-      var val = function (id) { var e = body.querySelector('[data-q="' + id + '"]'); return e ? e.value : ''; }, got = 0, tot = 0;
-      var mark = function (id, ok, msg) { var e = $('#' + id, body); e.className = 'xfb ' + (ok ? 'ok' : 'ng'); e.innerHTML = (ok ? '⭕' : '✕ 正解：') + (ok ? '' : esc(msg)); tot++; if (ok) got++; };
-      P.pairs.forEach(function (p, q) { var ok = val('iq' + q) === p.q && +val('id' + q) === p.deg; mark('fi' + q, ok, M.QN[p.q] + p.deg + '度' + (p.comp ? '（複音程 ' + p.raw.name + ' → 単音程）' : '')); });
-      P.secs.forEach(function (s, i) { var ok = val('k' + i) === s.key + ',' + (s.minor ? 1 : 0); mark('fk' + i, ok, M.keyName(s.key, s.minor)); });
-      P.boxes.forEach(function (ci, q) { var c = P.cols[ci], ty = P.types[ci], ok = val('ct' + q) === ty[0] && +val('cd' + q) === c.ch.d && +val('ci' + q) === c.ch.inv; mark('fc' + q, ok, ty[1] + '・' + ['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ'][c.ch.d] + '・' + INVN[c.ch.inv] + '（' + M.keyName(c.key, c.minor) + ' ' + H.label(c.ch) + '）'); });
+      if (graded) return; graded = true; clearTimeout(timer);
+      var got = slots.filter(isOk).length, tot = slots.length;
       var pts = got + (got === tot ? 5 : 0); GK.earn(pts); var w = GK.store.get('examW', { ok: 0, sets: 0 }); w.ok += got; GK.store.set('examW', w); if (got === tot) { GK.fx('fanfare'); GK.confetti && GK.confetti(30); }
-      $('#pRes', body).innerHTML = '<div class="xwr ' + (got >= tot * 0.8 ? 'ok' : 'ng') + '"><b>' + got + ' / ' + tot + ' 問 正解</b>' + (got === tot ? ' 🎉 ぜんぶ 正解！' : got >= tot * 0.8 ? '　合格ライン（8 割）です' : '　まちがいを 見なおそう') + '<p class="xwe">音程は 低い音から 数え、♯♭ で 質を あわせる。調名は 臨時記号（導音）と 和音から。和音は 構成音を 積みなおして 根音を さがす。（+' + pts + ' コイン）</p></div>';
-      body.querySelectorAll('select').forEach(function (s) { s.disabled = true; });
+      var bad = slots.filter(function (x) { return !isOk(x); });
+      $('#pRes', body).innerHTML = '<div class="xwr ' + (got >= tot * 0.8 ? 'ok' : 'ng') + '"><b>' + got + ' / ' + tot + ' 問 正解</b>' + (got === tot ? ' 🎉 ぜんぶ 正解！' : got >= tot * 0.8 ? '　合格ライン（8 割）です' : '　まちがいを 見なおそう') + '<p class="xwe">' + (bad.length ? '✕ の ところを タップすると、正解が 見られます。' : '') + '音程は 低い音から 数え、♯♭ で 質を あわせる。調名は 臨時記号（導音）と 和音から。和音は 構成音を 積みなおして 根音を さがす。（+' + pts + ' コイン）</p></div>';
+      pickSlot(bad.length ? bad[0].id : cur);
     };
+    pickSlot(cur);
   }
 })();
