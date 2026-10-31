@@ -131,6 +131,7 @@
     return { i: i, name: RANKS[i][1], from: RANKS[i][0], next: nx ? nx[0] : null, nextName: nx ? nx[1] : null };
   };
   function touchDay() { var d = GK.dayNo(); if (RW.lastDay === d) return; RW.streak = RW.lastDay === d - 1 ? RW.streak + 1 : 1; RW.lastDay = d; }
+  GK.touchDay = function () { touchDay(); GK.rwSave(); };
   GK.passCount = function () { return (GK.UNITS || []).filter(function (u) { return GK.prog(u.id).pass; }).length; };
   function badgeOn(id) {
     var n = (GK.UNITS || []).length || 13;

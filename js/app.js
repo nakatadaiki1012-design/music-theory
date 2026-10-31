@@ -52,6 +52,7 @@
       var ok = i === q.a;
       $$('.ch button', el).forEach(function (b, j) { b.disabled = true; if (j === q.a) b.classList.add('ok'); else if (j === i) b.classList.add('ng'); else b.classList.add('dim'); });
       GK.fx(ok ? 'ok' : 'ng');
+      GK.act && GK.act(ok);
       if (!o.noFb) GK.showFb(el, q, ok, Object.assign({}, o, { pick: i }));
       o.onPick && o.onPick(i, ok);
     }
@@ -194,6 +195,7 @@
     V.innerHTML = '<div class="home"><aside class="panel hero">' +
       '<h2 class="cname">' + (tab === 'harm' ? '和声法' : tab === 'cp' ? '対位法' : '楽典') + '</h2><p class="cdesc">' + (tab === 'harm' ? '四声部の 和音の つなぎ方を、楽譜と 音で 見て・聴いて・自分で 書いて 身につける' : tab === 'cp' ? '2 つの メロディーを 同時に 歌わせる 技術。定旋律に 対位線を つけて、ルールと ひびきを 身につける' : '音名・リズム・音程・音階・調・和音・記号を、楽譜と図で 見て・聴いて・解いて 身につける') + '</p>' +
       '<div class="stats"><div class="stat"><b>' + pass + '<small>/' + list.length + '</small></b><small>合格した単元</small></div><div class="stat"><b>' + GK.fmtN(RW.drillOk) + '</b><small>演習の正解</small></div><div class="stat"><b>' + GK.levelOf(RW.coins).name + '</b><small>段位</small></div></div>' +
+      (GK.motivHTML ? GK.motivHTML(tab) : '') +
       (task ? '<div class="taskbox">📮 <span>課題 <b>' + task.units.filter(function (u) { return GK.prog(u).pass; }).length + '/' + task.units.length + '</b> 合格</span><button type="button" class="btn" data-go="#task">見る</button></div>' : '') +
       '<div class="acts"><button type="button" class="btn main" data-go="#' + next.id + '">' + (tab === 'theory' ? '' : '📖 授業　') + '▶ ' + (seen ? 'つづき' : 'はじめる') + '：' + esc(next.title) + '</button>' +
       (tab !== 'theory' ? '' : due ? '<button type="button" class="btn warm" data-go="#learn/due">🔁 復習 ' + due + '</button>' : '<button type="button" class="btn" data-go="#learn/diag">🧭 力だめし</button>') +
@@ -203,6 +205,7 @@
       (tab === 'theory' ? '<h3 style="margin-top:10px">🧠 わすれない しくみ</h3><div class="cycle"><ol><li><b>🔁</b><b>今日の復習</b><span>間をあけて 思い出す</span></li><li><b>🧭</b><b>力だめし</b><span>実力を はかる</span></li><li><b>🗺</b><b>学習マップ</b><span>身につき具合</span></li></ol></div>' : '<h3 style="margin-top:10px">✍️ 実践とは？</h3><p class="note">' + (tab === 'harm' ? '授業で 学んだ ことを、五線に 4 声を 書いて 試します。ソプラノ課題・バス課題・自由入力・自分で出題。禁則を 自動で 採点。' : '定旋律に 対位線を 書いて 試します。協和・禁則を 自動で チェック。') + '</p>') + '</div>' +
       '</aside><section class="gridw">' + (tabs.length ? '<div class="mtabs ccs">' + tabs.map(function (x) { return '<button type="button" data-c="' + x[0] + '" data-go="#home/' + x[0] + '" aria-pressed="' + (x[0] === tab) + '">' + x[1] + '</button>'; }).join('') + '</div>' : '') +
       '<div class="grid" style="--c1:' + cols + ';--r1:' + rows + ';--c2:3;--r2:' + Math.ceil(n / 3) + ';--c3:2;--r3:' + Math.ceil(n / 2) + '">' + tiles + '</div></section></div>';
+    GK.motivBind && GK.motivBind(V, tab);
   });
 
   /* =========================================================

@@ -177,6 +177,23 @@ body[data-course="cp"] { --warm: #2c8a5c; --warm-soft: rgba(44, 138, 92, .15); }
 @media (max-height: 860px) { #hostL .qr { width: 84px !important; height: 84px !important; margin: 0 auto; overflow: hidden; } #hostL .qr > * { width: 84px !important; height: 84px !important; } #hostL .joinhow { display: none; } #hostL .roomhd .code { font-size: 34px !important; line-height: 1.05; } }
 .qq .fmt { display: inline-block; font-size: 11px; font-weight: 800; background: var(--warm); color: #fff; border-radius: 6px; padding: 0 6px; margin-right: 4px; vertical-align: 2px; }
 .qq .claim { display: block; margin-top: 6px; font-size: 1.05em; } .qq .claim b { color: var(--warm); }
+/* やってみたくなる しかけ */
+.ibtn.strk { filter: grayscale(1); opacity: .6; } .ibtn.strk.lit { filter: none; opacity: 1; }
+.motiv { border: 2px solid var(--warm); border-radius: 12px; padding: 8px 10px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; }
+.mvt { display: flex; align-items: center; gap: 10px; } .mvs { display: flex; align-items: center; gap: 4px; } .mvs b { font-family: var(--font-en); font-size: 30px; line-height: 1; } .mvs small { font-size: 10px; line-height: 1.2; color: var(--muted); }
+.mvs .fl { font-size: 26px; filter: grayscale(1); opacity: .5; } .mvs .fl.lit { filter: none; opacity: 1; animation: flk 1.2s ease-in-out infinite; } @keyframes flk { 50% { transform: scale(1.12) rotate(-4deg); } }
+.mvc { display: flex; gap: 1px; flex: 1; justify-content: flex-end; min-width: 0; } .mvc i { font-style: normal; display: flex; flex-direction: column; align-items: center; font-size: 11px; width: 18px; color: var(--muted); } .mvc i span { font-size: 9.5px; } .mvc i.td { font-weight: 800; color: var(--ink); } .mvc i.on { color: var(--warm); }
+.mvg { display: flex; align-items: center; gap: 8px; } .mvg small { font-size: 11.5px; font-weight: 700; white-space: nowrap; } .mvg b { font-size: 13px; } .mbar { flex: 1; height: 9px; border-radius: 99px; background: var(--chip); overflow: hidden; } .mbar i { display: block; height: 100%; background: linear-gradient(90deg, #f0a43c, var(--warm)); border-radius: 99px; transition: width .4s; }
+.mvh { margin: 0; font-size: 12px; color: var(--muted); } .mvq { width: 100%; justify-content: center; font-weight: 800; }
+.dqz { min-height: 360px; display: flex; flex-direction: column; }
+.mvs small { white-space: nowrap; }
+@media (max-width: 640px) {
+  #taskBtn { display: none; }
+  .motiv { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 5px 8px; gap: 4px 8px; }
+  .motiv .mvt { flex: none; } .motiv .mvc, .motiv .mvh { display: none; } .mvs b { font-size: 22px; } .mvs .fl { font-size: 20px; }
+  .motiv .mvg { flex: 1 1 120px; } .motiv .mvq { width: auto; flex: 1 1 100%; padding: 5px 8px; font-size: 13px; }
+  .gridw .grid { grid-template-rows: none !important; grid-auto-rows: minmax(56px, auto) !important; }
+}
 /* わかりやすさ */
 .tile.nextu { border-color: var(--warm) !important; box-shadow: 0 0 0 2px var(--warm), 3px 3px 0 var(--warm) !important; position: relative; }
 .tile .nxb { position: absolute; bottom: 6px; right: 8px; background: var(--warm); color: #fff; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 1px 8px; }
@@ -930,6 +947,7 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
   <div class="tools">
     <div class="cswitch" id="cswitch" role="group" aria-label="コースを かえる"><button type="button" data-c="theory" data-go="#home/theory" title="楽典ラボ">🎼<span class="lbl"> 楽典</span></button><button type="button" data-c="harm" data-go="#home/harm" title="和声法ラボ">🎹<span class="lbl"> 和声法</span></button><button type="button" data-c="cp" data-go="#home/cp" title="対位法ラボ">🎶<span class="lbl"> 対位法</span></button></div>
     <button type="button" class="ibtn" id="taskBtn" data-go="#task" title="課題">📮<span class="lbl"></span></button>
+    <button type="button" class="ibtn strk" id="strkBtn" data-go="#home" title="れんぞく日数">🔥<b>0</b></button>
     <button type="button" class="ibtn" id="coinBtn" data-go="#game" title="コイン・段位">🪙<b>0</b></button>
     <button type="button" class="ibtn" id="setBtn" title="設定">⚙</button>
   </div>
@@ -938,32 +956,33 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261031l"></script>
-<script src="js/music.js?v=20261031l"></script>
-<script src="js/core.js?v=20261031l"></script>
-<script src="js/figs.js?v=20261031l"></script>
-<script src="js/terms.js?v=20261031l"></script>
-<script src="js/terms_info.js?v=20261031l"></script>
-<script src="js/terms_pro.js?v=20261031l"></script>
-<script src="js/typenames.js?v=20261031l"></script>
-<script src="js/harmony.js?v=20261031l"></script>
-<script src="js/lessons.js?v=20261031l"></script>
-<script src="js/quiz.js?v=20261031l"></script>
-<script src="js/quiz_more.js?v=20261031l"></script>
-<script src="js/app.js?v=20261031l"></script>
-<script src="js/exam.js?v=20261031l"></script>
-<script src="js/exam2.js?v=20261031l"></script>
-<script src="js/learn.js?v=20261031l"></script>
-<script src="js/harmony_units.js?v=20261031l"></script>
-<script src="js/harmony_lab.js?v=20261031l"></script>
-<script src="js/harmony_units2.js?v=20261031l"></script>
-<script src="js/harmony_units3.js?v=20261031l"></script>
-<script src="js/harmony_units4.js?v=20261031l"></script>
-<script src="js/counterpoint.js?v=20261031l"></script>
-<script src="js/counterpoint_units.js?v=20261031l"></script>
-<script src="js/harmony_reg.js?v=20261031l"></script>
-<script src="js/quiz_more2.js?v=20261031l"></script>
-<script src="js/stage.js?v=20261031l"></script>
-<script src="js/game.js?v=20261031l"></script>
+<script src="js/config.js?v=20261031o"></script>
+<script src="js/music.js?v=20261031o"></script>
+<script src="js/core.js?v=20261031o"></script>
+<script src="js/figs.js?v=20261031o"></script>
+<script src="js/terms.js?v=20261031o"></script>
+<script src="js/terms_info.js?v=20261031o"></script>
+<script src="js/terms_pro.js?v=20261031o"></script>
+<script src="js/typenames.js?v=20261031o"></script>
+<script src="js/harmony.js?v=20261031o"></script>
+<script src="js/lessons.js?v=20261031o"></script>
+<script src="js/quiz.js?v=20261031o"></script>
+<script src="js/quiz_more.js?v=20261031o"></script>
+<script src="js/app.js?v=20261031o"></script>
+<script src="js/exam.js?v=20261031o"></script>
+<script src="js/exam2.js?v=20261031o"></script>
+<script src="js/motivate.js?v=20261031o"></script>
+<script src="js/learn.js?v=20261031o"></script>
+<script src="js/harmony_units.js?v=20261031o"></script>
+<script src="js/harmony_lab.js?v=20261031o"></script>
+<script src="js/harmony_units2.js?v=20261031o"></script>
+<script src="js/harmony_units3.js?v=20261031o"></script>
+<script src="js/harmony_units4.js?v=20261031o"></script>
+<script src="js/counterpoint.js?v=20261031o"></script>
+<script src="js/counterpoint_units.js?v=20261031o"></script>
+<script src="js/harmony_reg.js?v=20261031o"></script>
+<script src="js/quiz_more2.js?v=20261031o"></script>
+<script src="js/stage.js?v=20261031o"></script>
+<script src="js/game.js?v=20261031o"></script>
 </body>
 </html>
