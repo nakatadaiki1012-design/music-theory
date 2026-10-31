@@ -19,7 +19,32 @@
     var g = GR.filter(function (x) { return x[0] === cfg.m; })[0];
     return g && g[2] ? g[2] : GK.UNITS.map(function (u) { return u.id; });
   };
+  /* ---------- ジャンル（先生が えらべる） ---------- */
+  var GENRES = [
+    ['note', '🎼 音名・読譜', ['u01']], ['rhy', '🥁 リズム・拍子', ['u02', 'u03', 'u04']], ['acc', '♯♭ 変化記号・音程', ['u05', 'u06']], ['scale', '🎹 音階', ['u07', 'u08']],
+    ['key', '🔑 調・調号', ['u09']], ['chord', '🎶 和音・コード', ['u10', 'u11']], ['trans', '🔀 移調', ['u12']], ['term', '📖 楽語・記号', ['u13', 'u14', 'u15']],
+    ['exam', '🎓 入試形式（楽譜を読む）', ['x01']], ['ear', '👂 聴いて答える', null], ['harm', '🎹 和声法', 'H'], ['cp', '🎶 対位法', 'C']
+  ];
+  var genreOf = function (id) { return GENRES.filter(function (g) { return g[0] === id; })[0]; };
+  var cfgGenres = function (cfg) { return (cfg.g || '').split(',').filter(function (x) { return x && genreOf(x); }); };
+  var genreTypes = function (gid, withEar) {
+    var g = genreOf(gid), T = GK.Q.T;
+    if (gid === 'ear') return Object.keys(T).filter(function (id) { return T[id].ear; });
+    var us = g[2] === 'H' ? GK.HUNITS.map(function (u) { return u.id; }) : g[2] === 'C' ? GK.CPUNITS.map(function (u) { return u.id; }) : g[2];
+    return GK.Q.typesOf(us.filter(function (u) { return GK.UNIT[u]; }), !withEar);
+  };
+  // 出題する 種類を グループに わける（グループごとに 順ぐりに 出して 変化を ふやす）
+  var cfgGroups = function (cfg, withEar) {
+    var gs = cfgGenres(cfg), groups;
+    if (gs.length) groups = gs.map(function (g) { return genreTypes(g, withEar); });
+    else groups = unitsOf(cfg).map(function (u) { return GK.Q.typesOf([u], !withEar); });
+    groups = groups.filter(function (g) { return g.length; });
+    return groups.length ? groups : [GK.Q.typesOf(GK.UNITS.map(function (u) { return u.id; }), !withEar)];
+  };
+  var ST_NAME = { 0: 'だんだん', 1: '★ やさしい', 2: '★★ ふつう', 3: '★★★ むずかしい' };
   var rangeName = function (cfg) {
+    var gs = cfgGenres(cfg);
+    if (gs.length) return gs.length > 3 ? gs.length + ' ジャンル' : gs.map(function (g) { return genreOf(g)[1].replace(/^\S+ /, ''); }).join('・');
     if (cfg.m === 'units') { var us = unitsOf(cfg); return us.length > 3 ? us.length + ' 単元' : us.map(function (u) { return GK.UNIT[u].title; }).join('・'); }
     return (GR.filter(function (x) { return x[0] === cfg.m; })[0] || GR[0])[1];
   };
@@ -34,13 +59,20 @@
   var drainRate = function (sec) { return 1 + Math.max(0, sec - DRAIN0) / DRAINK; };
   // 問題：はじめの 8 問は ★1 の種類だけ、22 問目までは ★2 まで、そのあとは 全部（だんだん むずかしく）
   function makeQs(cfg, seed) {
-    var R = GK.rng(seed), T = GK.Q.T, all = GK.Q.typesOf(unitsOf(cfg), true), out = [], bag = [], last = null, seen = {};
+    var R = GK.rng(seed), T = GK.Q.T, groups = cfgGroups(cfg, false), out = [], bags = groups.map(function () { return []; }), recent = [], seen = {}, order = GK.shuffle(groups.map(function (_, i) { return i; }), R), gp = 0;
+    var all = [].concat.apply([], groups);
     for (var i = 0; i < 160; i++) {
-      var tr = i < 8 ? 1 : i < 22 ? 2 : 3;
-      var pool = all.filter(function (id) { return T[id].st <= tr; }); if (!pool.length) pool = all;
-      bag = bag.filter(function (id) { return pool.indexOf(id) >= 0; });
-      if (!bag.length) bag = GK.shuffle(pool.slice(), R);
-      var id = bag.pop(); if (id === last && bag.length) { bag.unshift(id); id = bag.pop(); } last = id;
+      var tr = cfg.st > 0 ? cfg.st : i < 8 ? 1 : i < 22 ? 2 : 3, g = -1, pool = null;
+      for (var k = 0; k < order.length && g < 0; k++) {
+        if (gp > 0 && gp % order.length === 0 && k === 0) order = GK.shuffle(order, R);
+        var cand = order[gp % order.length]; gp++;
+        var p1 = groups[cand].filter(function (id) { return T[id].st <= tr; }), p2 = p1.filter(function (id) { return recent.indexOf(id) < 0; });
+        if (p1.length) { g = cand; pool = p2.length ? p2 : p1; }
+      }
+      if (g < 0) { g = 0; pool = all.filter(function (id) { return T[id].st <= tr; }); if (!pool.length) pool = all; }
+      bags[g] = bags[g].filter(function (id) { return pool.indexOf(id) >= 0; });
+      if (!bags[g].length) bags[g] = GK.shuffle(pool.slice(), R);
+      var id = bags[g].pop(); recent.push(id); if (recent.length > 7) recent.shift();
       try { out.push(GK.Q.fresh(id, R, Math.max(T[id].st, tr), seen)); } catch (e) { console.error(id, e); }
     }
     return out;
@@ -276,6 +308,23 @@
     };
     tryOne(0).catch(function (e) { GK.toast('部屋をつくれませんでした（' + e.message + '）。⚙ 設定を確認してください'); });
   }
+  // 先生用：ジャンル（えらんだ ジャンルだけ 出題）と むずかしさ
+  function genrePanel(cfg, busy, ens) {
+    var gs = cfgGenres(cfg);
+    return '<p class="gh">出題する ジャンル' + (gs.length ? '（' + gs.length + ' 個）' : '（えらばない ＝ 全範囲）') + '</p><div class="gchips">' + GENRES.map(function (g) { return '<button type="button" data-hg="' + g[0] + '" aria-pressed="' + (gs.indexOf(g[0]) >= 0) + '"' + (busy ? ' disabled' : '') + '>' + g[1] + '</button>'; }).join('') + '<button type="button" data-hg="-" class="gclr"' + (busy || !gs.length ? ' disabled' : '') + '>✕ はずす</button></div>' +
+      '<p class="gh">むずかしさ</p><div class="seg">' + [0, 1, 2, 3].map(function (s) { return '<button type="button" data-hs="' + s + '" aria-pressed="' + ((cfg.st || 0) === s) + '"' + (busy ? ' disabled' : '') + '>' + ST_NAME[s] + '</button>'; }).join('') + '</div>';
+  }
+  // 部屋の 設定を 書きかえる（すぐ 画面にも 反映する）
+  function patchCfg(Hh, pt, redraw) {
+    api('PATCH', ROOM(Hh.code) + '/cfg', pt);
+    Object.keys(pt).forEach(function (k) { if (pt[k] === null) delete Hh.room.cfg[k]; else Hh.room.cfg[k] = pt[k]; });
+    Hh.lkey = null; redraw();
+  }
+  function genrePatch(cfg, id) {
+    if (id === '-') return { g: null };
+    var gs = cfgGenres(cfg), i = gs.indexOf(id); if (i >= 0) gs.splice(i, 1); else gs.push(id);
+    return { g: gs.length ? gs.join(',') : null };
+  }
   var H = null;
   GK.route(/^host\/(\d{4})$/, function (m) {
     var code = m[1];
@@ -309,14 +358,15 @@
     el.innerHTML = '<div class="roomhd"><small>部屋番号</small><div class="code">' + H.code + '</div></div><div class="qr" id="qr">' + (hadQR || '') + '</div>' +
       '<p class="note joinhow" style="text-align:center">楽典ラボ → 🎮 → 部屋番号を入力<br>または QR を読みとる</p>' +
       '<div class="hsum"><p><span>📚</span><b>' + esc(rangeName(cfg)) + '</b></p><p><span>⏱</span><b>' + cfg.t + ' 秒</b></p>' +
-      '<div class="seg">' + GR.filter(function (g) { return g[0] !== 'units'; }).map(function (g) { return '<button type="button" data-hm="' + g[0] + '" aria-pressed="' + (cfg.m === g[0]) + '"' + (busy ? ' disabled' : '') + '>' + g[1] + '</button>'; }).join('') + '</div>' +
-      '<div class="seg">' + [60, 90, 120, 180].map(function (t) { return '<button type="button" data-ht="' + t + '" aria-pressed="' + (cfg.t === t) + '"' + (busy ? ' disabled' : '') + '>' + t + '秒</button>'; }).join('') + '</div></div>' +
+      '<div class="seg">' + [60, 90, 120, 180].map(function (t) { return '<button type="button" data-ht="' + t + '" aria-pressed="' + (cfg.t === t) + '"' + (busy ? ' disabled' : '') + '>' + t + '秒</button>'; }).join('') + '</div>' + genrePanel(cfg, busy) + '</div>' +
       '<div class="hbtns"><span class="ppl">👥 <b>' + playersOf(r).length + '</b> 人</span><button type="button" class="btn main big" id="hGo"' + (busy ? ' disabled' : '') + '>' + (r.round ? '▶ 第' + (r.round + 1) + '回戦' : '▶ スタート') + '</button></div>' +
       '<div class="hbtns"><button type="button" class="btn ghost sm" id="hCopy">🔗 参加リンク</button><button type="button" class="btn ghost sm" id="hClose">部屋を閉じる</button></div>';
     if (!hadQR) drawQR($('#qr', el), joinUrl(H.code));
     el.onclick = function (e) {
-      var b = e.target.closest('[data-hm],[data-ht],#hGo,#hCopy,#hClose'); if (!b) return;
-      if (b.dataset.hm) api('PATCH', ROOM(H.code) + '/cfg', { m: b.dataset.hm });
+      var b = e.target.closest('[data-hm],[data-ht],[data-hg],[data-hs],#hGo,#hCopy,#hClose'); if (!b) return;
+      if (b.dataset.hg) patchCfg(H, genrePatch(H.room.cfg, b.dataset.hg), drawHostL);
+      if (b.dataset.hs) patchCfg(H, { st: +b.dataset.hs }, drawHostL);
+      if (b.dataset.hm) api('PATCH', ROOM(H.code) + '/cfg', { m: b.dataset.hm, g: null });
       if (b.dataset.ht) api('PATCH', ROOM(H.code) + '/cfg', { t: +b.dataset.ht });
       if (b.id === 'hGo') { H.tab = 'now'; api('PATCH', ROOM(H.code), { state: 'play', round: (r.round || 0) + 1, seed: Math.floor(Math.random() * 1e9), startAt: Math.round(now() + 5000) }).catch(function () { GK.toast('スタートできませんでした'); }); }
       if (b.id === 'hCopy') GK.share('【楽典ラボ クラス対戦】部屋 ' + H.code + '\n' + joinUrl(H.code));
@@ -468,7 +518,14 @@
   var TEMPO = [[0.25, 'Presto!'], [0.5, 'Allegro!'], [0.75, 'Moderato'], [1.01, 'Andante']];
   var tempoName = function (frac) { for (var i = 0; i < TEMPO.length; i++) if (frac < TEMPO[i][0]) return TEMPO[i][1]; return 'Andante'; };
   var ensPoints = function (ok, frac, k) { return ok ? 100 + Math.round(200 * Math.max(0, 1 - frac)) + Math.min(100, Math.max(0, k - 1) * 20) : 0; };
-  function ensQs(cfg, seed) { return GK.Q.set(unitsOf(cfg), cfg.n, GK.rng(seed), { noEar: !cfg.ear, ramp: true }); }
+  function ensQs(cfg, seed) {
+    var R = GK.rng(seed), groups = cfgGroups(cfg, !!cfg.ear), types = [], used = {}, T = GK.Q.T;
+    for (var i = 0; i < cfg.n; i++) {
+      var g = groups[i % groups.length], pool = g.filter(function (id) { return !used[id]; }); if (!pool.length) { pool = g; used = {}; }
+      var id = pool[Math.floor(R() * pool.length)]; used[id] = 1; types.push(id);
+    }
+    return GK.Q.set([], cfg.n, R, { types: GK.shuffle(types, R), noEar: !cfg.ear, ramp: !(cfg.st > 0), st: cfg.st > 0 ? cfg.st : undefined });
+  }
   var ansOf = function (p, qi) { return p && p.a ? p.a[qi] : null; };
   // クラスで集めた音（h：'1' ＝ 音、'0' ＝ 休符）の楽譜
   function melodySpec(h, n, upto) {
@@ -532,15 +589,16 @@
     el.innerHTML = '<div class="roomhd"><small>🎼 アンサンブル・クイズ　部屋番号</small><div class="code">' + EH.code + '</div></div><div class="qr" id="qr">' + (hadQR || '') + '</div>' +
       '<p class="note joinhow" style="text-align:center">楽典ラボ → 🎮 → 部屋番号を入力<br>または QR を読みとる</p>' +
       '<div class="hsum"><p><span>📚</span><b>' + esc(rangeName(cfg)) + '</b>　' + cfg.n + ' 問・' + cfg.sec + ' 秒' + (cfg.ear ? '・👂' : '') + '</p>' +
-      (busy ? '' : seg('m', GR.filter(function (g) { return g[0] !== 'units'; })) +
-      seg('n', [[7, '7 問（1 フレーズ）'], [14, '14 問（2 フレーズ）']]) +
+      (busy ? '' : seg('n', [[7, '7 問'], [14, '14 問']]) +
       seg('sec', [[10, '10 秒'], [20, '20 秒'], [30, '30 秒']]) +
-      seg('ear', [[false, '👂 聴く問題なし'], [true, '👂 聴く問題あり']])) + '</div>' +
+      seg('ear', [[false, '👂 なし'], [true, '👂 あり']]) + genrePanel(cfg, busy, true)) + '</div>' +
       '<div class="hbtns"><span class="ppl">👥 <b>' + n + '</b> 人</span><button type="button" class="btn main big" id="eGo"' + (busy ? ' disabled' : '') + '>' + (r.round ? '▶ もう一度（新しい問題）' : '▶ スタート') + '</button></div>' +
       '<div class="hbtns"><button type="button" class="btn ghost sm" id="hCopy">🔗 参加リンク</button><button type="button" class="btn ghost sm" id="hClose">部屋を閉じる</button></div>';
     if (!hadQR) drawQR($('#qr', el), joinUrl(EH.code));
     el.onclick = function (e) {
-      var b = e.target.closest('[data-ec],#eGo,#hCopy,#hClose'); if (!b) return;
+      var b = e.target.closest('[data-ec],[data-hg],[data-hs],#eGo,#hCopy,#hClose'); if (!b) return;
+      if (b.dataset.hg) patchCfg(EH, genrePatch(EH.room.cfg, b.dataset.hg), ensHostL);
+      if (b.dataset.hs) patchCfg(EH, { st: +b.dataset.hs }, ensHostL);
       if (b.dataset.ec) {
         var kv = b.dataset.ec.split(':'), v = kv[0] === 'm' ? kv[1] : kv[0] === 'ear' ? kv[1] === 'true' : +kv[1], o = {}; o[kv[0]] = v;
         ENS[kv[0]] = v; GK.store.set('ensSel', ENS); api('PATCH', ROOM(EH.code) + '/cfg', o);
@@ -749,4 +807,5 @@
       };
     }
   }
+  GK._game = { makeQs: makeQs, ensQs: ensQs, cfgGenres: cfgGenres, GENRES: GENRES };
 })();

@@ -85,17 +85,20 @@
     for (var i = 1; i < xs.length; i++) { var bx = (xs[i - 1] + xs[i]) / 2 + 3; E('line', { x1: bx, y1: geo.y1 - 40, x2: bx, y2: geo.y1 + 0, stroke: 'currentColor', 'stroke-width': 1 }); E('line', { x1: bx, y1: geo.y2 - 40, x2: bx, y2: geo.y2, stroke: 'currentColor', 'stroke-width': 1 }); }
     // 和音の 点線の 枠
     P.boxes.forEach(function (ci, q) {
+      if (o.boxes && o.boxes.indexOf(q) < 0) return;
       var x = xs[ci] + 2; E('rect', { x: x - 24, y: top + 6, width: 48, height: bot - top - 4, rx: 6, fill: 'none', stroke: '#2d6fb0', 'stroke-width': 1.8, 'stroke-dasharray': '5 4' });
       E('circle', { cx: x, cy: top + 6, r: 10, fill: '#fff', stroke: '#2d6fb0', 'stroke-width': 1.5 }); M.svgText(svg, x, top + 11, LET[q], { size: 13, c: '#2d6fb0', fixed: true });
     });
     // 部分（調）の かっこ
     P.secs.forEach(function (sc, si) {
+      if (o.secs === false) return;
       var a = xs[sc.start] - 24, b = xs[sc.start + sc.chs.length - 1] + 28, y = bot + 14;
       E('path', { d: 'M' + a + ' ' + (y - 8) + ' V' + y + ' H' + b + ' V' + (y - 8), fill: 'none', stroke: 'currentColor', 'stroke-width': 1.4 });
       var mx = (a + b) / 2; E('rect', { x: mx - 11, y: y - 10, width: 22, height: 20, fill: 'var(--panel, #fff)', stroke: 'currentColor', 'stroke-width': 1.3 }); M.svgText(svg, mx, y + 5, 'AB'.charAt(si), { size: 14, c: 'currentColor', fixed: true });
     });
     // 2 音の 目じるし
     P.pairs.forEach(function (p, q) {
+      if (o.pairs && o.pairs.indexOf(q) < 0) return;
       [[p.i1, p.j1, JA[q]], [p.i2, p.j2, JA[q] + '′']].forEach(function (z) {
         var n = geo.notes[z[1]][z[0]]; if (!n || !n.getYs) return; var cx = n.getAbsoluteX() + 6, cy = n.getYs()[0];
         E('ellipse', { cx: cx, cy: cy, rx: 12, ry: 9.5, fill: 'none', stroke: '#c0392b', 'stroke-width': 2.2 });
@@ -113,6 +116,38 @@
     V.innerHTML = '<div class="split">' + GK.EXAM.side('piece') + '<section class="panel main"><div class="mbody" id="pbody"></div></section></div>';
     run($('#pbody'));
   });
+
+  /* ---------- クラス対戦・演習で つかう 4 択の 入試形式（楽譜を 読む） ---------- */
+  var F = GK.F, U = GK.Q.util, tx = U.tx, mc = U.mc, add = U.add;
+  GK.UNIT.x01 = { id: 'x01', no: 'X1', title: '入試形式（大譜表）', en: 'Exam Score', sym: '🎓', grp: 'exam', goal: '', types: ['pieceIv', 'pieceKey', 'pieceChord'] };
+  F.CUSTOM.piece = function (box, a) { drawPiece(box, a.P, a.o); };
+  var pf = function (P, o) { return { c: 'piece', a: { P: P, o: o } }; };
+  var ROM = ['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ'];
+  add('pieceIv', 'x01', 2, function (R) {
+    var P = genPiece(R), q = Math.floor(R() * 3), p = P.pairs[q], right = M.QN[p.q] + p.deg + '度', wr = [];
+    var opts = [['P', 4], ['P', 5], ['M', 3], ['m', 3], ['M', 6], ['m', 6], ['M', 2], ['m', 7], ['A', 4], ['d', 5], ['M', 7], ['m', 2], ['d', 7], ['A', 2]];
+    shuf(opts, R).forEach(function (o) { var t = M.QN[o[0]] + o[1] + '度'; if (t !== right && wr.length < 5) wr.push(t); });
+    var near = M.QN[p.q === 'M' ? 'm' : p.q === 'm' ? 'M' : p.q === 'P' ? 'A' : 'd'] + p.deg + '度'; if (near !== right && wr.indexOf(near) < 0) wr[0] = near;
+    var m = mc(R, tx(right), wr.map(function (t) { return tx(t); }), 4);
+    return { q: '赤く 囲んだ <b>' + JA[q] + ' と ' + JA[q] + '′</b> の ２音間の 音程は？（複音程は 単音程に）', fig: pf(P, { pairs: [q], boxes: [], secs: false }), ch: m.ch, a: m.a, ex: '<b>' + right + '</b>。' + (p.comp ? '複音程（' + p.raw.name + '）を 単音程に 直した 答え。' : '') + '低い音から 数え、♯♭ で 質を あわせる。', exFig: pf(P, { pairs: [q], boxes: [], secs: false }), play: [[[M.str(P.cols[p.i1].v[p.j1]), M.str(P.cols[p.i2].v[p.j2])], 1.4]] };
+  });
+  add('pieceKey', 'x01', 3, function (R) {
+    var P = genPiece(R), si = Math.floor(R() * 2), s = P.secs[si], right = M.keyName(s.key, s.minor), wr = [];
+    var cand = [[s.key, !s.minor], [s.key + 1, s.minor], [s.key - 1, s.minor], [s.key + 2, s.minor], [s.key - 2, s.minor], [s.key + 1, !s.minor], [s.key - 1, !s.minor], [P.secs[1 - si].key, P.secs[1 - si].minor]];
+    cand.forEach(function (c) { var n = M.keyName(c[0], c[1]); if (n !== right && wr.indexOf(n) < 0 && Math.abs(c[0]) <= 7 && wr.length < 6) wr.push(n); });
+    var m = mc(R, tx(right), wr.map(function (t) { return tx(t); }), 4);
+    return { q: 'かっこ <b>' + 'AB'.charAt(si) + '</b> の 部分の 調名は？', fig: pf(P, { pairs: [], boxes: [], secs: true }), ch: m.ch, a: m.a, ex: '<b>' + right + '</b>。臨時記号（導音の ♯・♮）と、はじめと 終わりの 和音（Ⅰ）から 判断する。', exFig: pf(P, { pairs: [], boxes: [], secs: true }) };
+  });
+  add('pieceChord', 'x01', 3, function (R) {
+    var P = genPiece(R), q = Math.floor(R() * P.boxes.length), ci = P.boxes[q], c = P.cols[ci], ty = P.types[ci], d = c.ch.d, inv = c.ch.inv;
+    var lab = function (t, dd, ii) { return t + '・' + ROM[dd] + '・' + INVN[ii]; }, right = lab(ty[1], d, inv), wr = [];
+    var same = CTYPES.filter(function (x) { return (x[0].indexOf('7') >= 0) === (ty[0].indexOf('7') >= 0) && x[0] !== ty[0]; });
+    [lab(pick(same, R)[1], d, inv), lab(ty[1], d, (inv + 1) % (ty[0].indexOf('7') >= 0 ? 4 : 3)), lab(ty[1], d % 7 + 1, inv), lab(pick(same, R)[1], d, (inv + 2) % (ty[0].indexOf('7') >= 0 ? 4 : 3)), lab(ty[1], (d + 2) % 7 + 1, inv), lab(ty[1], d, (inv + 2) % (ty[0].indexOf('7') >= 0 ? 4 : 3))].forEach(function (t) { if (t !== right && wr.indexOf(t) < 0) wr.push(t); });
+    var m = mc(R, tx(right), wr.slice(0, 5).map(function (t) { return tx(t); }), 4);
+    return { q: '点線で 囲んだ 和音 <b>' + LET[q] + '</b> の 種類・和音度・位置は？（和音度は その 部分の 調 ＝ ' + M.keyName(c.key, c.minor) + ' で）', fig: pf(P, { pairs: [], boxes: [q], secs: true }), ch: m.ch, a: m.a, ex: '<b>' + right + '</b>（' + M.keyName(c.key, c.minor) + ' の ' + H.label(c.ch) + '）。いちばん 下の 音（バス）で 位置、積み上げた 形で 種類を きめる。', exFig: pf(P, { pairs: [], boxes: [q], secs: true }), play: [[c.v.map(function (p) { return M.str(p); }), 2]] };
+  });
+  Object.assign(GK.TYPE_NAME, { pieceIv: '楽譜の 2音の 音程', pieceKey: '楽譜の 調名', pieceChord: '楽譜の 和音' });
+
   function run(body) {
     var P = genPiece(GK.rng(Math.floor(Math.random() * 1e9))), graded = false;
     var iv = P.pairs.map(function (p, q) { return '<div class="xrow"><b>' + JA[q] + ' ─ ' + JA[q] + '′</b>' + sel('iq' + q, QUAL, '長・短・完全…') + sel('id' + q, [1, 2, 3, 4, 5, 6, 7, 8].map(function (d) { return [d, d + '度']; }), '何度') + '<span class="xfb" id="fi' + q + '"></span></div>'; }).join('');
