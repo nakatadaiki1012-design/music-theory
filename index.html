@@ -177,6 +177,43 @@ body[data-course="cp"] { --warm: #2c8a5c; --warm-soft: rgba(44, 138, 92, .15); }
 @media (max-height: 860px) { #hostL .qr { width: 84px !important; height: 84px !important; margin: 0 auto; overflow: hidden; } #hostL .qr > * { width: 84px !important; height: 84px !important; } #hostL .joinhow { display: none; } #hostL .roomhd .code { font-size: 34px !important; line-height: 1.05; } }
 .qq .fmt { display: inline-block; font-size: 11px; font-weight: 800; background: var(--warm); color: #fff; border-radius: 6px; padding: 0 6px; margin-right: 4px; vertical-align: 2px; }
 .qq .claim { display: block; margin-top: 6px; font-size: 1.05em; } .qq .claim b { color: var(--warm); }
+/* ダークモード：楽譜の 濃い色・暗い色を 明るく */
+:root[data-theme="dark"] svg [fill="#444"] { fill: var(--ink); } :root[data-theme="dark"] svg [stroke="#444"] { stroke: var(--ink); }
+:root[data-theme="dark"] svg [fill="#333"] { fill: var(--ink); } :root[data-theme="dark"] svg [stroke="#333"] { stroke: var(--ink); }
+:root[data-theme="dark"] svg [fill="#222"] { fill: var(--ink); } :root[data-theme="dark"] svg [stroke="#222"] { stroke: var(--ink); }
+:root[data-theme="dark"] svg [fill="#444444"] { fill: var(--ink); } :root[data-theme="dark"] svg [stroke="#444444"] { stroke: var(--ink); }
+:root[data-theme="dark"] svg [fill="#333333"] { fill: var(--ink); } :root[data-theme="dark"] svg [stroke="#333333"] { stroke: var(--ink); }
+:root[data-theme="dark"] svg [fill="#7d4fb0"] { fill: #c3a2f0; } :root[data-theme="dark"] svg [stroke="#7d4fb0"] { stroke: #c3a2f0; }
+:root[data-theme="dark"] svg [fill="#2f6bb8"] { fill: #86b6f2; } :root[data-theme="dark"] svg [stroke="#2f6bb8"] { stroke: #86b6f2; }
+:root[data-theme="dark"] svg [fill="#2d6fb0"] { fill: #86b6f2; } :root[data-theme="dark"] svg [stroke="#2d6fb0"] { stroke: #86b6f2; }
+:root[data-theme="dark"] svg [fill="#2c8a5c"] { fill: #74d3a2; } :root[data-theme="dark"] svg [stroke="#2c8a5c"] { stroke: #74d3a2; }
+:root[data-theme="dark"] svg [fill="#c4452a"] { fill: #f3926f; } :root[data-theme="dark"] svg [stroke="#c4452a"] { stroke: #f3926f; }
+:root[data-theme="dark"] svg [fill="#c0392b"] { fill: #ff8a73; } :root[data-theme="dark"] svg [stroke="#c0392b"] { stroke: #ff8a73; }
+:root[data-theme="dark"] svg [fill="#d3302a"] { fill: #ff8a73; } :root[data-theme="dark"] svg [stroke="#d3302a"] { stroke: #ff8a73; }
+:root[data-theme="dark"] svg [fill="#c08a0e"] { fill: #f0c95a; } :root[data-theme="dark"] svg [stroke="#c08a0e"] { stroke: #f0c95a; }
+:root[data-theme="dark"] svg [fill="#7a7568"] { fill: #b3ad9e; } :root[data-theme="dark"] svg [stroke="#7a7568"] { stroke: #b3ad9e; }
+:root[data-theme="dark"] svg [fill="#8a8578"] { fill: #b3ad9e; } :root[data-theme="dark"] svg [stroke="#8a8578"] { stroke: #b3ad9e; }
+:root[data-theme="dark"] svg [fill="#9a968b"] { fill: #bdb8aa; } :root[data-theme="dark"] svg [stroke="#9a968b"] { stroke: #bdb8aa; }
+:root[data-theme="dark"] svg [fill="#9a9486"] { fill: #bdb8aa; } :root[data-theme="dark"] svg [stroke="#9a9486"] { stroke: #bdb8aa; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) svg [fill="#444"] { fill: var(--ink); } :root:not([data-theme="light"]) svg [stroke="#444"] { stroke: var(--ink); }
+  :root:not([data-theme="light"]) svg [fill="#333"] { fill: var(--ink); } :root:not([data-theme="light"]) svg [stroke="#333"] { stroke: var(--ink); }
+  :root:not([data-theme="light"]) svg [fill="#222"] { fill: var(--ink); } :root:not([data-theme="light"]) svg [stroke="#222"] { stroke: var(--ink); }
+  :root:not([data-theme="light"]) svg [fill="#444444"] { fill: var(--ink); } :root:not([data-theme="light"]) svg [stroke="#444444"] { stroke: var(--ink); }
+  :root:not([data-theme="light"]) svg [fill="#333333"] { fill: var(--ink); } :root:not([data-theme="light"]) svg [stroke="#333333"] { stroke: var(--ink); }
+  :root:not([data-theme="light"]) svg [fill="#7d4fb0"] { fill: #c3a2f0; } :root:not([data-theme="light"]) svg [stroke="#7d4fb0"] { stroke: #c3a2f0; }
+  :root:not([data-theme="light"]) svg [fill="#2f6bb8"] { fill: #86b6f2; } :root:not([data-theme="light"]) svg [stroke="#2f6bb8"] { stroke: #86b6f2; }
+  :root:not([data-theme="light"]) svg [fill="#2d6fb0"] { fill: #86b6f2; } :root:not([data-theme="light"]) svg [stroke="#2d6fb0"] { stroke: #86b6f2; }
+  :root:not([data-theme="light"]) svg [fill="#2c8a5c"] { fill: #74d3a2; } :root:not([data-theme="light"]) svg [stroke="#2c8a5c"] { stroke: #74d3a2; }
+  :root:not([data-theme="light"]) svg [fill="#c4452a"] { fill: #f3926f; } :root:not([data-theme="light"]) svg [stroke="#c4452a"] { stroke: #f3926f; }
+  :root:not([data-theme="light"]) svg [fill="#c0392b"] { fill: #ff8a73; } :root:not([data-theme="light"]) svg [stroke="#c0392b"] { stroke: #ff8a73; }
+  :root:not([data-theme="light"]) svg [fill="#d3302a"] { fill: #ff8a73; } :root:not([data-theme="light"]) svg [stroke="#d3302a"] { stroke: #ff8a73; }
+  :root:not([data-theme="light"]) svg [fill="#c08a0e"] { fill: #f0c95a; } :root:not([data-theme="light"]) svg [stroke="#c08a0e"] { stroke: #f0c95a; }
+  :root:not([data-theme="light"]) svg [fill="#7a7568"] { fill: #b3ad9e; } :root:not([data-theme="light"]) svg [stroke="#7a7568"] { stroke: #b3ad9e; }
+  :root:not([data-theme="light"]) svg [fill="#8a8578"] { fill: #b3ad9e; } :root:not([data-theme="light"]) svg [stroke="#8a8578"] { stroke: #b3ad9e; }
+  :root:not([data-theme="light"]) svg [fill="#9a968b"] { fill: #bdb8aa; } :root:not([data-theme="light"]) svg [stroke="#9a968b"] { stroke: #bdb8aa; }
+  :root:not([data-theme="light"]) svg [fill="#9a9486"] { fill: #bdb8aa; } :root:not([data-theme="light"]) svg [stroke="#9a9486"] { stroke: #bdb8aa; }
+}
 /* やってみたくなる しかけ */
 .ibtn.strk { filter: grayscale(1); opacity: .6; } .ibtn.strk.lit { filter: none; opacity: 1; }
 .motiv { border: 2px solid var(--warm); border-radius: 12px; padding: 8px 10px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; }
@@ -406,7 +443,7 @@ body[data-course="cp"] { --warm: #2c8a5c; --warm-soft: rgba(44, 138, 92, .15); }
 .playb { position: absolute; right: 0; top: 0; z-index: 2; }
 .fig .html { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
 svg.vf { color: var(--ink); overflow: visible; width: 100%; height: 100%; }
-svg.vf text.sl { font-family: var(--font-body); }
+svg.vf text.sl, svg text.sl { font-family: var(--font-body); stroke: none; }
 svg.kbd { width: 100%; height: 100%; max-height: 190px; }
 svg.kbd .wk { fill: #fffdf8; stroke: var(--ink); stroke-width: 1.2; }
 svg.kbd .bk { fill: #2a2b2c; stroke: var(--ink); stroke-width: 1; }
@@ -956,33 +993,33 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261031o"></script>
-<script src="js/music.js?v=20261031o"></script>
-<script src="js/core.js?v=20261031o"></script>
-<script src="js/figs.js?v=20261031o"></script>
-<script src="js/terms.js?v=20261031o"></script>
-<script src="js/terms_info.js?v=20261031o"></script>
-<script src="js/terms_pro.js?v=20261031o"></script>
-<script src="js/typenames.js?v=20261031o"></script>
-<script src="js/harmony.js?v=20261031o"></script>
-<script src="js/lessons.js?v=20261031o"></script>
-<script src="js/quiz.js?v=20261031o"></script>
-<script src="js/quiz_more.js?v=20261031o"></script>
-<script src="js/app.js?v=20261031o"></script>
-<script src="js/exam.js?v=20261031o"></script>
-<script src="js/exam2.js?v=20261031o"></script>
-<script src="js/motivate.js?v=20261031o"></script>
-<script src="js/learn.js?v=20261031o"></script>
-<script src="js/harmony_units.js?v=20261031o"></script>
-<script src="js/harmony_lab.js?v=20261031o"></script>
-<script src="js/harmony_units2.js?v=20261031o"></script>
-<script src="js/harmony_units3.js?v=20261031o"></script>
-<script src="js/harmony_units4.js?v=20261031o"></script>
-<script src="js/counterpoint.js?v=20261031o"></script>
-<script src="js/counterpoint_units.js?v=20261031o"></script>
-<script src="js/harmony_reg.js?v=20261031o"></script>
-<script src="js/quiz_more2.js?v=20261031o"></script>
-<script src="js/stage.js?v=20261031o"></script>
-<script src="js/game.js?v=20261031o"></script>
+<script src="js/config.js?v=20261031q"></script>
+<script src="js/music.js?v=20261031q"></script>
+<script src="js/core.js?v=20261031q"></script>
+<script src="js/figs.js?v=20261031q"></script>
+<script src="js/terms.js?v=20261031q"></script>
+<script src="js/terms_info.js?v=20261031q"></script>
+<script src="js/terms_pro.js?v=20261031q"></script>
+<script src="js/typenames.js?v=20261031q"></script>
+<script src="js/harmony.js?v=20261031q"></script>
+<script src="js/lessons.js?v=20261031q"></script>
+<script src="js/quiz.js?v=20261031q"></script>
+<script src="js/quiz_more.js?v=20261031q"></script>
+<script src="js/app.js?v=20261031q"></script>
+<script src="js/exam.js?v=20261031q"></script>
+<script src="js/exam2.js?v=20261031q"></script>
+<script src="js/motivate.js?v=20261031q"></script>
+<script src="js/learn.js?v=20261031q"></script>
+<script src="js/harmony_units.js?v=20261031q"></script>
+<script src="js/harmony_lab.js?v=20261031q"></script>
+<script src="js/harmony_units2.js?v=20261031q"></script>
+<script src="js/harmony_units3.js?v=20261031q"></script>
+<script src="js/harmony_units4.js?v=20261031q"></script>
+<script src="js/counterpoint.js?v=20261031q"></script>
+<script src="js/counterpoint_units.js?v=20261031q"></script>
+<script src="js/harmony_reg.js?v=20261031q"></script>
+<script src="js/quiz_more2.js?v=20261031q"></script>
+<script src="js/stage.js?v=20261031q"></script>
+<script src="js/game.js?v=20261031q"></script>
 </body>
 </html>
