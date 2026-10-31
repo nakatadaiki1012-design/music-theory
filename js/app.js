@@ -174,7 +174,7 @@
     var due = GK.dueTypes ? GK.dueTypes().length : 0, hasH = GK.HUNITS && GK.HUNITS.length, hasC = GK.CPUNITS && GK.CPUNITS.length;
     var tile = function (u) {
       var p = GK.prog(u.id), mx = GK.unitMastery ? GK.unitMastery(u.id) : { pct: 0 };
-      return '<button type="button" class="tile" data-go="#' + u.id + '"><span class="no">' + u.no + '</span><span class="tg">' + u.sym + '</span><b>' + esc(u.title) + '</b><small>' + esc(u.en) + '</small><div class="gl">' + esc(u.goal) + '</div>' +
+      return '<button type="button" class="tile' + (u === next && !p.pass ? ' nextu' : '') + '" data-go="#' + u.id + '">' + (u === next && !p.pass ? '<span class="nxb">▶ つぎは ここ</span>' : '') + '<span class="no">' + u.no + '</span><span class="tg">' + u.sym + '</span><b>' + esc(u.title) + '</b><small>' + esc(u.en) + '</small><div class="gl">' + esc(u.goal) + '</div>' +
         '<div class="pips"><i class="' + (p.seen ? 'on' : '') + '"></i><i class="' + (p.prac >= 7 ? 'on' : '') + '"></i>' + (u.grp === 'harm' ? '<i class="' + ((GK.store.get('hlabUnit', {})[u.id] || 0) > 0 ? 'on' : '') + '" title="実践"></i>' : '') + '<i class="' + (p.pass ? 'on' : '') + '"></i>' + (mx.pct ? '<span class="mpc" title="身についた度">' + mx.pct + '%</span>' : '') + '</div>' + (p.pass ? '<span class="stamp">合格</span>' : '') + '</button>';
     };
     var tool = function (go, ic, ttl, en, gl, badge) { return '<button type="button" class="tile tool" data-go="' + go + '"><span class="no">' + ic + '</span><b>' + ttl + '</b><small>' + en + '</small><div class="gl">' + gl + '</div>' + (badge ? '<span class="stamp" style="color:var(--warm);border-color:var(--warm)">' + badge + '</span>' : '') + '</button>'; };
