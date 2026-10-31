@@ -25,12 +25,15 @@
     seen[right.k] = 1;
     pool.forEach(function (w) { if (list.length < n - 1 && !seen[w.k]) { seen[w.k] = 1; list.push(w); } });
     // 正解だけ 目立って 長い（説明つき）ときは かっこ書きを はずす（「いちばん長いのが 正解」を 防ぐ）
+    var orig = right;
     if (plain(right) && list.length && list.every(plain)) {
       var mx = Math.max.apply(null, list.map(len));
       if (len(right) > mx * 1.3 + 2) { var t2 = String(right.t).replace(/（[^）]*）/g, '').replace(/[\s　]+$/, ''); if (t2.replace(/<[^>]+>/g, '').trim().length >= 2) right = { k: right.k, t: t2, w: right.w };
         var bs = String(right.t).match(/<b>[^<]*<\/b>/g);
         if (len(right) > mx * 1.3 + 2 && bs && bs.length) { var t3 = bs.join(' '); if (t3.replace(/<[^>]+>/g, '').trim().length >= 2) right = { k: right.k, t: t3, w: right.w }; } }
     }
+    var plainT = function (x) { return String(x.t).replace(/<[^>]+>/g, '').trim(); };
+    if (right !== orig && list.some(function (w) { return plainT(w) === plainT(right); })) right = orig; // 短くして 同じ 文字に なるなら もどす
     var all = shuffle([right].concat(list), R);
     return { ch: all.map(function (x) { return x.fig ? { fig: x.fig, k: x.k } : x.t; }), a: all.indexOf(right), why: all.map(function (x) { return x.w || ''; }) };
   }
