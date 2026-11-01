@@ -167,7 +167,7 @@
     return Math.max(0, G.left);
   }
   function tick() {
-    if (!G || G.dead) return;
+    if (!G || G.dead || G.paused) return;
     var t = now(), gq = $('#gq', G.box);
     if (!gq) { stopGame(); return; }
     if (t < G.startAt) {
@@ -234,7 +234,23 @@
         cb.innerHTML = G.combo >= 3 ? '🔥 <b>' + G.combo + '</b> コンボ' + (mult(G.combo) > 1 ? ' ×' + mult(G.combo) : '') : '';
         cb.classList.toggle('hot', G.combo >= 10); bump(cb);
         G.hooks.answer && G.hooks.answer(G);
-        setTimeout(function () { if (G && !G.over && !G.dead) { G.i++; showQ(); } }, ok ? 380 : 1100);
+        if (ok) { setTimeout(function () { if (G && !G.over && !G.dead) { G.i++; showQ(); } }, 380); return; }
+        // まちがえた 直後に 解説を すこし 見せる（1 人で 遊ぶ ときは その間 時計を 止める。タップで すぐ 次へ）
+        var solo = G.mode !== 'battle', g0 = G, went = false, pAt = now();
+        if (solo) G.paused = true;
+        var ans = q.ch[q.a], ansT = ans && ans.fig ? (q.a + 1) + ' 番' : String(ans);
+        var ov = document.createElement('div'); ov.className = 'gex';
+        ov.innerHTML = '<b>✕ 正解は <span>' + ansT + '</span></b>' + (q.ex ? '<p>' + q.ex + '</p>' : '') + '<div class="gexf"><small>' + (solo ? '⏸ 時計 ストップ中' : '') + '</small><button type="button" class="btn main sm" data-qa="next">次へ ▶</button></div><i class="gexbar" style="animation-duration:' + (solo ? 3200 : 1700) + 'ms"></i>';
+        var go = function () {
+          if (went) return; went = true; clearTimeout(tmo); ov.remove();
+          if (g0 !== G || G.dead) return;
+          if (solo) { var d = now() - pAt; G.startAt += d; G.last = now(); G.paused = false; }
+          if (!G.over) { G.i++; showQ(); }
+        };
+        ov.addEventListener('click', go); G.qel.addEventListener('click', function (e) { if (e.target.closest('.ch button')) go(); });
+        G.qel.appendChild(ov);
+        var tmo = setTimeout(go, solo ? 3200 : 1700);
+        G.skipEx = go;
       }
     });
   }

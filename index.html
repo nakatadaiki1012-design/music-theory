@@ -1030,6 +1030,16 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 .hfs i { font-style: normal; font-size: 26px; } .hfs b { font-size: 16px; color: var(--accent); } .hfs span { font-size: 13.5px; line-height: 1.55; color: var(--ink); }
 .hfs:not(:last-child)::after { content: '▶'; position: absolute; right: -11px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); }
 @media (max-width: 640px) { .hfs { flex-basis: 100%; max-width: none; flex-direction: row; align-items: center; padding: 8px 10px; } .hfs i { font-size: 20px; } .hfs b { min-width: 7.5em; font-size: 14px; } .hfs:not(:last-child)::after { content: '▼'; right: auto; left: 22px; top: auto; bottom: -13px; transform: none; } }
+
+/* ゲーム：まちがえた 直後の 解説 */
+.arena #gq > .qz { position: relative; }
+.gex { position: absolute; left: 8px; right: 8px; top: 30px; z-index: 8; background: var(--panel); border: 2.5px solid var(--ng); border-radius: 14px; padding: 12px 14px 14px; box-shadow: 0 12px 30px rgba(0,0,0,.22); animation: gexin .18s ease-out; cursor: pointer; overflow: hidden; max-height: 70%; display: flex; flex-direction: column; gap: 6px; }
+@keyframes gexin { from { transform: translateY(-12px); opacity: 0; } }
+.gex > b { font-size: 17px; color: var(--ng); } .gex > b span { color: var(--ink); background: color-mix(in srgb, var(--ok) 16%, transparent); padding: 1px 8px; border-radius: 6px; }
+.gex p { margin: 0; font-size: 14px; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.gexf { display: flex; align-items: center; justify-content: space-between; gap: 8px; } .gexf small { color: var(--muted); font-size: 12px; }
+.gexbar { position: absolute; left: 0; bottom: 0; height: 4px; width: 100%; background: var(--ng); transform-origin: left; animation: gexbar linear forwards; }
+@keyframes gexbar { to { transform: scaleX(0); } }
 </style>
 </head>
 <body>
@@ -1053,33 +1063,33 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261101d"></script>
-<script src="js/music.js?v=20261101d"></script>
-<script src="js/core.js?v=20261101d"></script>
-<script src="js/figs.js?v=20261101d"></script>
-<script src="js/terms.js?v=20261101d"></script>
-<script src="js/terms_info.js?v=20261101d"></script>
-<script src="js/terms_pro.js?v=20261101d"></script>
-<script src="js/typenames.js?v=20261101d"></script>
-<script src="js/harmony.js?v=20261101d"></script>
-<script src="js/lessons.js?v=20261101d"></script>
-<script src="js/quiz.js?v=20261101d"></script>
-<script src="js/quiz_more.js?v=20261101d"></script>
-<script src="js/app.js?v=20261101d"></script>
-<script src="js/exam.js?v=20261101d"></script>
-<script src="js/exam2.js?v=20261101d"></script>
-<script src="js/motivate.js?v=20261101d"></script>
-<script src="js/learn.js?v=20261101d"></script>
-<script src="js/harmony_units.js?v=20261101d"></script>
-<script src="js/harmony_lab.js?v=20261101d"></script>
-<script src="js/harmony_units2.js?v=20261101d"></script>
-<script src="js/harmony_units3.js?v=20261101d"></script>
-<script src="js/harmony_units4.js?v=20261101d"></script>
-<script src="js/counterpoint.js?v=20261101d"></script>
-<script src="js/counterpoint_units.js?v=20261101d"></script>
-<script src="js/harmony_reg.js?v=20261101d"></script>
-<script src="js/quiz_more2.js?v=20261101d"></script>
-<script src="js/stage.js?v=20261101d"></script>
-<script src="js/game.js?v=20261101d"></script>
+<script src="js/config.js?v=20261101e"></script>
+<script src="js/music.js?v=20261101e"></script>
+<script src="js/core.js?v=20261101e"></script>
+<script src="js/figs.js?v=20261101e"></script>
+<script src="js/terms.js?v=20261101e"></script>
+<script src="js/terms_info.js?v=20261101e"></script>
+<script src="js/terms_pro.js?v=20261101e"></script>
+<script src="js/typenames.js?v=20261101e"></script>
+<script src="js/harmony.js?v=20261101e"></script>
+<script src="js/lessons.js?v=20261101e"></script>
+<script src="js/quiz.js?v=20261101e"></script>
+<script src="js/quiz_more.js?v=20261101e"></script>
+<script src="js/app.js?v=20261101e"></script>
+<script src="js/exam.js?v=20261101e"></script>
+<script src="js/exam2.js?v=20261101e"></script>
+<script src="js/motivate.js?v=20261101e"></script>
+<script src="js/learn.js?v=20261101e"></script>
+<script src="js/harmony_units.js?v=20261101e"></script>
+<script src="js/harmony_lab.js?v=20261101e"></script>
+<script src="js/harmony_units2.js?v=20261101e"></script>
+<script src="js/harmony_units3.js?v=20261101e"></script>
+<script src="js/harmony_units4.js?v=20261101e"></script>
+<script src="js/counterpoint.js?v=20261101e"></script>
+<script src="js/counterpoint_units.js?v=20261101e"></script>
+<script src="js/harmony_reg.js?v=20261101e"></script>
+<script src="js/quiz_more2.js?v=20261101e"></script>
+<script src="js/stage.js?v=20261101e"></script>
+<script src="js/game.js?v=20261101e"></script>
 </body>
 </html>
