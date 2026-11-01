@@ -56,7 +56,7 @@
     (function nextC() {
       var x = cq.shift(); if (!x) { cbusy = false; return; }
       cbusy = true;
-      var d = document.createElement('div'); d.className = 'celebrate';
+      var d = document.createElement('div'); d.className = 'celebrate' + (document.querySelector('#gq .qz, .qz .ch') ? ' mini' : '');   // 問題を 解いている ときは 上の すみに 小さく（問題を かくさない）
       d.innerHTML = '<small>' + GK.esc(x[0]) + '</small><b>' + GK.esc(x[1]) + '</b>';
       document.body.appendChild(d); GK.fx('fanfare');
       setTimeout(function () { d.remove(); nextC(); }, 2000);
