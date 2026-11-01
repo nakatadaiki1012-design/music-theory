@@ -19,8 +19,8 @@
      ========================================================= */
   GK.drawQ = function (el, q, o) {
     o = o || {};
-    el.innerHTML = '<div class="qtop">' + (o.top || '') + '<span class="stars">' + '★★★'.slice(0, q.st) + '<span style="opacity:.25">' + '★★★'.slice(q.st) + '</span></span><span class="cat">' + esc(GK.UNIT[q.u].title) + '</span><span class="r">' + (q.play && !q.ear ? '<button type="button" class="btn sm" data-qa="play">🔊</button>' : '') + '</span></div>' +
-      '<p class="qq"><span>' + GK.symfix(q.q) + '</span></p><div class="qfig"></div><div class="ch n' + q.ch.length + '"></div><div class="fb" hidden></div>';
+    el.innerHTML = '<div class="qtop">' + (o.top || '') + '<span class="stars">' + '★★★'.slice(0, q.st) + '<span style="opacity:.25">' + '★★★'.slice(q.st) + '</span></span><span class="cat">' + esc(GK.UNIT[q.u].title) + '</span><span class="r">' + (o.hint ? '<button type="button" class="qhb" data-qa="hint" title="ヒント（H キー）">' + (o.hintLabel || '💡 ヒント') + '</button>' : '') + (q.play && !q.ear ? '<button type="button" class="btn sm" data-qa="play">🔊</button>' : '') + '</span></div>' +
+      '<p class="qq"><span>' + GK.symfix(q.q) + '</span></p>' + (o.hint ? '<div class="qhint" hidden></div>' : '') + '<div class="qfig"></div><div class="ch n' + q.ch.length + '"></div><div class="fb" hidden></div>';
     var fig = $('.qfig', el), ch = $('.ch', el);
     el.q = q;
     el.classList.toggle('nofig', !q.fig && !q.ear);
@@ -44,7 +44,8 @@
       var a = e.target.closest('[data-qa]');
       if (a && a.dataset.qa === 'play') { GK.playQ(q); return; }
       if (a && a.dataset.qa === 'next') { o.next && o.next(); return; }
-      var b = e.target.closest('.ch button'); if (!b || done) return;
+      if (a && a.dataset.qa === 'hint') { useHint(); return; }
+      var b = e.target.closest('.ch button'); if (!b || done || b.classList.contains('cut')) return;
       pick(+b.dataset.i);
     };
     function pick(i) {
@@ -56,7 +57,26 @@
       if (!o.noFb) GK.showFb(el, q, ok, Object.assign({}, o, { pick: i }));
       o.onPick && o.onPick(i, ok);
     }
-    el.pick = function (i) { if (i >= 0 && i < q.ch.length) pick(i); };
+    el.pick = function (i) { if (i >= 0 && i < q.ch.length && !$$('.ch button', el)[i].classList.contains('cut')) pick(i); };
+    // 💡 ヒント：1 回め＝考える ヒント、2 回め＝2 択に しぼる（4 択の とき）
+    var hl = 0;
+    function useHint() {
+      if (done || !o.hint) return;
+      var hb = $('[data-qa="hint"]', el), can2 = q.ch.length >= 3;
+      if (hl === 0) {
+        hl = 1; var hx = $('.qhint', el); hx.hidden = false; hx.innerHTML = '💡 ' + GK.symfix(GK.hintOf(q));
+        if (hb) { if (can2) hb.innerHTML = o.hint2Label || '✂️ 2択に'; else { hb.disabled = true; hb.innerHTML = '💡 ヒント中'; } }
+      } else if (hl === 1 && can2) {
+        hl = 2; var R2 = GK.rng(Math.floor(Math.random() * 1e9)), wr = []; q.ch.forEach(function (_, j) { if (j !== q.a) wr.push(j); });
+        var keep = wr[Math.floor(R2() * wr.length)];
+        $$('.ch button', el).forEach(function (b, j) { if (j !== q.a && j !== keep) { b.classList.add('cut'); b.disabled = true; } });
+        if (hb) { hb.disabled = true; hb.innerHTML = '✂️ 2択'; }
+      } else return;
+      GK.fx && GK.fx('tap');
+      o.onHint && o.onHint(hl);
+    }
+    el.hint = useHint;
+    el.hintLv = function () { return hl; };
     el.isDone = function () { return done; };
     return el;
   };
@@ -81,6 +101,7 @@
     GK.onKey(function (e) {
       var el = get(); if (!el) return;
       if (/^[1-4]$/.test(e.key) && el.pick && !el.isDone()) { el.pick(+e.key - 1); e.preventDefault(); }
+      else if ((e.key === 'h' || e.key === 'H') && el.hint && el.isDone && !el.isDone()) { el.hint(); e.preventDefault(); }
       else if ((e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') && el.isDone && el.isDone()) { var n = $('[data-qa="next"]', el); if (n) { n.click(); e.preventDefault(); } }
     });
   }
@@ -119,6 +140,7 @@
     function show() {
       var q = o.qs[i];
       GK.drawQ(el, q, {
+        hint: o.mode !== 'test',
         top: prog() + (q.retry ? '<span class="cat" style="color:var(--warm);border-color:var(--warm)">🔁 もう一度</span>' : '') + (q.mix ? '<span class="cat" style="color:var(--blue);border-color:var(--blue)">🔁 前に 習った ところ</span>' : ''), noEx: o.mode === 'test',
         onPick: function (k, ok) {
           res.push({ q: q, pick: k, ok: ok });

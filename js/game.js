@@ -197,8 +197,11 @@
     gq.innerHTML = '<div class="qz" style="padding:6px 0 0"></div>';
     G.qel = gq.firstChild;
     G.qstart = now(); G.qlim = (6 + (q.st || 1) * 3 + (q.fmt === 'tf' ? -2 : 0)) * 1000;
+    G.qh = 0;
     GK.drawQ(G.qel, q, {
       top: '<span>第 ' + (G.i + 1) + ' 問</span>', noFb: true,
+      hint: G.mode !== 'battle', hintLabel: '💡 ヒント<small>点½</small>', hint2Label: '✂️ 2択に<small>点¼</small>',
+      onHint: function (lv) { G.qh = lv; G.hintsUsed = (G.hintsUsed || 0) + 1; },
       onPick: function (k, ok) {
         if (G.over) return;
         G.res.push({ q: q, pick: k, ok: ok });
@@ -207,8 +210,8 @@
         var pop = '';
         if (ok) {
           G.combo++; G.ok++; G.maxCombo = Math.max(G.maxCombo, G.combo);
-          var ff = GK.STAGE.ffOn(G), pts = Math.round(q.st * 30 * mult(G.combo) * (ff ? 2 : 1));
-          G.score += pts; pop = '+' + pts + ' 点' + (ff ? '（ff ×2）' : '');
+          var ff = GK.STAGE.ffOn(G), hk = G.qh === 2 ? 0.25 : G.qh === 1 ? 0.5 : 1, pts = Math.round(q.st * 30 * mult(G.combo) * (ff ? 2 : 1) * hk);
+          G.score += pts; pop = '+' + pts + ' 点' + (ff ? '（ff ×2）' : '') + (hk < 1 ? '（💡 ×' + (hk === 0.5 ? '½' : '¼') + '）' : '');
           if (G.mode !== 'battle' && ruleOf(G.cfg) === 'sprint' && G.ok >= SPRINT) { G.forceEnd = true; pop += '　🏁 ゴール！'; }
           if (G.mode !== 'battle' && ruleOf(G.cfg) === 'time') {
             var b = bonusSec(q.st, G.ok - 1) + (G.combo % 10 === 0 ? COMBO_BONUS : 0);

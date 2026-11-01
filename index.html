@@ -1051,6 +1051,15 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 @keyframes celmini { from { opacity: 0; transform: translateY(-10px); } }
 .trn .gbanner.venue { white-space: nowrap; width: max-content; }
 @media (max-width: 640px) { .celebrate.mini { top: 52px; right: 8px; padding: 6px 10px; } .celebrate.mini b { font-size: 15px; } }
+
+/* 💡 ヒント */
+.qhb { border: 1.5px solid #e8b73a; background: color-mix(in srgb, #e8b73a 14%, var(--panel)); color: var(--ink); border-radius: 999px; padding: 3px 12px; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+.qhb small { font-size: 10.5px; color: var(--muted); font-weight: 700; }
+.qhb:hover:not(:disabled) { background: color-mix(in srgb, #e8b73a 28%, var(--panel)); } .qhb:disabled { opacity: .55; cursor: default; }
+.qhint { margin: 2px auto 6px; max-width: 760px; background: color-mix(in srgb, #e8b73a 16%, var(--panel)); border: 1.5px solid #e8b73a; border-radius: 12px; padding: 7px 12px; font-size: 14px; line-height: 1.6; animation: gexin .2s ease-out; }
+.qz .ch button.cut { opacity: .22 !important; filter: grayscale(1); pointer-events: none; }
+.arena .qhb { background: rgba(232,183,58,.18); }
+@media (max-width: 640px) { .qhb { padding: 3px 9px; font-size: 12px; } .qhint { font-size: 13px; padding: 6px 10px; } }
 </style>
 </head>
 <body>
@@ -1074,33 +1083,34 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261101g"></script>
-<script src="js/music.js?v=20261101g"></script>
-<script src="js/core.js?v=20261101g"></script>
-<script src="js/figs.js?v=20261101g"></script>
-<script src="js/terms.js?v=20261101g"></script>
-<script src="js/terms_info.js?v=20261101g"></script>
-<script src="js/terms_pro.js?v=20261101g"></script>
-<script src="js/typenames.js?v=20261101g"></script>
-<script src="js/harmony.js?v=20261101g"></script>
-<script src="js/lessons.js?v=20261101g"></script>
-<script src="js/quiz.js?v=20261101g"></script>
-<script src="js/quiz_more.js?v=20261101g"></script>
-<script src="js/app.js?v=20261101g"></script>
-<script src="js/exam.js?v=20261101g"></script>
-<script src="js/exam2.js?v=20261101g"></script>
-<script src="js/motivate.js?v=20261101g"></script>
-<script src="js/learn.js?v=20261101g"></script>
-<script src="js/harmony_units.js?v=20261101g"></script>
-<script src="js/harmony_lab.js?v=20261101g"></script>
-<script src="js/harmony_units2.js?v=20261101g"></script>
-<script src="js/harmony_units3.js?v=20261101g"></script>
-<script src="js/harmony_units4.js?v=20261101g"></script>
-<script src="js/counterpoint.js?v=20261101g"></script>
-<script src="js/counterpoint_units.js?v=20261101g"></script>
-<script src="js/harmony_reg.js?v=20261101g"></script>
-<script src="js/quiz_more2.js?v=20261101g"></script>
-<script src="js/stage.js?v=20261101g"></script>
-<script src="js/game.js?v=20261101g"></script>
+<script src="js/config.js?v=20261101i"></script>
+<script src="js/music.js?v=20261101i"></script>
+<script src="js/core.js?v=20261101i"></script>
+<script src="js/figs.js?v=20261101i"></script>
+<script src="js/terms.js?v=20261101i"></script>
+<script src="js/terms_info.js?v=20261101i"></script>
+<script src="js/terms_pro.js?v=20261101i"></script>
+<script src="js/typenames.js?v=20261101i"></script>
+<script src="js/harmony.js?v=20261101i"></script>
+<script src="js/lessons.js?v=20261101i"></script>
+<script src="js/quiz.js?v=20261101i"></script>
+<script src="js/quiz_more.js?v=20261101i"></script>
+<script src="js/app.js?v=20261101i"></script>
+<script src="js/exam.js?v=20261101i"></script>
+<script src="js/exam2.js?v=20261101i"></script>
+<script src="js/motivate.js?v=20261101i"></script>
+<script src="js/learn.js?v=20261101i"></script>
+<script src="js/harmony_units.js?v=20261101i"></script>
+<script src="js/harmony_lab.js?v=20261101i"></script>
+<script src="js/harmony_units2.js?v=20261101i"></script>
+<script src="js/harmony_units3.js?v=20261101i"></script>
+<script src="js/harmony_units4.js?v=20261101i"></script>
+<script src="js/counterpoint.js?v=20261101i"></script>
+<script src="js/counterpoint_units.js?v=20261101i"></script>
+<script src="js/harmony_reg.js?v=20261101i"></script>
+<script src="js/quiz_more2.js?v=20261101i"></script>
+<script src="js/stage.js?v=20261101i"></script>
+<script src="js/hints.js?v=20261101i"></script>
+<script src="js/game.js?v=20261101i"></script>
 </body>
 </html>
