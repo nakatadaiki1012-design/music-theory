@@ -158,7 +158,7 @@
       });
       if (!best) continue;
       var vs = [pc.v0, best], opts = ['バスと 反対向きに 動く', 'バスと 同じ向きに 動く', '共通音を 保って 動かない', 'ソプラノ だけ 動く'], m = mc(R, tx(opts[0]), opts.map(function (x) { return tx(x); }));
-      return { q: kname(key) + '。<b>' + H.label(chs[0]) + ' → ' + H.label(chs[1]) + '</b>。共通音が ない とき、上の 3 声（S・A・T）は バスに 対して どう 動く？', fig: fig(key, false, chs, vs, { zoom: 2.4 }), ch: m.ch, a: m.a, ex: H.label(chs[0]) + ' と ' + H.label(chs[1]) + ' に 共通音は ない。こんな とき 上の 3 声を <b>バスと 反対の 向き</b> に 動かすと、連続5度・8度を さけられて きれいに つながる。', exFig: fig(key, false, chs, vs, { marks: [], zoom: 2.4 }) };
+      return { q: kname(key) + '。<b>' + H.label(chs[0]) + ' → ' + H.label(chs[1]) + '</b>。共通音が ない とき、上の 3 声（S・A・T）は バスに 対して どう 動く？', fig: fig(key, false, chs, vs, { zoom: 2.4 }), ch: m.ch, a: m.a, ex: H.label(chs[0]) + ' と ' + H.label(chs[1]) + ' に 共通音は ない。こんな とき 上の 3 声を <b>バスと 反対の 向き</b> に 動かすと、連続5度・8度を さけられて きれいに つながる。', exFig: fig(key, false, chs, vs, { marks: [], zoom: 2.4, move: true }) };
     }
     throw new Error('contraryQ');
   });
@@ -225,10 +225,10 @@
     {
       id: 'h03', title: '和音の 連結（基本）', en: 'Connecting Chords', sym: '⌒', goal: '共通音を 保ち、なめらかに 連結できる',
       cards: [
-        { k: '✨ ひとことで言うと', h: '和音を つなぐ 2 つの 方法', b: '<b>① 共通音が ある</b> → その音は 同じ声部で <b>保持</b>、ほかは 近い音へ。<b>② 共通音が ない</b> → 上の 3 声を <b>バスと 反対の向き</b> へ 動かす。', fig: row2(fig(0, false, [Ch(1), Ch(4)], vv('C5 G4 E4 C3', 'C5 A4 F4 F3'), { col: [[gold, null, null, null], [gold, null, null, null]], zoom: 2.2 }), fig(0, false, [Ch(4), Ch(5)], vv('C5 A4 F4 F3', 'B4 G4 D4 G3'), { zoom: 2.2 }), '共通音あり（Ⅰ→Ⅳ）', '共通音なし（Ⅳ→Ⅴ）') },
-        { k: 'ポイント 1', h: '共通音は そのまま 保つ', b: 'Ⅰ（ド・ミ・ソ）と Ⅳ（ファ・ラ・ド）の 共通音は <b>ド</b>。ドは 同じ声部で 保ち、ほかの声部は <em>いちばん 近い音</em> へ。バスは 大きく 動いても よい。', fig: fig(0, false, [Ch(1), Ch(4)], vv('C5 G4 E4 C3', 'C5 A4 F4 F3'), { col: [[gold, null, null, null], [gold, null, null, null]], zoom: 2.4, subs: ['', 'ドを保持'] }) },
-        { k: 'ポイント 2', h: '共通音が ない：バスと 反対へ', b: 'Ⅳ（ファ・ラ・ド）と Ⅴ（ソ・シ・レ）には 共通音が ない。バスが <b>上へ</b> 行くなら、上の 3 声は <b>下へ</b>。同じ向きだと 連続5度・8度に なりやすい。', fig: fig(0, false, [Ch(4), Ch(5)], vv('C5 A4 F4 F3', 'B4 G4 D4 G3'), { zoom: 2.4, subs: ['', '上↓ バス↑'] }) },
-        { k: 'ポイント 3', h: '最短進行：なるべく 近い音へ', b: '各声部は <b>近い音へ</b>（順次進行か 小さな跳躍）。バス以外は 大きく 跳ばない。<em>跳躍は 4〜5度まで</em> を めやすに。同じ音を 保つのも 最短進行。', fig: fig(0, false, [Ch(1), Ch(5)], vv('C5 G4 E4 C3', 'B4 G4 D4 G2'), { col: [[null, gold, null, null], [null, gold, null, null]], zoom: 2.4, subs: ['', 'ソを保持'] }) },
+        { k: '✨ ひとことで言うと', h: '和音を つなぐ 2 つの 方法', b: '<b>① 共通音が ある</b> → その音は 同じ声部で <b>保持</b>、ほかは 近い音へ。<b>② 共通音が ない</b> → 上の 3 声を <b>バスと 反対の向き</b> へ 動かす。', fig: row2(fig(0, false, [Ch(1), Ch(4)], vv('C5 G4 E4 C3', 'C5 A4 F4 F3'), { col: [[gold, null, null, null], [gold, null, null, null]], zoom: 2.2, move: true }), fig(0, false, [Ch(4), Ch(5)], vv('C5 A4 F4 F3', 'B4 G4 D4 G3'), { zoom: 2.2, move: true }), '共通音あり（Ⅰ→Ⅳ）：金の 点線 ＝ そのまま', '共通音なし（Ⅳ→Ⅴ）：上 3 声 ↓、バス ↑') },
+        { k: 'ポイント 1', h: '共通音は そのまま 保つ', b: 'Ⅰ（ド・ミ・ソ）と Ⅳ（ファ・ラ・ド）の 共通音は <b>ド</b>。ドは 同じ声部で 保ち、ほかの声部は <em>いちばん 近い音</em> へ。バスは 大きく 動いても よい。', fig: fig(0, false, [Ch(1), Ch(4)], vv('C5 G4 E4 C3', 'C5 A4 F4 F3'), { move: true, col: [[gold, null, null, null], [gold, null, null, null]], zoom: 2.4, subs: ['', 'ドを保持'] }) },
+        { k: 'ポイント 2', h: '共通音が ない：バスと 反対へ', b: 'Ⅳ（ファ・ラ・ド）と Ⅴ（ソ・シ・レ）には 共通音が ない。バスが <b>上へ</b> 行くなら、上の 3 声は <b>下へ</b>。同じ向きだと 連続5度・8度に なりやすい。', fig: fig(0, false, [Ch(4), Ch(5)], vv('C5 A4 F4 F3', 'B4 G4 D4 G3'), { zoom: 2.4, subs: ['', '上↓ バス↑'], move: true }) },
+        { k: 'ポイント 3', h: '最短進行：なるべく 近い音へ', b: '各声部は <b>近い音へ</b>（順次進行か 小さな跳躍）。バス以外は 大きく 跳ばない。<em>跳躍は 4〜5度まで</em> を めやすに。同じ音を 保つのも 最短進行。', fig: fig(0, false, [Ch(1), Ch(5)], vv('C5 G4 E4 C3', 'B4 G4 D4 G2'), { move: true, col: [[null, gold, null, null], [null, gold, null, null]], zoom: 2.4, subs: ['', 'ソを保持'] }) },
         MEMO('連結の 合言葉', '連結は この 2 つだけ。', [['共通音は「そのまま」', 'Ⅰ→Ⅳ は ド、Ⅰ→Ⅴ は ソ。同じ声部で 動かない'], ['共通音が なければ「反対に」', 'Ⅳ→Ⅴ・Ⅴ→Ⅵ は バスが 上なら 上3声は 下'], ['動くなら「いちばん 近い音」', '遠くへ 跳ぶと 歌いにくく、禁則も おこりやすい'], ['バスは 自由に 大きく', '根音の 土台なので 跳んで よい']])
       ],
       sum: ['共通音は 同じ声部で 保つ', '共通音が ない ときは 上の 3 声を バスと 反対に', '動く声部は いちばん 近い音へ（最短進行）'],

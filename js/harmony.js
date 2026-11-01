@@ -76,7 +76,9 @@
     var add = function (kind, ng, vs, msg) { out.push({ i: i, j: i + 1, kind: kind, ng: ng, v: vs, msg: msg }); };
     var sg = function (x) { return x > 0 ? 1 : x < 0 ? -1 : 0; };
     // 連続 5 度・8 度
+    var nul = function (x) { return x == null; };
     for (var a = 0; a < 4; a++) for (var b = a + 1; b < 4; b++) {
+      if (nul(v0[a]) || nul(v0[b]) || nul(v1[a]) || nul(v1[b])) continue;
       var d0 = Math.abs(mid(v0[a]) - mid(v0[b])), d1 = Math.abs(mid(v1[a]) - mid(v1[b]));
       var c0 = d0 % 12, c1 = d1 % 12, mv = sg(mid(v1[a]) - mid(v0[a])), mw = sg(mid(v1[b]) - mid(v0[b]));
       if (mv && mw && mv === mw) {
@@ -87,7 +89,7 @@
     }
     // 旋律の 動き
     for (var j = 0; j < 4; j++) {
-      var x = v0[j], y = v1[j], dm = mid(y) - mid(x);
+      var x = v0[j], y = v1[j]; if (nul(x) || nul(y)) continue; var dm = mid(y) - mid(x);
       if (Math.abs(dm) > 12) add('leap', true, [j], H.VNAME[j] + 'の 跳躍が 1 オクターブを こえています');
       else if (dm) {
         var lw = dm > 0 ? x : y, up = dm > 0 ? y : x, iv = M.interval(lw, up);
@@ -96,13 +98,14 @@
     }
     // 隣りあう声部の ぶつかり（オーバーラップ）
     for (var k = 0; k < 3; k++) {
+      if (nul(v1[k]) || nul(v0[k + 1]) || nul(v1[k + 1]) || nul(v0[k])) continue;
       if (mid(v1[k]) < mid(v0[k + 1]) || mid(v1[k + 1]) > mid(v0[k])) add('overlap', false, [k, k + 1], H.VNAME[k] + 'と' + H.VNAME[k + 1] + 'が 前の 位置を こえて います（声部の 重なり）');
     }
     // 導音の 解決（V・Ⅶ の あと）
     if (ch0.d === 5 || ch0.d === 7) {
       var p1 = H.pcs(key, minor, ch1), hasTon = p1.some(function (c) { return same(c, ton); });
       v0.forEach(function (p, j) {
-        if (!same(p, lt) || !hasTon) return;
+        if (nul(p) || nul(v1[j]) || !same(p, lt) || !hasTon) return;
         var up1 = mid(v1[j]) - mid(p) === 1 && same(v1[j], ton);
         if (up1) return;
         var okInner = (j === 1 || j === 2) && ch1.d === 1 && !ch1.sev && [3, 4].indexOf(mid(p) - mid(v1[j])) >= 0;
@@ -112,13 +115,13 @@
     // 第 9 音の 解決（2度 下へ）
     if (ch0.nine) {
       var n9 = H.pcs(key, minor, ch0)[4];
-      v0.forEach(function (p, j) { if (!same(p, n9)) return; var d9 = mid(p) - mid(v1[j]); if (!(d9 === 1 || d9 === 2)) add('nine', true, [j], H.VNAME[j] + 'の 第9音（' + N(p) + '）は 2度 下へ 進みます'); });
+      v0.forEach(function (p, j) { if (nul(p) || nul(v1[j]) || !same(p, n9)) return; var d9 = mid(p) - mid(v1[j]); if (!(d9 === 1 || d9 === 2)) add('nine', true, [j], H.VNAME[j] + 'の 第9音（' + N(p) + '）は 2度 下へ 進みます'); });
     }
     // 第 7 音の 解決
     if (ch0.sev) {
       var s7 = H.pcs(key, minor, ch0)[3];
       v0.forEach(function (p, j) {
-        if (!same(p, s7)) return;
+        if (nul(p) || nul(v1[j]) || !same(p, s7)) return;
         var d = mid(p) - mid(v1[j]);
         if (!(d === 1 || d === 2)) add('sev', true, [j], H.VNAME[j] + 'の 第7音（' + N(p) + '）は 2度 下へ 進みます');
       });
@@ -275,14 +278,28 @@
     var by = Math.max(top + gap + 40 + 52, botY + 20), xs = sn[0].map(function (s) { return s.getAbsoluteX() + (s.getGlyphWidth ? s.getGlyphWidth() / 2 : 6); });
     chords.forEach(function (c, i) { if (c.lab) M.svgText(svg, xs[i], by, c.lab, { size: 17, c: c.lc || undefined, font: 'serif' }); if (c.sub) M.svgText(svg, xs[i], by + 17, c.sub, { size: 10, c: '#7a7568', fixed: true }); });
     // まちがいの 印（線で むすぶ）
+    var placed = [];
     (spec.marks || []).forEach(function (mk) {
       (mk.vs || []).forEach(function (v) {
         var a = sn[v][mk.i], b = sn[v][mk.j]; if (!a || !b || !a.getYs || !b.getYs || a instanceof V.GhostNote || b instanceof V.GhostNote) return;
         var ya = a.getYs()[0], yb = b.getYs()[0];
         M.svgEl(svg, 'line', { x1: a.getAbsoluteX() + 6, y1: ya, x2: b.getAbsoluteX() + 6, y2: yb, stroke: mk.c || '#d3302a', 'stroke-width': 2, 'stroke-dasharray': '4 3', opacity: .85 });
       });
-      if (mk.t) { var m0 = (xs[mk.i] + xs[mk.j]) / 2; M.svgText(svg, m0, top + 30 - 14, mk.t, { size: 12, c: mk.c || '#d3302a' }); }
+      if (mk.t) {   // 文字は 重ならない ように 段を ずらす（同じ 文字は 1 回だけ）
+        var m0 = (xs[mk.i] + xs[mk.j]) / 2, lw = mk.t.length * 12 + 6, row = 0;
+        if (placed.some(function (q) { return q.t === mk.t && Math.abs(q.x - m0) < 1; })) return;
+        while (placed.some(function (q) { return q.row === row && Math.abs(q.x - m0) < (q.w + lw) / 2; })) row++;
+        placed.push({ x: m0, w: lw, row: row, t: mk.t });
+        M.svgText(svg, m0, top + 16 - row * 15, mk.t, { size: 12, c: mk.c || '#d3302a' });
+      }
     });
+    // 声部の 動き（move）：となりの 和音へ 線と 矢印。動かない 音（共通音）は 金色の 点線
+    if (spec.move) for (var mi = 0; mi + 1 < n; mi++) for (var mj = 0; mj < 4; mj++) {
+      var na = sn[mj][mi], nb = sn[mj][mi + 1]; if (!na || !nb || !na.getYs || !nb.getYs || na instanceof V.GhostNote || nb instanceof V.GhostNote) continue;
+      var xa = na.getAbsoluteX() + 13, ya = na.getYs()[0], xb = nb.getAbsoluteX() - 1, yb = nb.getYs()[0], hold = Math.abs(ya - yb) < 0.5, mc = hold ? '#c99a1e' : H.VCOL[mj];
+      M.svgEl(svg, 'line', { x1: xa, y1: ya, x2: xb, y2: yb, stroke: mc, 'stroke-width': hold ? 2.2 : 1.6, 'stroke-dasharray': hold ? '3 3' : '', opacity: .8 });
+      if (!hold) { var ux = xb - xa, uy = yb - ya, L = Math.sqrt(ux * ux + uy * uy) || 1; ux /= L; uy /= L; M.svgEl(svg, 'path', { d: 'M' + xb + ' ' + yb + ' L' + (xb - ux * 7 - uy * 3.5) + ' ' + (yb - uy * 7 + ux * 3.5) + ' L' + (xb - ux * 7 + uy * 3.5) + ' ' + (yb - uy * 7 - ux * 3.5) + 'Z', fill: mc, opacity: .9 }); }
+    }
     (spec.names ? sn : []).forEach(function (arr, j) { var s0 = arr[0]; if (s0 && !(s0 instanceof V.GhostNote)) M.svgText(svg, s0.getAbsoluteX() - 15, s0.getYs()[0] + 4, 'SATB'.charAt(j), { size: 11, c: H.VCOL[j], anchor: 'end', fixed: true }); });
     if (!spec.hideq) chords.forEach(function (c, i) { (c.q || []).forEach(function (j) { M.svgText(svg, xs[i], top + 10 + (j < 2 ? 0 : gap - 2) + (j % 2) * 0, 'SATB'.charAt(j) + '？', { size: 15, c: H.VCOL[j] }); }); });
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + Hh); svg.removeAttribute('width'); svg.removeAttribute('height'); svg.setAttribute('class', 'vf');
@@ -305,7 +322,7 @@
   // 図の 指定：o = { color, names, zoom, sp, marks, col: [[色…]…], bad: [[声部…]…], q: [[声部…]…], nolab }
   H.fig = function (key, minor, chs, vs, o) {
     o = o || {};
-    return { c: 'satb', a: { key: key, minor: minor, color: o.color, names: o.names, zoom: o.zoom, sp: o.sp, marks: o.marks, chords: chs.map(function (c, i) { return { v: vs[i], lab: o.nolab ? null : (o.labs ? o.labs[i] : H.label(c)), sub: o.subs && o.subs[i], col: o.col && o.col[i], bad: o.bad && o.bad[i], q: o.q && o.q[i] }; }) } };
+    return { c: 'satb', a: { key: key, minor: minor, color: o.color, names: o.names, move: o.move, zoom: o.zoom, sp: o.sp, marks: o.marks, chords: chs.map(function (c, i) { return { v: vs[i], lab: o.nolab ? null : (o.labs ? o.labs[i] : H.label(c)), sub: o.subs && o.subs[i], col: o.col && o.col[i], bad: o.bad && o.bad[i], q: o.q && o.q[i] }; }) } };
   };
   // 1 つの 和音だけ（配置の 説明などに）
   H.fig1 = function (key, minor, ch, v, o) { return H.fig(key, minor, [ch], [v], o); };

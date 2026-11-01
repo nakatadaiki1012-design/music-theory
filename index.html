@@ -274,7 +274,7 @@ body[data-course="cp"] { --warm: #2c8a5c; --warm-soft: rgba(44, 138, 92, .15); }
 .hzcb.ok em { color: var(--ok); } .hzcb.ok { border-color: var(--ok); } .hzcb.wn em { color: var(--gold); } .hzcb.wn { border-color: var(--gold); } .hzcb.ng { background: rgba(211, 48, 42, .13); } .hzcb.ng em { color: var(--ng); }
 .hzcb.on { box-shadow: 0 0 0 3px var(--ink) inset; } .hzcb.hint { animation: hzp 1s ease-in-out infinite; } @keyframes hzp { 50% { box-shadow: 0 0 0 4px #e8b73a; } }
 .hzj { margin: 0; font-size: 13.5px; font-weight: 700; } .hzj.ok { color: var(--ok); } .hzj.ng { color: var(--ng); } .hzj.wn { color: var(--gold); }
-.hzh { background: #fff6d6; border: 1.5px solid #e8b73a; border-radius: 10px; padding: 6px 10px; font-size: 13.5px; line-height: 1.5; }
+.hzh { background: color-mix(in srgb, #e8b73a 18%, var(--panel)); border: 1.5px solid #e8b73a; border-radius: 10px; padding: 6px 10px; font-size: 13.5px; line-height: 1.5; }
 .hzfa { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .hzauto { font-size: 12.5px; color: var(--muted); display: flex; gap: 4px; align-items: center; }
 .hzcap { margin: 0; font-size: 12px; color: var(--muted); }
 .hzkbd { overflow-x: auto; padding-bottom: 4px; flex: none; }
@@ -290,7 +290,7 @@ body[data-course="cp"] { --warm: #2c8a5c; --warm-soft: rgba(44, 138, 92, .15); }
 .hztip { position: fixed; z-index: 80; background: var(--ink); color: var(--panel); border-radius: 8px; padding: 2px 10px; font-weight: 800; font-size: 18px; pointer-events: none; }
 .hzud { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .hzud .btn { padding: 8px 14px; font-weight: 800; }
 .hzacc { display: flex; gap: 4px; align-items: center; font-size: 12px; color: var(--muted); } .hzacc button { border: 1.5px solid var(--line); background: var(--panel); border-radius: 8px; padding: 1px 9px; font-weight: 800; font-size: 14px; color: var(--ink); } .hzacc button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
-.hzs { border: 2px solid var(--ink); border-radius: 12px; padding: 8px 12px; background: var(--panel); } .hzs.good { border-color: var(--ok); background: #eef8ef; }
+.hzs { border: 2px solid var(--ink); border-radius: 12px; padding: 8px 12px; background: var(--panel); } .hzs.good { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--panel)); }
 .hzs1 { display: flex; align-items: baseline; gap: 12px; } .hzs1 b { font-family: var(--font-en); font-size: 28px; } .hzs1 small { font-size: 13px; color: var(--muted); } .hzs .stars { color: var(--gold); font-size: 22px; letter-spacing: 2px; }
 .hzs p { margin: 2px 0; font-weight: 700; } .hzs .hzn { color: var(--ng); font-size: 13px; }
 .hzh4 { margin: 4px 0 2px; font-size: 14px; }
@@ -1008,6 +1008,28 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
   .xpone { gap: 8px; } .xpone .xpr { gap: 8px; }
 }
 @media (max-width: 640px) { .xpone .xwpiece svg { min-width: 540px !important; width: 540px !important; } .xpc .xc { min-height: 40px; } .xpdots { gap: 9px; } .xpgrp { gap: 4px; } .xpd { width: 32px; height: 32px; font-size: 13px; } .xpa { display: none; } }
+
+/* 和声の 実践：すっきり */
+.hzmw { position: relative; display: inline-block; }
+.hzmenu { position: absolute; z-index: 30; top: calc(100% + 4px); right: 0; min-width: 250px; background: var(--panel); border: 1.5px solid var(--line); border-radius: 12px; box-shadow: 0 10px 28px rgba(0,0,0,.18); padding: 6px; display: flex; flex-direction: column; gap: 2px; }
+.hzmenu > button { text-align: left; border: 0; background: none; color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 700; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.hzmenu > button:hover:not(:disabled) { background: var(--chip); }
+.hzmenu label { display: flex; gap: 6px; align-items: center; font-size: 13px; padding: 6px 10px; color: var(--ink); }
+.hzmenu p { margin: 4px 10px 6px; font-size: 11.5px; color: var(--muted); line-height: 1.5; border-top: 1px dashed var(--line); padding-top: 6px; }
+@media (max-width: 640px) { .hzmenu { position: fixed; left: 12px; right: 12px; top: auto; bottom: 12px; min-width: 0; } }
+.hzic { margin-left: auto; border: 0; background: none; font-size: 18px; cursor: pointer; padding: 0 4px; }
+.hzd.em { border-style: dashed; } .hzd.ok em { color: var(--ok); }
+.hzvb.em b { color: var(--muted); } .hzvb.em:not(.sel) { border-style: dashed; border-top-style: solid; }
+.hzcb.pl em { display: none; }
+.hzs.hzp { display: flex; align-items: center; gap: 12px; font-size: 14px; } .hzs.hzp em { font-style: normal; color: var(--ng); font-weight: 800; }
+.hzbarp { flex: 1; height: 8px; border-radius: 99px; background: var(--chip); overflow: hidden; } .hzbarp i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .25s; }
+.hzf .hzfi br + * { }
+
+.hflow { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; justify-content: center; width: 100%; padding: 6px 0; }
+.hfs { position: relative; flex: 1 1 150px; max-width: 210px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--bg); padding: 12px 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.hfs i { font-style: normal; font-size: 26px; } .hfs b { font-size: 16px; color: var(--accent); } .hfs span { font-size: 13.5px; line-height: 1.55; color: var(--ink); }
+.hfs:not(:last-child)::after { content: '▶'; position: absolute; right: -11px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); }
+@media (max-width: 640px) { .hfs { flex-basis: 100%; max-width: none; flex-direction: row; align-items: center; padding: 8px 10px; } .hfs i { font-size: 20px; } .hfs b { min-width: 7.5em; font-size: 14px; } .hfs:not(:last-child)::after { content: '▼'; right: auto; left: 22px; top: auto; bottom: -13px; transform: none; } }
 </style>
 </head>
 <body>
@@ -1031,33 +1053,33 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261031t"></script>
-<script src="js/music.js?v=20261031t"></script>
-<script src="js/core.js?v=20261031t"></script>
-<script src="js/figs.js?v=20261031t"></script>
-<script src="js/terms.js?v=20261031t"></script>
-<script src="js/terms_info.js?v=20261031t"></script>
-<script src="js/terms_pro.js?v=20261031t"></script>
-<script src="js/typenames.js?v=20261031t"></script>
-<script src="js/harmony.js?v=20261031t"></script>
-<script src="js/lessons.js?v=20261031t"></script>
-<script src="js/quiz.js?v=20261031t"></script>
-<script src="js/quiz_more.js?v=20261031t"></script>
-<script src="js/app.js?v=20261031t"></script>
-<script src="js/exam.js?v=20261031t"></script>
-<script src="js/exam2.js?v=20261031t"></script>
-<script src="js/motivate.js?v=20261031t"></script>
-<script src="js/learn.js?v=20261031t"></script>
-<script src="js/harmony_units.js?v=20261031t"></script>
-<script src="js/harmony_lab.js?v=20261031t"></script>
-<script src="js/harmony_units2.js?v=20261031t"></script>
-<script src="js/harmony_units3.js?v=20261031t"></script>
-<script src="js/harmony_units4.js?v=20261031t"></script>
-<script src="js/counterpoint.js?v=20261031t"></script>
-<script src="js/counterpoint_units.js?v=20261031t"></script>
-<script src="js/harmony_reg.js?v=20261031t"></script>
-<script src="js/quiz_more2.js?v=20261031t"></script>
-<script src="js/stage.js?v=20261031t"></script>
-<script src="js/game.js?v=20261031t"></script>
+<script src="js/config.js?v=20261101d"></script>
+<script src="js/music.js?v=20261101d"></script>
+<script src="js/core.js?v=20261101d"></script>
+<script src="js/figs.js?v=20261101d"></script>
+<script src="js/terms.js?v=20261101d"></script>
+<script src="js/terms_info.js?v=20261101d"></script>
+<script src="js/terms_pro.js?v=20261101d"></script>
+<script src="js/typenames.js?v=20261101d"></script>
+<script src="js/harmony.js?v=20261101d"></script>
+<script src="js/lessons.js?v=20261101d"></script>
+<script src="js/quiz.js?v=20261101d"></script>
+<script src="js/quiz_more.js?v=20261101d"></script>
+<script src="js/app.js?v=20261101d"></script>
+<script src="js/exam.js?v=20261101d"></script>
+<script src="js/exam2.js?v=20261101d"></script>
+<script src="js/motivate.js?v=20261101d"></script>
+<script src="js/learn.js?v=20261101d"></script>
+<script src="js/harmony_units.js?v=20261101d"></script>
+<script src="js/harmony_lab.js?v=20261101d"></script>
+<script src="js/harmony_units2.js?v=20261101d"></script>
+<script src="js/harmony_units3.js?v=20261101d"></script>
+<script src="js/harmony_units4.js?v=20261101d"></script>
+<script src="js/counterpoint.js?v=20261101d"></script>
+<script src="js/counterpoint_units.js?v=20261101d"></script>
+<script src="js/harmony_reg.js?v=20261101d"></script>
+<script src="js/quiz_more2.js?v=20261101d"></script>
+<script src="js/stage.js?v=20261101d"></script>
+<script src="js/game.js?v=20261101d"></script>
 </body>
 </html>
