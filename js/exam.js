@@ -136,6 +136,7 @@
     return '<aside class="panel side"><h3>🎓 応用（入試形式）</h3>' +
       '<p class="note" style="padding:0 10px 6px">音大入試の 楽典のように、<b>五線に 書く</b> 問題と、<b>実際の 楽譜を 読んで 答える</b> 問題です。</p>' +
       '<button type="button" class="it" data-go="#exam/piece" aria-current="' + (active === 'piece') + '"><b>📜 課題楽曲（大譜表）</b><small>音程・調名・和音を 楽譜から 読みとる</small></button>' +
+      '<button type="button" class="it" data-go="#exam/score" aria-current="' + (active === 'score') + '"><b>🎹 課題楽曲 II（ピアノ曲）</b><small>旋律と 伴奏の 楽譜から 音程・調・和音・楽語・終止</small></button>' +
       CATS.map(function (c) { return '<button type="button" class="it" data-go="#exam/write/' + c[0] + '" aria-current="' + (active === c[0]) + '"><b>' + c[1] + '</b><small>' + c[2] + '</small></button>'; }).join('') +
       '<button type="button" class="it" data-go="#exam/mock"><b>📝 選択式 ★3 模擬</b><small>20 問・★3 だけ</small></button>' +
       '<button type="button" class="it" data-go="#drill"><b>◀ 演習へ もどる</b></button>' +
