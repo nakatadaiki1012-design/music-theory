@@ -5,7 +5,7 @@
 (function () {
   'use strict';
   var GK = window.GK;
-  GK.HINTS = {
+  GK.HINTS = Object.assign(GK.HINTS || {}, {
     // u01 五線と音名
     readT: 'ト音記号の 渦の 中心（下から 2 本めの 線）が ソ。そこから 線・間・線…と 1 つずつ 数えよう。',
     readB: 'ヘ音記号の 2 つの 点に はさまれた 線（上から 2 本め）が ファ。そこから 数えよう。',
@@ -288,7 +288,7 @@
     suspRule: '掛留は 3 つの 段階（予備・掛留・解決）。それぞれ 協和？ 不協和？',
     suspFig: 'タイで のびた 音と 下の 声の 音程を 数えよう。',
     sp5Rule: '第5類は 1〜4類の 組み合わせ。それぞれの きまりを まもる。'
-  };
+  });
   // その 問題の ヒント（なければ 単元の めあて）
   GK.hintOf = function (q) {
     if (q.hint) return q.hint;

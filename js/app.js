@@ -186,12 +186,15 @@
      ホーム
      ========================================================= */
   // ホームの 3 つの タブ：🎼 楽典 ／ 🎹 和声法 ／ 🧰 道具と 学習サポート
-  GK.route(/^home(?:\/(theory|harm|cp|tools))?$/, function (m) {
+  GK.route(/^home(?:\/(theory|harm|harm2|cp|tools))?$/, function (m) {
     var tab = m[1] || GK.store.get('homeTab', 'theory');
-    if (tab === 'harm' && !(GK.HUNITS && GK.HUNITS.length)) tab = 'theory';
+    if ((tab === 'harm' || tab === 'harm2') && !(GK.HUNITS && GK.HUNITS.length)) tab = 'theory';
+    // 和声法は「基礎（第1巻）」と「応用（音大の 授業レベル）」の 2 つの タブ
+    var sub = tab === 'harm2' ? 'adv' : tab === 'harm' ? 'basic' : null; if (sub) { GK.store.set('harmSub', sub); }
+    var tab0 = tab; if (tab === 'harm2') tab = 'harm';
     if (tab === 'cp' && !(GK.CPUNITS && GK.CPUNITS.length)) tab = 'theory';
     GK.store.set('homeTab', tab);
-    var list = tab === 'harm' ? GK.HUNITS : tab === 'cp' ? GK.CPUNITS : GK.UNITS, task = GK.store.get('task', null);
+    var list = tab === 'harm' ? GK.HUNITS.filter(function (u) { return (u.lv === 'adv') === (sub === 'adv'); }) : tab === 'cp' ? GK.CPUNITS : GK.UNITS, task = GK.store.get('task', null);
     var pass = list.filter(function (u) { return GK.prog(u.id).pass; }).length, seen = list.filter(function (u) { return GK.prog(u.id).seen; }).length;
     var next = list.filter(function (u) { return !GK.prog(u.id).pass; })[0] || list[0];
     var due = GK.dueTypes ? GK.dueTypes().length : 0, hasH = GK.HUNITS && GK.HUNITS.length, hasC = GK.CPUNITS && GK.CPUNITS.length;
@@ -213,7 +216,8 @@
       if (tab === 'cp') { tiles += tool('#cplab', '✍️', '実践', 'Practice', '定旋律に 対位線を 書いて 自動チェック'); n++; }
     }
     var cols = n > 16 ? Math.ceil(n / 4) : n > 9 ? 4 : 3, rows = Math.ceil(n / cols);
-    var tabs = (tab === 'theory' || tab === 'tools') ? [['theory', '🎼 楽典の 単元（' + GK.UNITS.length + '）'], ['tools', '🧰 道具・復習' + (due ? ' ' + due : '')]] : [];
+    var nAdv = GK.HUNITS ? GK.HUNITS.filter(function (u) { return u.lv === 'adv'; }).length : 0;
+    var tabs = (tab === 'theory' || tab === 'tools') ? [['theory', '🎼 楽典の 単元（' + GK.UNITS.length + '）'], ['tools', '🧰 道具・復習' + (due ? ' ' + due : '')]] : tab === 'harm' && nAdv ? [['harm', '🎹 基礎（' + (GK.HUNITS.length - nAdv) + '）'], ['harm2', '🎓 応用・音大レベル（' + nAdv + '）']] : [];
     V.innerHTML = '<div class="home"><aside class="panel hero">' +
       '<h2 class="cname">' + (tab === 'harm' ? '和声法' : tab === 'cp' ? '対位法' : '楽典') + '</h2><p class="cdesc">' + (tab === 'harm' ? '四声部の 和音の つなぎ方を、楽譜と 音で 見て・聴いて・自分で 書いて 身につける' : tab === 'cp' ? '2 つの メロディーを 同時に 歌わせる 技術。定旋律に 対位線を つけて、ルールと ひびきを 身につける' : '音名・リズム・音程・音階・調・和音・記号を、楽譜と図で 見て・聴いて・解いて 身につける') + '</p>' +
       '<div class="stats"><div class="stat"><b>' + pass + '<small>/' + list.length + '</small></b><small>合格した単元</small></div><div class="stat"><b>' + GK.fmtN(RW.drillOk) + '</b><small>演習の正解</small></div><div class="stat"><b>' + GK.levelOf(RW.coins).name + '</b><small>段位</small></div></div>' +
@@ -225,7 +229,7 @@
       '<button type="button" class="btn" data-go="#' + (tab === 'theory' ? 'game' : 'game/c/' + tab) + '">🎮 ゲーム</button>' + '</div>' +
       '<div class="heromini"><h3>1 単元 ＝ 3 ステップ</h3><div class="cycle"><ol><li><b>💡</b><b>ポイント</b><span>図と音で わかる</span></li><li><b>💪</b><b>演習</b><span>10 問。毎回ちがう問題</span></li><li><b>🏁</b><b>テスト</b><span>' + GK.TEST_N + ' 問中 ' + GK.PASS + ' 問で 合格</span></li></ol></div>' +
       (tab === 'theory' ? '<h3 style="margin-top:10px">🧠 わすれない しくみ</h3><div class="cycle"><ol><li><b>🔁</b><b>今日の復習</b><span>間をあけて 思い出す</span></li><li><b>🧭</b><b>力だめし</b><span>実力を はかる</span></li><li><b>🗺</b><b>学習マップ</b><span>身につき具合</span></li></ol></div>' : '<h3 style="margin-top:10px">✍️ 実践とは？</h3><p class="note">' + (tab === 'harm' ? '授業で 学んだ ことを、五線に 4 声を 書いて 試します。ソプラノ課題・バス課題・自由入力・自分で出題。禁則を 自動で 採点。' : '定旋律に 対位線を 書いて 試します。協和・禁則を 自動で チェック。') + '</p>') + '</div>' +
-      '</aside><section class="gridw">' + (tabs.length ? '<div class="mtabs ccs">' + tabs.map(function (x) { return '<button type="button" data-c="' + x[0] + '" data-go="#home/' + x[0] + '" aria-pressed="' + (x[0] === tab) + '">' + x[1] + '</button>'; }).join('') + '</div>' : '') +
+      '</aside><section class="gridw">' + (tabs.length ? '<div class="mtabs ccs">' + tabs.map(function (x) { return '<button type="button" data-c="' + x[0] + '" data-go="#home/' + x[0] + '" aria-pressed="' + (x[0] === tab0) + '">' + x[1] + '</button>'; }).join('') + '</div>' : '') +
       '<div class="grid" style="--c1:' + cols + ';--r1:' + rows + ';--c2:3;--r2:' + Math.ceil(n / 3) + ';--c3:2;--r3:' + Math.ceil(n / 2) + '">' + tiles + '</div></section></div>';
     GK.motivBind && GK.motivBind(V, tab);
   });
@@ -236,7 +240,7 @@
   GK.route(/^([uhc]\d\d)(?:\/(p|x|l|t))?(?:\/(\d+))?$/, function (m) {
     var u = GK.UNIT[m[1]]; if (!u) { GK.go('#home'); return; }
     if (m[2] === 'l') { GK.go(u.grp === 'harm' ? '#hlab/u/' + u.id : u.grp === 'cp' ? '#cplab' : '#home'); return; }
-    var back = '#home/' + (u.grp === 'harm' ? 'harm' : u.grp === 'cp' ? 'cp' : 'theory');
+    var back = '#home/' + (u.grp === 'harm' ? (u.lv === 'adv' ? 'harm2' : 'harm') : u.grp === 'cp' ? 'cp' : 'theory');
     var step = m[2] || 'p', p = GK.prog(u.id);
     V.innerHTML = '<div class="uhead"><button type="button" class="btn back" data-go="' + back + '">◀ 一覧</button><div class="ut"><small>' + (u.grp === 'harm' ? '和声法ラボ' : u.grp === 'cp' ? '対位法ラボ' : '楽典ラボ') + '・' + u.no + '・' + esc(u.en) + '</small><h2>' + esc(u.title) + '</h2></div>' +
       '<nav class="steps">' + [['p', '💡 ポイント', p.seen], ['x', '💪 演習', p.prac >= 7]].concat(u.grp === 'harm' ? [['l', '✍️ 実践', (GK.store.get('hlabUnit', {})[u.id] || 0) > 0]] : u.grp === 'cp' ? [['l', '✍️ 実践', false]] : [], [['t', '🏁 テスト', p.pass]]).map(function (s) { return '<button type="button" data-go="#' + u.id + '/' + s[0] + '" aria-current="' + (s[0] === step) + '">' + s[1] + (s[2] ? '<span class="ck">✓</span>' : '') + '</button>'; }).join('') + '</nav></div><div class="stage" id="stage"></div>';

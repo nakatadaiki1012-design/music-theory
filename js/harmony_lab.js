@@ -53,7 +53,7 @@
     h12: ['Ⅰ‐Ⅱ₇‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅱ₆₅‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅱ₇‐Ⅴ₇‐Ⅰ', 'Ⅰ‐Ⅳ‐Ⅶ₆₅‐Ⅰ', 'Ⅰ‐Ⅵ‐Ⅳ₇‐Ⅴ‐Ⅰ'], h13: ['Ⅰ‐Ⅳ‐Ⅴ₉‐Ⅰ', 'Ⅰ‐Ⅱ‐Ⅴ₉‐Ⅰ', 'Ⅰ‐Ⅵ‐Ⅴ₉‐Ⅰ'],
     h14: ['Ⅰ‐Ⅳ‐Ⅴ₇‐Ⅰ', 'Ⅰ‐Ⅵ‐Ⅱ‐Ⅴ₇‐Ⅰ', 'Ⅰ‐Ⅱ₇‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅳ‐Ⅰ₆₄‐Ⅴ‐Ⅰ', 'Ⅰ‐Ⅴ₆₅‐Ⅰ', 'Ⅰ‐Ⅰ₆‐Ⅳ‐Ⅴ₇‐Ⅰ']
   };
-  var unitProgs = function (u) { var nm = UP[u] || []; return H.PROGS.filter(function (p) { return nm.indexOf(p.name) >= 0; }); };
+  var unitProgs = function (u) { var nm = UP[u] || (GK.HLAB_UP || {})[u] || []; return H.PROGS.filter(function (p) { return nm.indexOf(p.name) >= 0; }); };
   var sk = function () { return S.unit ? S.mode + '@' + S.unit : S.mode; };
   var STORE = function () { return GK.store.get('hlab', {}); };
   var S = (function () { var o = STORE(); return { mode: o.mode || (o.type === 'bass' ? 'bass' : o.type === 'free' ? 'free' : 'sop'), lv: o.lv || 1, adv: o.adv || 'voice', kbd: !!o.kbd, snap: o.snap !== false, fk: o.fk, fm: o.fm, fc: o.fc, mv: o.mv, unit: null, ses: {} }; })();
@@ -83,7 +83,7 @@
     var Z;
     if (mode === 'sop' || mode === 'bass') {
       var R = GK.rng(Math.floor(Math.random() * 1e9)), minor = S.lv >= 2 && R() < 0.3, ok = H.PROGS.filter(function (p) { return p.lv <= S.lv && p.lv >= Math.max(1, S.lv - 1) && !(minor && p.majorOnly); });
-      if (S.unit) { minor = S.unit === 'h09' || (S.unit === 'h14' && R() < 0.25); ok = unitProgs(S.unit).filter(function (p) { return !(minor && p.majorOnly); }); if (!ok.length) ok = unitProgs(S.unit); }
+      if (S.unit) { minor = S.unit === 'h09' || (S.unit === 'h14' && R() < 0.25) || (['h18', 'h19', 'h20'].indexOf(S.unit) >= 0 && R() < 0.5); ok = unitProgs(S.unit).filter(function (p) { return !(minor && p.majorOnly); }); if (!ok.length) ok = unitProgs(S.unit); }
       var key = pick(minor ? H.KEYS.min : H.KEYS.maj, R), pr = pick(ok, R), model = null;
       for (var t = 0; t < 6 && !model; t++) { model = H.solve(key, minor, pr.chs, null, R); if (!model) pr = pick(ok, R); }
       var gv = mode === 'bass' ? 3 : 0;

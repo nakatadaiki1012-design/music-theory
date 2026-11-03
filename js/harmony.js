@@ -23,16 +23,42 @@
   var SUB = '₀₁₂₃₄₅₆₇₈₉';
   var sub = function (s) { return s.split('').map(function (c) { return SUB.charAt(+c); }).join(''); };
   // 和音記号（転回形は 小さな 数字：Ⅰ₆・Ⅴ₇・Ⅴ₆₅）
-  H.label = function (ch) { if (ch.nine) return H.ROMAN[ch.d] + sub('9'); var f = ch.sev ? ['7', '65', '43', '42'][ch.inv] : ['', '6', '64'][ch.inv]; return H.ROMAN[ch.d] + sub(f); };
-  H.figure = function (ch) { if (ch.nine) return '9'; return ch.sev ? ['7', '6 5', '4 3', '4 2'][ch.inv] : ['', '6', '6 4'][ch.inv]; };
+  /* 変化和音（第2巻〜）：
+     tg：副属和音（Ⅴ や Ⅴ₇ を その 音度の 調で）＝ Ⅴ/tg。 nap：ナポリの Ⅱ（♭Ⅱ）。 bor：準固有和音（同主短調から かりる）。
+     a6：増六の和音（'it' イタリア・'ge' ドイツ・'fr' フランス）。 */
+  var AUG6N = { it: 'It', ge: 'Ge', fr: 'Fr' };
+  H.isAlt = function (ch) { return !!(ch && (ch.tg || ch.nap || ch.bor || ch.a6)); };
+  H.label = function (ch) {
+    if (ch.a6) return AUG6N[ch.a6] + '⁺⁶';
+    if (ch.nap) return 'N' + sub(['', '6', '64'][ch.inv]);
+    var base = ch.nine ? H.ROMAN[ch.d] + sub('9') : H.ROMAN[ch.d] + sub(ch.sev ? ['7', '65', '43', '42'][ch.inv] : ['', '6', '64'][ch.inv]);
+    if (ch.tg) return (ch.nine ? 'Ⅴ' + sub('9') : 'Ⅴ' + sub(ch.sev ? ['7', '65', '43', '42'][ch.inv] : ['', '6', '64'][ch.inv])) + '/' + H.ROMAN[ch.tg];
+    if (ch.bor) return '○' + base;
+    return base;
+  };
+  H.figure = function (ch) { if (ch.a6) return '+6'; if (ch.nine) return '9'; return ch.sev ? ['7', '6 5', '4 3', '4 2'][ch.inv] : ['', '6', '6 4'][ch.inv]; };
+  var nn = function (p) { return { l: p.l, a: p.a }; };
   H.pcs = function (key, minor, ch) {
+    if (ch.tg || ch.nap || ch.a6) {
+      var ton = Object.assign(M.keyTonic(key, minor), { o: 4 }), rt, out;
+      if (ch.tg) {   // Ⅴ/tg：tg の 根音の 5度 上に 長三和音（＋短7度・長9度）
+        var tr = M.diatonic(key, minor, ch.tg, false)[0]; rt = M.up(Object.assign({}, tr, { o: 4 }), 5, 'P');
+        out = [rt, M.up(rt, 3, 'M'), M.up(rt, 5, 'P')]; if (ch.sev || ch.nine) out.push(M.up(rt, 7, 'm')); if (ch.nine) out.push(M.up(rt, 9, minor || ch.m9 ? 'm' : 'M'));
+        return out.map(nn);
+      }
+      if (ch.nap) { rt = M.up(ton, 2, 'm'); return [rt, M.up(rt, 3, 'M'), M.up(rt, 5, 'P')].map(nn); }
+      var b6 = M.up(ton, 6, 'm'), s4 = M.up(ton, 4, 'A');   // 増六：バス ♭6・♯4・主音（＋独 ♭3／仏 2）
+      out = [b6, ton, s4]; if (ch.a6 === 'ge') out.push(M.up(ton, 3, 'm')); if (ch.a6 === 'fr') out.push(M.up(ton, 2, 'M'));
+      return out.map(nn);
+    }
+    if (ch.bor && !minor) return H.pcs(key - 3, true, Object.assign({}, ch, { bor: false }));   // 同主短調（調号 ♭3 つ 多い）
     var r = M.diatonic(key, minor, ch.d, ch.sev || ch.nine).map(function (p) { return { l: p.l, a: p.a }; });
     if (ch.nine) { var n9 = M.diatonic(key, minor, ch.d % 7 + 1, false)[0]; r.push({ l: n9.l, a: n9.a }); }   // 第9音：ひとつ上の 音階音
     return r;
   };
   H.tonic = function (key, minor) { var t = M.keyTonic(key, minor); return { l: t.l, a: t.a }; };
   H.lt = function (key, minor) { var s = M.scale(M.keyTonic(key, minor), minor ? 'harmonic' : 'major'); return { l: s[6].l, a: s[6].a }; };
-  H.role = function (ch, idx) { if (ch.nine) return ['根音', '第3音', '第5音', '第7音', '第9音'][idx]; return ch.sev ? ['根音', '第3音', '第5音', '第7音'][idx] : ['根音', '第3音', '第5音'][idx]; };
+  H.role = function (ch, idx) { if (ch.a6) return ['♭6 の 音', '主音', '♯4 の 音', '第4の 音'][idx]; if (ch.nine) return ['根音', '第3音', '第5音', '第7音', '第9音'][idx]; return ch.sev ? ['根音', '第3音', '第5音', '第7音'][idx] : ['根音', '第3音', '第5音'][idx]; };
   H.keyName = function (key, minor) { return M.keyName(key, minor); };
   H.ctext = function (key, minor, ch) { var ps = H.pcs(key, minor, ch); return H.label(ch) + '（' + ps.map(N).join('・') + '）'; };
 
@@ -57,7 +83,7 @@
       else if (j < 2 && mid(v[j]) - mid(v[j + 1]) > 12) add('space', true, [j, j + 1], H.VNAME[j] + 'と' + H.VNAME[j + 1] + 'が 1 オクターブより はなれています');
     }
     // そろっているか
-    var need = ch.nine ? [0, 1, 3, 4] : ch.sev ? [0, 1, 3] : (prev && prev.sev && ch.d === 1 && ch.inv === 0) ? [0, 1] : [0, 1, 2];
+    var need = ch.a6 ? pcs.map(function (_, q) { return q; }) : ch.nine ? [0, 1, 3, 4] : ch.sev ? [0, 1, 3] : (prev && prev.sev && ch.d === 1 && ch.inv === 0 && !H.isAlt(prev) && !H.isAlt(ch)) ? [0, 1] : [0, 1, 2];
     need.forEach(function (q) { if (!cnt[q]) add('incomplete', true, [], H.role(ch, q) + '（' + N(pcs[q]) + '）が ありません' + (q === 1 ? '（第3音は 省略できません）' : '')); });
     // 重ねてはいけない音
     pcs.forEach(function (c, q) {
@@ -65,7 +91,10 @@
       else if (cnt[q] > 1 && ch.sev && q === 3) add('dbl7', true, [], '第7音（' + N(c) + '）を 重ねては いけません');
       else if (cnt[q] > 1 && ch.nine && q === 4) add('dbl7', true, [], '第9音（' + N(c) + '）を 重ねては いけません');
     });
-    if (ch.inv === 0 && !ch.sev && cnt[1] > 1 && !same(pcs[1], lt) && (ch.d === 1 || ch.d === 4 || ch.d === 5)) add('dblThird', false, [], '第3音を 重ねるのは ふつう さけます（根音を 重ねるのが 基本）');
+    // 変化音（調の 音階に ない 音）は 重ねない（ナポリの 第3音だけ 例外）
+    if (H.isAlt(ch)) { var dia = M.scale(M.keyTonic(key, minor), minor ? 'harmonic' : 'major'); pcs.forEach(function (c, q) { if (cnt[q] > 1 && !dia.some(function (x) { return same(x, c); }) && !(ch.nap && q === 1)) add('dblAlt', true, [], '変化音（' + N(c) + '）を 重ねては いけません'); }); }
+    if (ch.a6 && cnt[1] < 1) add('incomplete', true, [], '主音が ありません');
+    if (!H.isAlt(ch) && ch.inv === 0 && !ch.sev && cnt[1] > 1 && !same(pcs[1], lt) && (ch.d === 1 || ch.d === 4 || ch.d === 5)) add('dblThird', false, [], '第3音を 重ねるのは ふつう さけます（根音を 重ねるのが 基本）');
     return out;
   };
 
@@ -93,7 +122,8 @@
       if (Math.abs(dm) > 12) add('leap', true, [j], H.VNAME[j] + 'の 跳躍が 1 オクターブを こえています');
       else if (dm) {
         var lw = dm > 0 ? x : y, up = dm > 0 ? y : x, iv = M.interval(lw, up);
-        if (iv.q === 'A' || iv.q === 'd' || iv.q === 'AA' || iv.q === 'dd') add('aug', true, [j], H.VNAME[j] + 'が ' + N(x) + ' → ' + N(y) + '（' + iv.name + '）と 進んでいます。増・減の 音程は 使いません');
+        var okAlt = (iv.deg === 1 && iv.q === 'A') || (ch0.nap && iv.deg === 3 && iv.q === 'd') || (ch0.a6 && iv.deg === 1);
+        if (!okAlt && (iv.q === 'A' || iv.q === 'd' || iv.q === 'AA' || iv.q === 'dd')) add('aug', true, [j], H.VNAME[j] + 'が ' + N(x) + ' → ' + N(y) + '（' + iv.name + '）と 進んでいます。増・減の 音程は 使いません');
       }
     }
     // 隣りあう声部の ぶつかり（オーバーラップ）
@@ -102,7 +132,19 @@
       if (mid(v1[k]) < mid(v0[k + 1]) || mid(v1[k + 1]) > mid(v0[k])) add('overlap', false, [k, k + 1], H.VNAME[k] + 'と' + H.VNAME[k + 1] + 'が 前の 位置を こえて います（声部の 重なり）');
     }
     // 導音の 解決（V・Ⅶ の あと）
-    if (ch0.d === 5 || ch0.d === 7) {
+    // 副属和音：その 和音の 導音（第3音）は 目的の 和音の 根音へ 半音 上行
+    if (ch0.tg && ch1.d === ch0.tg && !H.isAlt(ch1)) {
+      var llt = H.pcs(key, minor, ch0)[1], tgr = H.pcs(key, minor, ch1)[0];
+      v0.forEach(function (p, j) { if (nul(p) || nul(v1[j]) || !same(p, llt)) return; if (!(mid(v1[j]) - mid(p) === 1 && same(v1[j], tgr))) add('lt', true, [j], H.VNAME[j] + 'の ' + N(p) + '（' + H.label(ch0) + ' の 導音）は 半音 上の ' + N(tgr) + ' へ 進みます'); });
+    }
+    // 増六：♭6 は 半音 下へ、♯4 は 半音 上へ（どちらも 属音へ）
+    if (ch0.a6) {
+      var a6p = H.pcs(key, minor, ch0);
+      v0.forEach(function (p, j) { if (nul(p) || nul(v1[j])) return; var dm = mid(v1[j]) - mid(p);
+        if (same(p, a6p[0]) && dm !== -1) add('a6res', true, [j], H.VNAME[j] + 'の ' + N(p) + '（増6度の 下の 音）は 半音 下へ 進みます');
+        if (same(p, a6p[2]) && dm !== 1) add('a6res', true, [j], H.VNAME[j] + 'の ' + N(p) + '（増6度の 上の 音）は 半音 上へ 進みます'); });
+    }
+    if ((ch0.d === 5 || ch0.d === 7) && !H.isAlt(ch0)) {
       var p1 = H.pcs(key, minor, ch1), hasTon = p1.some(function (c) { return same(c, ton); });
       v0.forEach(function (p, j) {
         if (nul(p) || nul(v1[j]) || !same(p, lt) || !hasTon) return;

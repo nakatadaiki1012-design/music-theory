@@ -23,14 +23,14 @@
   var GENRES = [
     ['note', '🎼 音名・読譜', ['u01']], ['rhy', '🥁 リズム・拍子', ['u02', 'u03', 'u04']], ['acc', '♯♭ 変化記号・音程', ['u05', 'u06']], ['scale', '🎹 音階', ['u07', 'u08']],
     ['key', '🔑 調・調号', ['u09']], ['chord', '🎶 和音・コード', ['u10', 'u11']], ['trans', '🔀 移調', ['u12']], ['term', '📖 楽語・記号', ['u13', 'u14', 'u15']],
-    ['exam', '🎓 入試形式（楽譜を読む）', ['x01']], ['ear', '👂 聴いて答える', null], ['harm', '🎹 和声法', 'H'], ['cp', '🎶 対位法', 'C']
+    ['exam', '🎓 入試形式（楽譜を読む）', ['x01']], ['ear', '👂 聴いて答える', null], ['harm', '🎹 和声法（基礎）', 'H'], ['harm2', '🎓 和声法（応用）', 'H2'], ['cp', '🎶 対位法', 'C']
   ];
   var genreOf = function (id) { return GENRES.filter(function (g) { return g[0] === id; })[0]; };
   var cfgGenres = function (cfg) { return (cfg.g || '').split(',').filter(function (x) { return x && genreOf(x); }); };
   var genreTypes = function (gid, withEar) {
     var g = genreOf(gid), T = GK.Q.T;
     if (gid === 'ear') return Object.keys(T).filter(function (id) { return T[id].ear; });
-    var us = g[2] === 'H' ? GK.HUNITS.map(function (u) { return u.id; }) : g[2] === 'C' ? GK.CPUNITS.map(function (u) { return u.id; }) : g[2];
+    var us = g[2] === 'H' || g[2] === 'H2' ? GK.HUNITS.filter(function (u) { return (u.lv === 'adv') === (g[2] === 'H2'); }).map(function (u) { return u.id; }) : g[2] === 'C' ? GK.CPUNITS.map(function (u) { return u.id; }) : g[2];
     return GK.Q.typesOf(us.filter(function (u) { return GK.UNIT[u]; }), !withEar);
   };
   // 出題する 種類を グループに わける（グループごとに 順ぐりに 出して 変化を ふやす）
