@@ -138,7 +138,7 @@
 
 
   /* ---------- ★3：1 つの 和音の まちがい（エンジンで 判定） ---------- */
-  var VF = [['range', '音域の 外の 音が ある'], ['incomplete', '必要な 音（第3音など）が ない'], ['dblLT', '導音を 重ねている'], ['cross', '声部が 交差している'], ['space', '上の 声部の 間が 広すぎる'], ['ok', 'まちがいは ない']];
+  var VF = [['range', '音域の 外の 音が ある'], ['incomplete', '第3音が ない'], ['dblLT', '導音を 重ねている'], ['cross', '声部が 交差している'], ['space', '上の 声部の 間が 広すぎる'], ['ok', 'まちがいは ない']];
   var vfName = function (k) { return VF.filter(function (x) { return x[0] === k; })[0][1]; };
   add('voiceFault', 'h02', 3, function (R) {
     for (var t = 0; t < 200; t++) {
@@ -146,11 +146,12 @@
       var all = shuffle(H.cands(key, mn, ch, null, true, null, true), R).slice(0, 400), v = null, kind = null;
       for (var i = 0; i < all.length; i++) {
         var iss = H.checkChord(key, mn, ch, all[i], 0, null), ng = iss.filter(function (x) { return x.ng; });
-        if (clean ? iss.length === 0 && H.nice(all[i]) : ng.length && ng.every(function (x) { return x.kind === ng[0].kind; }) && VF.some(function (x) { return x[0] === ng[0].kind; }) && iss.length === ng.length) { v = all[i]; kind = clean ? 'ok' : ng[0].kind; break; }
+        if (clean ? iss.length === 0 && H.nice(all[i]) : ng.length && ng.every(function (x) { return x.kind === ng[0].kind; }) && !(ng[0].kind === 'incomplete' && ng[0].msg.indexOf('第3音') < 0) && VF.some(function (x) { return x[0] === ng[0].kind; }) && iss.length === ng.length) { v = all[i]; kind = clean ? 'ok' : ng[0].kind; break; }
       }
       if (!v) continue;
       var wr = shuffle(VF.filter(function (x) { return x[0] !== kind; }), R).slice(0, 3).map(function (x) { return x[1]; }), m = mc(R, tx(vfName(kind)), wr.map(function (w) { return tx(w); }), 4);
-      var msg = kind === 'ok' ? '根音を 重ねた 完全和音。音域・間隔・交差も OK。' : H.checkChord(key, mn, ch, v, 0, null)[0].msg + '。';
+      var dbl = (function () { var pcs = H.pcs(key, mn, ch), c = pcs.map(function () { return 0; }); v.forEach(function (p) { pcs.forEach(function (x, q) { if (x.l === p.l && x.a === p.a) c[q]++; }); }); return ['根音', '第3音', '第5音'][c.indexOf(2)] || '根音'; })();
+      var msg = kind === 'ok' ? dbl + 'を 重ねた 完全和音。音域・間隔・交差も OK。' : H.checkChord(key, mn, ch, v, 0, null).map(function (x) { return x.msg; }).join('。') + '。';
       return { q: kname(key, mn) + '。この ' + H.label(ch) + ' の 4 声の 書き方で、まちがっているのは？', fig: fig(key, mn, [ch], [v], { zoom: 2.4 }), ch: m.ch, a: m.a, ex: '<b>' + vfName(kind) + '</b>。' + msg, play: [[v.map(function (p) { return M.str(p); }), 2]] };
     }
     throw new Error('voiceFault');
@@ -213,7 +214,7 @@
   // 単元に 登録
   var REG = { h01: ['voiceFault1'], h03: ['connFault'], h07: ['nctAna1'], h22: ['nctAna2'], h02: ['voiceFault'], h04: ['transFault'], h14: ['anaWork'], h21: ['seqAna', 'anaSeq'], h05: ['anaBasic'], h06: ['anaInv', 'spInv'], h08: ['anaSub'], h09: ['anaMinor'], h10: ['anaV7', 'nextV7'], h11: ['anaSix'], h12: ['sevEasy', 'anaSev', 'spSev'], h13: ['anaNine'], h15: ['anaSec', 'spSec'], h17: ['anaBor', 'spBor'], h18: ['anaNap'], h19: ['anaA6', 'spAlt', 'nextAlt'], h20: ['anaOmit'] };
   Object.keys(REG).forEach(function (u) { var U2 = GK.UNIT[u] || (GK.UNITDEF || []).filter(function (x) { return x.id === u; })[0]; if (U2) REG[u].forEach(function (t) { if (U2.types.indexOf(t) < 0) U2.types.push(t); }); });
-  var nm = { voiceFault1: '配置の まちがい（応用）', connFault: '連結の まちがい（応用）', nctAna1: '非和声音の 分析', nctAna2: '非和声音の 分析（応用）', voiceFault: '和音の 書き方の まちがい', transFault: 'つなぎの まちがいの 種類', anaWork: '和声分析（総合）', anaSeq: '和声分析（反復進行）', anaBasic: '和声分析（主要三和音）', anaInv: '和声分析（転回形）', anaSub: '和声分析（副三和音）', anaMinor: '和声分析（短調）', anaV7: '和声分析（Ⅴ₇）', anaSix: '和声分析（四六）', anaSev: '和声分析（七の和音）', anaNine: '和声分析（Ⅴ₉）', anaSec: '和声分析（副属和音）', anaBor: '和声分析（準固有）', anaNap: '和声分析（ナポリ）', anaA6: '和声分析（増六）', anaOmit: '和声分析（根音省略）',
+  var nm = { voiceFault1: '配置の まちがい（応用）', connFault: '連結の まちがい（応用）', nctAna1: '非和声音の 分析', nctAna2: '非和声音の 分析（応用）', voiceFault: '和音の 書き方の まちがい', transFault: 'つなぎの まちがいの 種類', anaWork: '和声分析（総合）', anaSeq: '和声分析（反復進行）', anaBasic: '和声分析（基本）', anaInv: '和声分析（転回形）', anaSub: '和声分析（副三和音）', anaMinor: '和声分析（短調）', anaV7: '和声分析（Ⅴ₇）', anaSix: '和声分析（四六）', anaSev: '和声分析（七の和音）', anaNine: '和声分析（Ⅴ₉）', anaSec: '和声分析（副属和音）', anaBor: '和声分析（準固有）', anaNap: '和声分析（ナポリ）', anaA6: '和声分析（増六）', anaOmit: '和声分析（根音省略）',
     spInv: '構成音から 和音記号（転回形）', spSev: '構成音から 和音記号（七の和音）', spSec: '構成音から 和音記号（副属和音）', spAlt: '構成音から 和音記号（ナポリ・増六）', spBor: '構成音から 和音記号（準固有）', nextAlt: '変化和音の 進み先', nextV7: 'Ⅴ₇ 転回形・Ⅱ₇ の 進み先', sevEasy: '七の和音の きほん', seqAna: '反復進行の バス' };
   Object.assign(GK.TYPE_NAME, nm);
   var hint = {};

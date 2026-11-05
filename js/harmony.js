@@ -84,7 +84,7 @@
     }
     // そろっているか
     var need = ch.a6 ? pcs.map(function (_, q) { return q; }) : ch.nine ? [0, 1, 3, 4] : ch.sev ? (ch.inv ? [0, 1, 2, 3] : [0, 1, 3]) : (prev && prev.sev && ch.d === 1 && ch.inv === 0 && !H.isAlt(prev) && !H.isAlt(ch)) ? [0, 1] : [0, 1, 2];
-    need.forEach(function (q) { if (!cnt[q]) add('incomplete', true, [], H.role(ch, q) + '（' + N(pcs[q]) + '）が ありません' + (q === 1 ? '（第3音は 省略できません）' : '')); });
+    need.forEach(function (q) { if (!cnt[q] && q === 2 && !ch.sev && !ch.a6 && cnt[0] >= 3) { add('incomplete', false, [], '第5音を 省略して 根音を 3 つ 重ねた 形（使えるが、ふつうは 完全和音に）'); return; } if (!cnt[q]) add('incomplete', true, [], H.role(ch, q) + '（' + N(pcs[q]) + '）が ありません' + (q === 1 ? '（第3音は 省略できません）' : '')); });
     // 重ねてはいけない音
     pcs.forEach(function (c, q) {
       if (cnt[q] > 1 && same(c, lt)) add('dblLT', true, [], '導音（' + N(lt) + '）を 重ねては いけません');
@@ -123,7 +123,7 @@
       if (nul(v0[a]) || nul(v0[b]) || nul(v1[a]) || nul(v1[b])) continue;
       var d0 = Math.abs(mid(v0[a]) - mid(v0[b])), d1 = Math.abs(mid(v1[a]) - mid(v1[b]));
       var c0 = d0 % 12, c1 = d1 % 12, mv = sg(mid(v1[a]) - mid(v0[a])), mw = sg(mid(v1[b]) - mid(v0[b]));
-      if (mv && mw && mv !== mw && d0 && d1 && ((c0 === 7 && c1 === 7) || (c0 === 0 && c1 === 0))) add(c0 === 7 ? 'p5' : 'p8', true, [a, b], H.VNAME[a] + 'と' + H.VNAME[b] + 'が 反行で 連続' + (c0 === 7 ? '5' : '8') + '度（' + N(v0[b]) + '‐' + N(v0[a]) + ' → ' + N(v1[b]) + '‐' + N(v1[a]) + '）');
+      if (mv && mw && mv !== mw && ((c0 === 7 && c1 === 7) || (c0 === 0 && c1 === 0))) add(c0 === 7 ? 'p5' : 'p8', true, [a, b], H.VNAME[a] + 'と' + H.VNAME[b] + 'が 反行で 連続' + (c0 === 7 ? '5' : '8') + '度（' + N(v0[b]) + '‐' + N(v0[a]) + ' → ' + N(v1[b]) + '‐' + N(v1[a]) + '）');
       if (b === 3 && mv && mw && c0 === 6 && c1 === 7 && M.interval(v0[b], v0[a]).deg % 7 === 5) add('p5', true, [a, b], H.VNAME[a] + 'と バスが 減5度 → 完全5度（バスを ふくむ 2 声では 使いません）');
       if (mv && mw && mv === mw) {
         if (c0 === 7 && c1 === 7) add('p5', true, [a, b], H.VNAME[a] + 'と' + H.VNAME[b] + 'が 連続5度（' + N(v0[b]) + '‐' + N(v0[a]) + ' → ' + N(v1[b]) + '‐' + N(v1[a]) + '）');
@@ -176,7 +176,11 @@
       v0.forEach(function (p, j) { if (nul(p) || nul(v1[j]) || !same(p, n9)) return; var d9 = mid(p) - mid(v1[j]); if (!(d9 === 1 || d9 === 2)) add('nine', true, [j], H.VNAME[j] + 'の 第9音（' + N(p) + '）は 2度 下へ 進みます'); });
     }
     // 第 7 音の 解決
-    if (ch0.sev && ch0.d === 7 && !H.isAlt(ch0)) {   // Ⅶ₇ ＝ Ⅴ₉ の 根音省略形：第5音（Ⅴ の 第7音）も 2度 下へ
+    if (ch0.d === 1 && ch0.inv === 2 && !ch0.sev && ch1.d === 5 && !H.isAlt(ch1)) {   // 終止四六：第3音・根音は 2度 下行
+      var p64 = H.pcs(key, minor, ch0);
+      v0.forEach(function (p, j) { if (j === 3 || nul(p) || nul(v1[j]) || !(same(p, p64[0]) || same(p, p64[1]))) return; var dd = mid(p) - mid(v1[j]); if (!(dd === 1 || dd === 2)) add('lt', true, [j], H.VNAME[j] + 'の ' + N(p) + '（Ⅰ₆₄ の ' + (same(p, p64[0]) ? '根音' : '第3音') + '）は 2度 下へ 進みます'); });
+    }
+    if (ch0.d === 7 && !H.isAlt(ch0)) {   // Ⅶ₇ ＝ Ⅴ₉ の 根音省略形：第5音（Ⅴ の 第7音）も 2度 下へ
       var f7 = H.pcs(key, minor, ch0)[2];
       v0.forEach(function (p, j) { if (nul(p) || nul(v1[j]) || !same(p, f7)) return; var dd = mid(p) - mid(v1[j]); if (!(dd === 1 || dd === 2)) add('sev', true, [j], H.VNAME[j] + 'の ' + N(p) + '（Ⅴ₉ の 第7音に あたる 音）は 2度 下へ 進みます'); });
     }
@@ -441,7 +445,8 @@
   };
   // 正しい 2 和音の つなぎ（v0 と、v0 から 正しく つなげる v1 の 一覧）
   H.pairOK = function (key, minor, chs, R) {
-    var A = GK.shuffle(H.cands(key, minor, chs[0], null, false, null).filter(nice), R), B = H.cands(key, minor, chs[1], null, false, chs[0]);
+    var clean = function (ch, pv) { return function (v) { return !H.checkChord(key, minor, ch, v, 0, pv).length; }; };
+    var A = GK.shuffle(H.cands(key, minor, chs[0], null, false, null).filter(nice).filter(clean(chs[0], null)), R), B = H.cands(key, minor, chs[1], null, false, chs[0]).filter(clean(chs[1], chs[0]));
     for (var i = 0; i < A.length; i++) {
       var ok = B.filter(function (v) { return !H.ngCount(H.checkTrans(key, minor, chs[0], A[i], chs[1], v, 0)); });
       if (ok.length) return { v0: A[i], B: ok };
