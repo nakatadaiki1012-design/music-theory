@@ -16,7 +16,7 @@
     funcOf: '和音の 働き', funcOrder: '逆行を 見つける', cadName: '終止の 名前', cadFig: '楽譜から 終止', cadRule: '完全正格終止',
     invName: '転回形の 名前', bassOf: 'バスの 音', figToChord: '数字から 和音', chordToFig: '和音から 数字', invOfV: '転回形を 見分ける',
     nctDef: '非和声音の 意味', nctPick: '非和声音を 選ぶ', nctFig: '非和声音の 種類', nctRule: '非和声音の 解決',
-    subName: '副三和音の 種類', subNotes: '和音の 構成音', subSub: '代理和音', v7Notes: 'Ⅴ₇ の 構成音', v7Why: 'Ⅴ₇ の 性質',
+    subName: '三和音の 種類（長調）', subNotes: '和音の 構成音', subSub: '代理和音', v7Notes: 'Ⅴ₇ の 構成音', v7Why: 'Ⅴ₇ の 性質',
     minLT: '短調の 導音', minQual: '短調の 和音の 種類', minAug: '増2度', minLTvoice: '導音の 声部'
   });
   GK.Q.addTips({

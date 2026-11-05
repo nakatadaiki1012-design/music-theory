@@ -134,9 +134,10 @@
     });
     reg('funcFill', 'h05', 2, 'はたらきの 穴うめ', function (R) {
       var opts = [['Ⅰ‐？‐Ⅴ‐Ⅰ', ['Ⅳ', 'Ⅱ'], 'S（下属）'], ['Ⅰ‐Ⅳ‐？‐Ⅰ', ['Ⅴ'], 'D（属）'], ['？‐Ⅳ‐Ⅴ‐Ⅰ', ['Ⅰ', 'Ⅵ'], 'T（主）'], ['Ⅰ‐Ⅵ‐？‐Ⅴ‐Ⅰ', ['Ⅱ', 'Ⅳ'], 'S（下属）']], x = pick(opts, R), right = pick(x[1], R);
-      var wr = ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ'].filter(function (s) { return x[1].indexOf(s) < 0; });
+      // まちがいの 選択肢は ちがう はたらきで、流れが はっきり くずれる 和音だけ（Ⅲ・Ⅶ の あいまいな 代理は 出さない）
+      var wr = x[2].charAt(0) === 'S' ? ['Ⅴ', 'Ⅰ'] : x[2].charAt(0) === 'D' ? ['Ⅱ', 'Ⅵ'] : ['Ⅴ', 'Ⅱ'];
       var m = textQ(R, right, wr);
-      return { q: '<b>' + x[0] + '</b> の ？ に 入る 和音として ふさわしいのは？', ch: m.ch, a: m.a, ex: 'T → S → D → T の 流れ。？ には <b>' + x[2] + '</b> の 和音（' + x[1].join('・') + '）。' };
+      return { q: '<b>' + x[0] + '</b>（T → S → D → T の 流れ）。？ に 入る 和音として ふさわしいのは？', ch: m.ch, a: m.a, ex: 'T → S → D → T の 流れ。？ には <b>' + x[2] + '</b> の 和音（' + x[1].join('・') + '）。' };
     });
     reg('invText', 'h06', 2, '音から 転回形', function (R) {
       var f = rkey(R), d = pick([1, 4, 5, 2, 6], R), inv = ri(0, 2, R), ch = Ch(d, inv), pcs = H.pcs(f, false, ch), bass = pcs[inv], up = pcs.filter(function (_, i) { return i !== inv; });
@@ -171,7 +172,7 @@
       var nat = pc.map(function (p) { var lt = H.lt(f, true); return p.l === lt.l && p.a === lt.a ? { l: p.l, a: p.a - 1 } : p; });
       var wr = [txt(nat), txt(H.pcs(f, true, Ch(d % 7 + 1, 0, sev))), txt(H.pcs(f, true, Ch((d + 1) % 7 + 1, 0, sev)))].filter(function (t) { return t !== txt(pc); });
       var m = textQ(R, txt(pc), wr.concat([txt(H.pcs(f, false, Ch(d, 0, sev)))]));
-      return { q: '<b>' + kname(f, true) + '</b>（和声短音階）の <b>' + H.label(ch) + '</b> の 構成音は？', ch: m.ch, a: m.a, ex: '短調では 導音（' + N(H.lt(f, true)) + '）を ふくむ 和音で 第7音を 半音 上げる。' + H.label(ch) + ' ＝ <b>' + txt(pc) + '</b>。' };
+      return { q: '<b>' + kname(f, true) + '</b>（和声短音階）の <b>' + H.label(ch) + '</b> の 構成音は？', ch: m.ch, a: m.a, ex: (pc.some(function (p) { var lt = H.lt(f, true); return p.l === lt.l && p.a === lt.a; }) ? '短調では 第7音を 半音 上げて 導音（' + N(H.lt(f, true)) + '）に する。' : 'この 和音に 第7音（導音）は ふくまれないので、調号どおりの 音。') + H.label(ch) + ' ＝ <b>' + txt(pc) + '</b>。' };
     });
     reg('nineSpell', 'h13', 2, '第9音を 答える', function (R) {
       var mi = R() < 0.4, f = pick([0, 1, -1, 2, -2, 3, -3], R), pc = H.pcs(f, mi, { d: 5, inv: 0, sev: true, nine: true }), right = N(pc[4]);

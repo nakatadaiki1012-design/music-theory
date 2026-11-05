@@ -15,7 +15,7 @@
   var kname = function (key, minor) { return H.keyName(key, minor); };
   var rkey = function (R, minor) { return pick(minor ? H.KEYS.min : H.KEYS.maj, R); };
   var vtxt = function (v) { return v.map(function (p) { return N(p); }).join('・'); };
-  var KIND = { p5: '連続5度', p8: '連続8度', hidden: '隠伏5度・8度', lt: '導音の 解決の まちがい', sev: '第7音の 解決の まちがい', nine: '第9音の 解決の まちがい', cross: '声部の 交差', space: '声部の 間隔が 広すぎる', dblLT: '導音の 重複', incomplete: '和音の 音が そろっていない', leap: '1 オクターブを こえる 跳躍', aug: '増・減の 音程の 進行', overlap: '声部の 重なり' };
+  var KIND = { p5: '連続5度', p8: '連続8度', hidden: '並達（隠伏）5度・8度', lt: '導音の 解決の まちがい', sev: '第7音の 解決の まちがい', nine: '第9音の 解決の まちがい', cross: '声部の 交差', space: '声部の 間隔が 広すぎる', dblLT: '導音の 重複', incomplete: '和音の 音が そろっていない', leap: '7度や 1 オクターブを こえる 跳躍', dbl64: '四六の和音の 重ね方', dblAlt: '変化音の 重複', a6res: '増6度の 解決', dblThird: '第3音の 重複', aug: '増・減の 音程の 進行', overlap: '声部の 重なり' };
   H.KIND = KIND;
   var fig = H.fig;
   var pairs = function (list, R) { return pick(list, R); };
@@ -55,12 +55,15 @@
     }
     throw new Error('rangeOut');
   });
+  // 密集＝上 3 声の となりどうしの 間に 和音の 音が 入らない。開離＝となりどうしの 間に 和音の 音が 1 つずつ 入る
+  var gapN = function (key, ch, a, b) { var pcs = H.pcs(key, false, ch), n = 0; for (var m = M.midi(b) + 1; m < M.midi(a); m++) { if (pcs.some(function (c) { return ((M.midi({ l: c.l, a: c.a, o: 4 }) - m) % 12 + 12) % 12 === 0; })) n++; } return n; };
   add('hpos', 'h01', 1, function (R) {
     var open = R() < 0.5, key = rkey(R), ch = pick([Ch(1), Ch(4), Ch(5)], R);
-    var v = oneChord(key, false, ch, R, function (x) { return (spreadOf(x) > 12) === open; });
-    if (!v) { open = !open; v = oneChord(key, false, ch, R, function (x) { return (spreadOf(x) > 12) === open; }); }
+    var test = function (op) { return function (x) { var g1 = gapN(key, ch, x[0], x[1]), g2 = gapN(key, ch, x[1], x[2]); return op ? g1 === 1 && g2 === 1 : g1 === 0 && g2 === 0; }; };
+    var v = oneChord(key, false, ch, R, test(open));
+    if (!v) { open = !open; v = oneChord(key, false, ch, R, test(open)); }
     var m = mc(R, tx(open ? '開離配置' : '密集配置'), [tx('密集配置'), tx('開離配置')], 2);
-    return { q: 'この配置は？', fig: fig(key, false, [ch], [v], { nolab: true, zoom: 2.4 }), ch: m.ch, a: m.a, ex: 'ソプラノ（' + pn(v[0]) + '）とテノール（' + pn(v[2]) + '）の 間は ' + (spreadOf(v) > 12 ? '1 オクターブより 広い → <b>開離配置</b>' : '1 オクターブ 以内 → <b>密集配置</b>') + '。' };
+    return { q: 'この配置は？', fig: fig(key, false, [ch], [v], { nolab: true, zoom: 2.4 }), ch: m.ch, a: m.a, ex: open ? 'S‐A、A‐T の 間に 和音の 音が 1 つずつ 入る（ひろがった 形）→ <b>開離配置</b>。' : 'S・A・T が となりあう 和音の 音で、間に 和音の 音が 入らない（つまった 形）→ <b>密集配置</b>。' };
   });
   add('spaceFind', 'h01', 2, function (R) {
     for (var t = 0; t < 60; t++) {
@@ -127,6 +130,9 @@
   });
 
   /* =================== h03 和音の連結 =================== */
+  // 上 3 声の 動きが 小さい 順（なめらかな つなぎを 優先）
+  var motion = function (v0, v1) { return [0, 1, 2].reduce(function (a, j) { return a + Math.abs(mid(v1[j]) - mid(v0[j])); }, 0); };
+  var smooth = function (v0, B) { return B.slice().sort(function (a, b) { return motion(v0, a) - motion(v0, b); }); };
   var PAIRS1 = [[1, 4], [1, 5], [4, 1], [5, 1], [4, 5], [1, 6], [6, 4], [2, 5], [5, 6], [6, 2], [4, 2]];
   add('commonTone', 'h03', 1, function (R) {
     var key = rkey(R), pr = pick(PAIRS1, R), a = Ch(pr[0]), b = Ch(pr[1]), pa = H.pcs(key, false, a), pb = H.pcs(key, false, b);
@@ -140,7 +146,7 @@
   add('holdVoice', 'h03', 2, function (R) {
     for (var t = 0; t < 80; t++) {
       var key = rkey(R), pr = pick([[1, 4], [1, 5], [4, 1], [5, 1], [1, 6], [6, 4], [2, 5]], R), chs = [Ch(pr[0]), Ch(pr[1])], pc = H.pairOK(key, false, chs, R); if (!pc) continue;
-      var best = null; shuffle(pc.B, R).forEach(function (v1) { var cm = H.common(pc.v0, v1).filter(function (j) { return j < 3; }); if (!best && cm.length === 1 && H.nice(v1)) best = { v1: v1, j: cm[0] }; });
+      var best = null; smooth(pc.v0, pc.B).forEach(function (v1) { var cm = H.common(pc.v0, v1).filter(function (j) { return j < 3; }); if (!best && cm.length === 1 && H.nice(v1)) best = { v1: v1, j: cm[0] }; });
       if (!best) continue;
       var vs = [pc.v0, best.v1], col = [[null, null, null, null], [null, null, null, null]]; col[0][best.j] = col[1][best.j] = '#c08a0e';
       var m = mc(R, tx(VN[best.j]), VN.slice(0, 3).map(function (x) { return tx(x); }), 3);
@@ -150,8 +156,8 @@
   });
   add('contraryQ', 'h03', 2, function (R) {
     for (var t = 0; t < 80; t++) {
-      var key = rkey(R), pr = pick([[4, 5], [5, 6], [1, 2], [6, 2], [4, 2]], R), chs = [Ch(pr[0]), Ch(pr[1])], pc = H.pairOK(key, false, chs, R); if (!pc) continue;
-      var best = null; shuffle(pc.B, R).forEach(function (v1) {
+      var key = rkey(R), pr = pick([[4, 5], [5, 6], [1, 2], [6, 5]], R), chs = [Ch(pr[0]), Ch(pr[1])], pc = H.pairOK(key, false, chs, R); if (!pc) continue;
+      var best = null; smooth(pc.v0, pc.B).forEach(function (v1) {
         if (best || !H.nice(v1) || H.common(pc.v0, v1).some(function (j) { return j < 3; })) return;
         var bd = mid(v1[3]) - mid(pc.v0[3]); if (!bd) return;
         if ([0, 1, 2].every(function (j) { var d = mid(v1[j]) - mid(pc.v0[j]); return d && (d > 0) !== (bd > 0); })) best = v1;
@@ -167,7 +173,7 @@
     return function (R, st) {
       for (var t = 0; t < 160; t++) {
         var key = rkey(R, minor), pr = pick(pairs, R), chs = [Ch(pr[0], 0, pr[2]), Ch(pr[1], 0, pr[3])], pc = H.pairOK(key, minor, chs, R); if (!pc) continue;
-        var tg = shuffle(pc.B, R)[0], j = st >= 3 ? 2 : 1;
+        var tg = shuffle(smooth(pc.v0, pc.B).slice(0, 3), R)[0], j = st >= 3 ? 2 : 1;
         var same = pc.B.filter(function (v) { return [0, 1, 2, 3].every(function (q) { return q === j || mid(v[q]) === mid(tg[q]); }); });
         var pcsOk = {}; same.forEach(function (v) { pcsOk[v[j].l + ':' + v[j].a] = 1; });
         if (Object.keys(pcsOk).length !== 1) continue;
@@ -180,6 +186,8 @@
           var is = H.checkChord(key, minor, chs[1], v2, 1, chs[0]).concat(H.checkTrans(key, minor, chs[0], pc.v0, chs[1], v2, 0)).filter(function (z) { return z.ng; });
           return is.length ? N(x) + ' だと「' + is[0].msg + '」' : null;
         };
+        var isCT = function (x) { return pcs.some(function (c) { return c.l === x.l && c.a === x.a; }); };
+        wrongs = wrongs.filter(function (x) { return !isCT(x) || why(x); });   // 和音の 音で 正しく 入る ものは 選択肢に しない（答えが 2 つに なるので）
         var opts = shuffle(wrongs, R).map(function (x) { return tw(N(x), why(x) || (N(x) + ' では 和音が そろわない・つながらない'), x.l + ':' + x.a); });
         var m = mc(R, tx(N(right), right.l + ':' + right.a), opts), q0 = [[], [j]];
         return { q: kname(key, minor) + '。<b>' + H.label(chs[0]) + ' → ' + H.label(chs[1]) + '</b>。？ に 入る ' + VN[j] + 'の 音は？', fig: fig(key, minor, chs, [pc.v0, tg], { q: q0, zoom: 2.4 }), ch: m.ch, a: m.a, why: m.why, ex: '他の 3 声は きまっているので、<b>' + N(right) + '</b> を 入れると ' + H.label(chs[1]) + ' の 音が そろい、連続5度・8度や 導音・第7音の ルールも まもれる。', exFig: fig(key, minor, chs, [pc.v0, tg], { zoom: 2.4 }), play: [[pc.v0.map(H.str), 1.6], [tg.map(H.str), 3]] };

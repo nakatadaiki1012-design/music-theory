@@ -83,7 +83,7 @@
       else if (j < 2 && mid(v[j]) - mid(v[j + 1]) > 12) add('space', true, [j, j + 1], H.VNAME[j] + 'と' + H.VNAME[j + 1] + 'が 1 オクターブより はなれています');
     }
     // そろっているか
-    var need = ch.a6 ? pcs.map(function (_, q) { return q; }) : ch.nine ? [0, 1, 3, 4] : ch.sev ? [0, 1, 3] : (prev && prev.sev && ch.d === 1 && ch.inv === 0 && !H.isAlt(prev) && !H.isAlt(ch)) ? [0, 1] : [0, 1, 2];
+    var need = ch.a6 ? pcs.map(function (_, q) { return q; }) : ch.nine ? [0, 1, 3, 4] : ch.sev ? (ch.inv ? [0, 1, 2, 3] : [0, 1, 3]) : (prev && prev.sev && ch.d === 1 && ch.inv === 0 && !H.isAlt(prev) && !H.isAlt(ch)) ? [0, 1] : [0, 1, 2];
     need.forEach(function (q) { if (!cnt[q]) add('incomplete', true, [], H.role(ch, q) + '（' + N(pcs[q]) + '）が ありません' + (q === 1 ? '（第3音は 省略できません）' : '')); });
     // 重ねてはいけない音
     pcs.forEach(function (c, q) {
@@ -94,6 +94,17 @@
     // 変化音（調の 音階に ない 音）は 重ねない（ナポリの 第3音だけ 例外）
     if (H.isAlt(ch)) { var dia = M.scale(M.keyTonic(key, minor), minor ? 'harmonic' : 'major'); pcs.forEach(function (c, q) { if (cnt[q] > 1 && !dia.some(function (x) { return same(x, c); }) && !(ch.nap && q === 1)) add('dblAlt', true, [], '変化音（' + N(c) + '）を 重ねては いけません'); }); }
     if (ch.a6 && cnt[1] < 1) add('incomplete', true, [], '主音が ありません');
+    if (!ch.sev && !ch.a6 && cnt[1] > 2) add('dblThird', true, [], '第3音を 3 つ 重ねては いけません');
+    // 四六の和音は バス（第5音）を 重ねる
+    if (!ch.sev && !ch.a6 && ch.inv === 2 && cnt[2] < 2) add('dbl64', true, [], '四六の和音では バス（第5音）を 重ねます');
+    // 主要三和音（Ⅰ・Ⅳ・Ⅴ）の 第1転回形でも 第3音（バス）の 重複は さける
+    if (!H.isAlt(ch) && ch.inv === 1 && !ch.sev && cnt[1] > 1 && (ch.d === 1 || ch.d === 4 || ch.d === 5)) add('dblThird', false, [], '主要三和音の 六の和音では バス（第3音）を 重ねるのを さけます');
+    // Ⅴ₉：第9音は 第3音（導音）より 上に 置き、根音の すぐ 上（9度より せまい）に 置かない
+    if (ch.nine) {
+      var j9 = -1, j3 = -1, jr = 3; v.forEach(function (p, j) { if (same(p, pcs[4])) j9 = j; if (same(p, pcs[1])) j3 = j; });
+      if (j9 >= 0 && j3 >= 0 && mid(v[j9]) < mid(v[j3])) add('nine', true, [j9], '第9音（' + N(pcs[4]) + '）は 第3音（導音）より 上に 置きます');
+      if (j9 >= 0 && mid(v[j9]) - mid(v[jr]) < 13) add('nine', true, [j9], '第9音は 根音から 9度 以上 はなして 置きます');
+    }
     if (!H.isAlt(ch) && ch.inv === 0 && !ch.sev && cnt[1] > 1 && !same(pcs[1], lt) && (ch.d === 1 || ch.d === 4 || ch.d === 5)) add('dblThird', false, [], '第3音を 重ねるのは ふつう さけます（根音を 重ねるのが 基本）');
     return out;
   };
@@ -110,6 +121,8 @@
       if (nul(v0[a]) || nul(v0[b]) || nul(v1[a]) || nul(v1[b])) continue;
       var d0 = Math.abs(mid(v0[a]) - mid(v0[b])), d1 = Math.abs(mid(v1[a]) - mid(v1[b]));
       var c0 = d0 % 12, c1 = d1 % 12, mv = sg(mid(v1[a]) - mid(v0[a])), mw = sg(mid(v1[b]) - mid(v0[b]));
+      if (mv && mw && mv !== mw && d0 && d1 && ((c0 === 7 && c1 === 7) || (c0 === 0 && c1 === 0))) add(c0 === 7 ? 'p5' : 'p8', true, [a, b], H.VNAME[a] + 'と' + H.VNAME[b] + 'が 反行で 連続' + (c0 === 7 ? '5' : '8') + '度（' + N(v0[b]) + '‐' + N(v0[a]) + ' → ' + N(v1[b]) + '‐' + N(v1[a]) + '）');
+      if (b === 3 && mv && mw && c0 === 6 && c1 === 7 && M.interval(v0[b], v0[a]).deg % 7 === 5) add('p5', true, [a, b], H.VNAME[a] + 'と バスが 減5度 → 完全5度（バスを ふくむ 2 声では 使いません）');
       if (mv && mw && mv === mw) {
         if (c0 === 7 && c1 === 7) add('p5', true, [a, b], H.VNAME[a] + 'と' + H.VNAME[b] + 'が 連続5度（' + N(v0[b]) + '‐' + N(v0[a]) + ' → ' + N(v1[b]) + '‐' + N(v1[a]) + '）');
         else if (c0 === 0 && c1 === 0) add('p8', true, [a, b], H.VNAME[a] + 'と' + H.VNAME[b] + 'が 連続8度（' + (d0 ? '' : '1度 ') + N(v0[b]) + ' → ' + N(v1[b]) + '）');
@@ -120,6 +133,7 @@
     for (var j = 0; j < 4; j++) {
       var x = v0[j], y = v1[j]; if (nul(x) || nul(y)) continue; var dm = mid(y) - mid(x);
       if (Math.abs(dm) > 12) add('leap', true, [j], H.VNAME[j] + 'の 跳躍が 1 オクターブを こえています');
+      else if (Math.abs(dm) === 10 || Math.abs(dm) === 11) add('leap', true, [j], H.VNAME[j] + 'が 7度 跳躍しています（' + N(x) + ' → ' + N(y) + '）');
       else if (dm) {
         var lw = dm > 0 ? x : y, up = dm > 0 ? y : x, iv = M.interval(lw, up);
         var okAlt = (iv.deg === 1 && iv.q === 'A') || (ch0.nap && iv.deg === 3 && iv.q === 'd') || (ch0.a6 && iv.deg === 1);
@@ -160,6 +174,10 @@
       v0.forEach(function (p, j) { if (nul(p) || nul(v1[j]) || !same(p, n9)) return; var d9 = mid(p) - mid(v1[j]); if (!(d9 === 1 || d9 === 2)) add('nine', true, [j], H.VNAME[j] + 'の 第9音（' + N(p) + '）は 2度 下へ 進みます'); });
     }
     // 第 7 音の 解決
+    if (ch0.sev && ch0.d === 7 && !H.isAlt(ch0)) {   // Ⅶ₇ ＝ Ⅴ₉ の 根音省略形：第5音（Ⅴ の 第7音）も 2度 下へ
+      var f7 = H.pcs(key, minor, ch0)[2];
+      v0.forEach(function (p, j) { if (nul(p) || nul(v1[j]) || !same(p, f7)) return; var dd = mid(p) - mid(v1[j]); if (!(dd === 1 || dd === 2)) add('sev', true, [j], H.VNAME[j] + 'の ' + N(p) + '（Ⅴ₉ の 第7音に あたる 音）は 2度 下へ 進みます'); });
+    }
     if (ch0.sev) {
       var s7 = H.pcs(key, minor, ch0)[3];
       v0.forEach(function (p, j) {
@@ -221,11 +239,12 @@
       if (!c.length) return null;
       layers.push(c);
     }
-    var best = layers[0].map(function (v) { return { v: v, c: (R ? R() * 1.5 : 0) + Math.abs(mid(v[0]) - mid('E5')) * 0.15 + (spread(v) ? 0.6 : 0), prev: -1 }; }), tbl = [best];
+    var best = layers[0].map(function (v) { return { v: v, c: H.checkChord(key, minor, chs[0], v, 0, null).length * 3 + (R ? R() * 1.5 : 0) + Math.abs(mid(v[0]) - mid('E5')) * 0.15 + (spread(v) ? 0.6 : 0), prev: -1 }; }), tbl = [best];
     for (var k = 1; k < n; k++) {
       var row = layers[k].map(function (v) {
+        var cw0 = H.checkChord(key, minor, chs[k], v, 0, chs[k - 1]).length * 3;
         var bc = Infinity, bi = -1;
-        tbl[k - 1].forEach(function (s, si) { var cc = s.c + cost(key, minor, chs[k - 1], s.v, chs[k], v, R); if (cc < bc) { bc = cc; bi = si; } });
+        tbl[k - 1].forEach(function (s, si) { var cc = s.c + cw0 + cost(key, minor, chs[k - 1], s.v, chs[k], v, R); if (cc < bc) { bc = cc; bi = si; } });
         return { v: v, c: bc, prev: bi };
       }).filter(function (s) { return s.c < Infinity; });
       if (!row.length) return null;
@@ -257,7 +276,7 @@
     { name: 'Ⅰ‐Ⅱ₇‐Ⅴ‐Ⅰ', chs: [C(1), C(2, 0, 1), C(5), C(1)], lv: 2, adv: true },
     { name: 'Ⅰ‐Ⅱ₆₅‐Ⅴ‐Ⅰ', chs: [C(1), C(2, 1, 1), C(5), C(1)], lv: 3, adv: true },
     { name: 'Ⅰ‐Ⅱ₇‐Ⅴ₇‐Ⅰ', chs: [C(1), C(2, 0, 1), C(5, 0, 1), C(1)], lv: 3, adv: true },
-    { name: 'Ⅰ‐Ⅳ‐Ⅶ₆₅‐Ⅰ', chs: [C(1), C(4), C(7, 1, 1), C(1)], lv: 3, adv: true },
+    { name: 'Ⅰ‐Ⅳ‐Ⅶ₆₅‐Ⅰ₆', chs: [C(1), C(4), C(7, 1, 1), C(1, 1)], lv: 3, adv: true },
     { name: 'Ⅰ‐Ⅵ‐Ⅳ₇‐Ⅴ‐Ⅰ', chs: [C(1), C(6), C(4, 0, 1), C(5), C(1)], lv: 3, adv: true },
     { name: 'Ⅰ‐Ⅳ‐Ⅴ₉‐Ⅰ', chs: [C(1), C(4), C(5, 0, 1, 1), C(1)], lv: 3, adv: true },
     { name: 'Ⅰ‐Ⅱ‐Ⅴ₉‐Ⅰ', chs: [C(1), C(2), C(5, 0, 1, 1), C(1)], lv: 3, adv: true },

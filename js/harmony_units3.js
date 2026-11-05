@@ -16,7 +16,7 @@
   var NCT = {
     pass: ['経過音', '和音の 音から 次の 和音の 音へ、<b>順次進行</b>で つなぐ 音'],
     nei: ['刺繍音', '和音の 音から <b>2度 はなれて</b> もとの 音へ もどる 音（かざり）'],
-    app: ['倚音', '<b>跳躍で 入り</b>、<b>順次進行で</b> 和音の 音へ 解決する 音（強拍に 来る）'],
+    app: ['倚音', '<b>準備なしで 強拍に</b> 置かれ（多くは 跳躍で 入る）、<b>順次進行で</b> 和音の 音へ 解決する 音'],
     sus: ['掛留音', '前の 和音の 音を <b>つないで</b> 次の 和音にまで 残し、<b>2度 下行</b>で 解決する 音'],
     ant: ['先取音', '次の 和音の 音を <b>先に 出して</b> しまう 音']
   };
@@ -29,9 +29,11 @@
   add('nctFig', 'h07', 2, function (R, st) {
     var k = pick(['pass', 'nei', 'app'], R), key = rkey(R), s = sc(key, false), d = pick(PAT[k], R);
     var ps = d.map(function (x) { return x === 0 ? { l: s[6].l, a: s[6].a, o: s[6].o - 1 } : at(s, x); });
-    var notes = ps.map(function (p, i) { return { k: M.str(p), d: 'q', c: i === 1 ? RED : '#333', lab: i === 1 ? '？' : '' }; });
+    var nt = function (i, d) { return { k: M.str(ps[i]), d: d, c: i === 1 ? RED : undefined, lab: i === 1 ? '？' : '' }; };
+    // 倚音は 強拍（小節の あたま）、経過音・刺繍音は 弱拍に 置く（2/4 拍子）
+    var bars = k === 'app' ? [[nt(0, 'h')], [nt(1, 'q'), nt(2, 'q')]] : [[nt(0, 'q'), nt(1, 'q')], [nt(2, 'h')]];
     var m = mc(R, tx(NCT[k][0], k), ['pass', 'nei', 'app'].map(function (x) { return tx(NCT[x][0], x); }), 3);
-    return { q: kname(key) + '。Ⅰ の 和音（' + [0, 2, 4].map(function (i) { return N(s[i]); }).join('・') + '）の 上で、<b>赤い音</b> は 非和声音。何かな？', fig: { score: { clef: 'treble', key: key, notes: notes, sp: 52, zoom: 2 } }, ch: m.ch, a: m.a, ex: '<b>' + NCT[k][0] + '</b>：' + NCT[k][1] + '。' + (k === 'pass' ? '前後の 和音の 音を 順次進行で つないでいる。' : k === 'nei' ? '同じ 和音の 音の あいだに はさまって いる。' : '跳躍で 非和声音に 入って、順次で 和音の 音へ。'), play: ps.map(function (p) { return [p, 0.5]; }) };
+    return { q: kname(key) + '。Ⅰ の 和音（' + [0, 2, 4].map(function (i) { return N(s[i]); }).join('・') + '）の 上で、<b>赤い音</b> は 非和声音。何かな？', fig: { score: { clef: 'treble', key: key, time: '2/4', bars: bars, sp: 52, zoom: 2 } }, ch: m.ch, a: m.a, ex: '<b>' + NCT[k][0] + '</b>：' + NCT[k][1] + '。' + (k === 'pass' ? '前後の 和音の 音を 順次進行で つないでいる。' : k === 'nei' ? '同じ 和音の 音の あいだに はさまって いる。' : '跳躍で 非和声音に 入って、順次で 和音の 音へ。'), play: ps.map(function (p) { return [p, 0.5]; }) };
   });
   add('nctPick', 'h07', 1, function (R) {
     var key = rkey(R), s = sc(key, false), non = [2, 4, 6].map(function (i) { return s[i % 7]; }), ct = [0, 2, 4].map(function (i) { return s[i]; });
@@ -64,8 +66,8 @@
   });
   var SUBOF = { 2: 'Ⅳ（下属和音）', 6: 'Ⅰ（主和音）', 7: 'Ⅴ（属和音）', 3: 'Ⅰ（主和音）' };
   add('subSub', 'h08', 2, function (R) {
-    var d = pick([2, 6, 7, 3], R), m = mc(R, tx(SUBOF[d]), ['Ⅰ（主和音）', 'Ⅳ（下属和音）', 'Ⅴ（属和音）'].map(function (x) { return tx(x); }), 3);
-    return { q: '<b>' + H.ROMAN[d] + '</b> の 和音は、どの 和音の「代理」として 働く？', ch: m.ch, a: m.a, ex: H.ROMAN[d] + ' は 構成音を 2 つ 共有する <b>' + SUBOF[d] + '</b> の 代理。Ⅰ↔Ⅵ（ドミソ／ラドミ）・Ⅳ↔Ⅱ・Ⅴ↔Ⅶ。' };
+    var d = pick([2, 6, 7], R), m = mc(R, tx(SUBOF[d]), ['Ⅰ（主和音）', 'Ⅳ（下属和音）', 'Ⅴ（属和音）'].map(function (x) { return tx(x); }), 3);
+    return { q: '<b>' + H.ROMAN[d] + '</b> の 和音は、どの 和音の「代理」として 働く？', ch: m.ch, a: m.a, ex: 'はたらきの なかま：T ＝ Ⅰ・Ⅵ、S ＝ Ⅳ・Ⅱ、D ＝ Ⅴ・Ⅶ。' + H.ROMAN[d] + ' は <b>' + SUBOF[d] + '</b> の 代理（同じ はたらき）。' };
   });
   add('v7Notes', 'h08', 2, function (R) {
     var key = rkey(R), pc = H.pcs(key, false, Ch(5, 0, true)), txt = function (a) { return a.map(N).join('・'); }, s = sc(key, false);
@@ -77,9 +79,9 @@
   add('v7Why', 'h08', 2, function (R) {
     var L1 = [
       ['Ⅴ₇ の 第7音は どの 方向へ 解決する？', '2度 下行', ['2度 上行', '3度 上行', '同音 保持'], '第7音は <b>2度 下行</b>。ファ → ミ。'],
-      ['Ⅴ₇ → Ⅰ で Ⅰ の 第5音を 省略 するのは どんな とき？', '各声部が なめらかに 進み、導音と 第7音を 解決 するため', ['いつでも 省略 しなければ ならない', '根音を 3 つ 重ねたいから', '転回形の ときだけ'], 'Ⅴ₇ は 4 音 なので、Ⅰ の 第5音を 省略して <b>根音を 3 つ</b> にする ことが ある（完全な 4 音の Ⅴ₇ から）。'],
+      ['完全な Ⅴ₇（基本形）→ Ⅰ で、Ⅰ の 第5音が 省略される のは なぜ？', '導音は 上へ、第7音は 下へ 解決すると、そうなるから', ['いつでも 省略 しなければ ならない', '根音を 3 つ 重ねたいから', '転回形の ときだけ'], 'Ⅴ₇ は 4 音 なので、Ⅰ の 第5音を 省略して <b>根音を 3 つ</b> にする ことが ある（完全な 4 音の Ⅴ₇ から）。'],
       ['Ⅴ₇ は 何和音？', '<b>属七の和音</b>', ['属三和音', '減七の和音', '副七の和音'], 'Ⅴ の 上に 7度を 加えた 和音を 属七の和音 という。'],
-      ['Ⅴ₇ の 導音と 第7音の ひびきは？', '<b>減5度</b>（トライトーン）で 解決したい', ['完全5度で 安定', '長3度で 明るい', '8度で とけあう'], 'シ と ファ の 減5度が 強く 解決を 求める。']
+      ['Ⅴ₇ の 導音と 第7音（ハ長調の シ と ファ）の ひびきは？', '<b>減5度・増4度</b>（トライトーン）で 解決したい', ['完全5度で 安定', '長3度で 明るい', '8度で とけあう'], 'シ と ファ の 減5度が 強く 解決を 求める。']
     ];
     var x = pick(L1, R), m = mc(R, tx(x[1]), x[2].map(function (s) { return tx(s); }).concat([tx(x[1])]));
     return { q: x[0], ch: m.ch, a: m.a, ex: x[3] };

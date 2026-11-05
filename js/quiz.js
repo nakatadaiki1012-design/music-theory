@@ -1335,10 +1335,21 @@
     o = o || {};
     var types = GK.Q.typesOf(uids, o.noEar), bag = [], out = [], last = null, err = 0, seen = {};
     if (o.types) types = o.types.slice();
+    // むずかしさを 決めたとき：その ★ の 種類を 中心に（足りなければ となりの ★ も）
+    if (o.st && !o.ramp) {
+      var ex = types.filter(function (id) { return T[id] && T[id].st === o.st; }), nr = types.filter(function (id) { return T[id] && Math.abs(T[id].st - o.st) <= 1; });
+      if (ex.length >= 4) types = ex; else if (ex.length && nr.length >= 4) types = ex.concat(ex, nr.filter(function (id) { return ex.indexOf(id) < 0; })); else if (nr.length >= 2) types = nr;
+    }
     GK.Q.useWeak = !!o.weak;
     for (var i = 0; i < n; i++) {
       if (!bag.length) bag = shuffle(types.slice(), R);
       var id = bag.pop(); if (id === last && bag.length) { bag.unshift(id); id = bag.pop(); }
+      // だんだん：前半は ★ の 少ない 種類、後半は 多い 種類を えらぶ
+      if (o.ramp && bag.length) {
+        var want = Math.min(3, 1 + Math.floor(i * 3 / n)), bi = -1, bd = Math.abs(((T[id] || {}).st || 1) - want);
+        bag.forEach(function (x, k) { var d = Math.abs(((T[x] || {}).st || 1) - want); if (d < bd && x !== last) { bd = d; bi = k; } });
+        if (bi >= 0) { var sw = bag[bi]; bag[bi] = id; id = sw; }
+      }
       last = id;
       var st = o.stFn ? o.stFn(i) : o.st || (o.ramp ? Math.min(3, 1 + Math.floor(i * 3 / n)) : T[id].st);
       try { out.push(GK.Q.fresh(id, R, Math.max(T[id].st, st), seen)); } catch (e) { console.error(id, e); if (++err < 50) i--; }
