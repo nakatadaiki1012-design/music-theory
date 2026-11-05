@@ -64,7 +64,7 @@
       shuffle(confuse(ch, mn), R).forEach(function (c) { var l = H.label(c); try { if (l !== right && wr.indexOf(l) < 0 && sig(key, mn, c) !== sig(key, mn, ch)) wr.push(l); } catch (e) { } });
       var m = mc(R, tx(right), wr.slice(0, 5).map(function (w) { return tx(w); }), 4);
       return { q: kname(key, mn) + '。バスが <b>' + N(bass) + '</b>、上の 声部に <b>' + up.map(N).join('・') + '</b>。この 和音の 和音記号は？', ch: m.ch, a: m.a,
-        ex: '3度ずつ 積みなおすと ' + pcs.map(N).join('・') + '（根音 ' + N(pcs[0]) + '）。バスが ' + H.role(ch, ch.inv) + ' なので <b>' + right + '</b>。', play: [[pcs.map(function (p, q) { return M.str(Object.assign({}, p, { o: q === ch.inv ? 3 : 4 })); }), 2]] };
+        ex: ch.a6 ? 'バス（♭6 の ' + N(pcs[0]) + '）と ' + N(pcs[2]) + '（♯4）が 増6度 → 増六の和音。ほかの 音が 主音だけ ＝ It⁺⁶、主音＋♭3 ＝ Ge⁺⁶、主音＋2 ＝ Fr⁺⁶ なので <b>' + right + '</b>。' : '3度ずつ 積みなおすと ' + pcs.map(N).join('・') + '（根音 ' + N(pcs[0]) + '）。バスが ' + H.role(ch, ch.inv) + ' なので <b>' + right + '</b>。', play: [[pcs.map(function (p, q) { return M.str(Object.assign({}, p, { o: q === ch.inv ? 3 : 4 })); }), 2]] };
     });
   }
   /* ---------- つぎに 進める 和音（★3） ---------- */

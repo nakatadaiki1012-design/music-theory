@@ -255,10 +255,10 @@
   var RED2 = '#c0392b';
   var NCTB = {
     sus: [[{ k: 'C5', d: 'q' }, { k: 'C5', d: 'q', tie: true }], [{ k: 'C5', d: 'q', c: RED2, lab: '？' }, { k: 'B4', d: 'q' }], [{ k: 'C5', d: 'h' }]],
-    ant: [[{ k: 'E5', d: 'q' }, { k: 'D5', d: '8' }, { k: 'C5', d: '8', c: RED2, lab: '？' }], [{ k: 'C5', d: 'h' }]],
+    ant: [[{ k: 'B4', d: 'q' }, { k: 'D5', d: '8' }, { k: 'C5', d: '8', c: RED2, lab: '？' }], [{ k: 'C5', d: 'h' }]],
     app: [[{ k: 'E4', d: 'q' }, { k: 'G4', d: 'q' }], [{ k: 'D5', d: 'q', c: RED2, lab: '？' }, { k: 'C5', d: 'q' }]]
   };
-  var NCTC = { sus: 'Ⅴ → Ⅰ', ant: 'Ⅴ → Ⅰ（最後の 小節が Ⅰ）', app: 'Ⅰ' };
+  var NCTC = { sus: 'Ⅰ → Ⅴ → Ⅰ', ant: 'Ⅴ → Ⅰ（最後の 小節が Ⅰ）', app: 'Ⅰ' };
   add('nct2Score', 'h22', 2, function (R) {
     var k = pick(['sus', 'ant', 'app'], R), nm = { sus: '掛留音', ant: '先取音', app: '倚音' }[k];
     var m = textMc(R, nm, ['掛留音', '先取音', '倚音', '経過音', '刺繍音']);

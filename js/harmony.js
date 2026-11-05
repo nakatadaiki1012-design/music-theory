@@ -94,6 +94,8 @@
     // 変化音（調の 音階に ない 音）は 重ねない（ナポリの 第3音だけ 例外）
     if (H.isAlt(ch)) { var dia = M.scale(M.keyTonic(key, minor), minor ? 'harmonic' : 'major'); pcs.forEach(function (c, q) { if (cnt[q] > 1 && !dia.some(function (x) { return same(x, c); }) && !(ch.nap && q === 1)) add('dblAlt', true, [], '変化音（' + N(c) + '）を 重ねては いけません'); }); }
     if (ch.a6 && cnt[1] < 1) add('incomplete', true, [], '主音が ありません');
+    // 七の和音で 第5音を 省くときは 根音を 重ねる
+    if (ch.sev && !ch.nine && !ch.a6 && !cnt[2] && cnt[0] < 2) add('incomplete', true, [], '第5音を 省くときは 根音を 重ねます');
     if (!ch.sev && !ch.a6 && cnt[1] > 2) add('dblThird', true, [], '第3音を 3 つ 重ねては いけません');
     // 四六の和音は バス（第5音）を 重ねる
     if (!ch.sev && !ch.a6 && ch.inv === 2 && cnt[2] < 2) add('dbl64', true, [], '四六の和音では バス（第5音）を 重ねます');
@@ -432,6 +434,7 @@
     for (var i = 0; i < c.length && i < 3000; i++) {
       var v2 = vs.slice(); v2[k + 1] = c[i];
       var ng = H.checkAll(key, minor, chs, v2).filter(function (x) { return x.ng; });
+      if (H.checkChord(key, minor, chs[k + 1], c[i], k + 1, chs[k]).length) continue;   // まちがいは つなぎ 1 か所だけ（和音そのものは きれいに）
       if (ng.length && ng.every(function (x) { return x.i === k && x.j === k + 1; }) && kindsOf(ng, true).length === 1) return { vs: v2, issues: ng };
     }
     return null;
