@@ -14,8 +14,23 @@
   var Ch = function (d, inv, sev, nine) { return { d: d, inv: inv || 0, sev: !!sev || !!nine, nine: !!nine }; };
   var CHL = [];
   for (var dd = 1; dd <= 7; dd++) { [0, 1, 2].forEach(function (iv) { CHL.push(Ch(dd, iv)); }); [0, 1, 2, 3].forEach(function (iv) { CHL.push(Ch(dd, iv, true)); }); if (dd === 5) CHL.push(Ch(5, 0, true, true)); }
-  var chKey = function (c) { return c.d + ',' + c.inv + ',' + (c.nine ? 2 : c.sev ? 1 : 0); };
-  var chName = function (c) { return H.ROMAN[c.d] + ' ' + (c.nine ? '九の和音（Ⅴ₉）' : c.sev ? ['七の和音', '五六の和音', '三四の和音', '二の和音'][c.inv] : ['基本形', '六の和音（第1転回）', '四六の和音（第2転回）'][c.inv]); };
+  // 変化和音（応用編）：副属和音・準固有和音・ナポリ・増六
+  var CA = function (d, inv, sev, o) { return Object.assign(Ch(d, inv, sev), o); };
+  var ALTG = [
+    ['副属和音', [2, 3, 4, 5, 6].map(function (tg) { return [CA(5, 0, false, { tg: tg }), CA(5, 1, false, { tg: tg }), CA(5, 0, true, { tg: tg }), CA(5, 1, true, { tg: tg }), CA(5, 2, true, { tg: tg }), CA(5, 3, true, { tg: tg })]; }).reduce(function (a, b) { return a.concat(b); }, [])],
+    ['準固有和音（長調）', [CA(4, 0, false, { bor: 1 }), CA(4, 1, false, { bor: 1 }), CA(2, 1, false, { bor: 1 }), CA(2, 0, true, { bor: 1 }), CA(2, 1, true, { bor: 1 }), CA(6, 0, false, { bor: 1 })]],
+    ['ナポリ・増六', [CA(2, 1, false, { nap: 1 }), CA(2, 0, false, { nap: 1 }), CA(4, 0, false, { a6: 'it' }), CA(4, 0, false, { a6: 'ge' }), CA(4, 0, false, { a6: 'fr' })]]
+  ];
+  ALTG.forEach(function (g) { g[1].forEach(function (c) { CHL.push(c); }); });
+  var chKey = function (c) { return c.d + ',' + c.inv + ',' + (c.nine ? 2 : c.sev ? 1 : 0) + (c.tg ? ',t' + c.tg : '') + (c.bor ? ',b' : '') + (c.nap ? ',n' : '') + (c.a6 ? ',' + c.a6 : ''); };
+  var chName = function (c) {
+    if (c.a6) return H.label(c) + '（' + { it: 'イタリア', ge: 'ドイツ', fr: 'フランス' }[c.a6] + 'の 六）';
+    if (c.nap) return H.label(c) + '（ナポリ' + (c.inv ? 'の 六' : '・基本形') + '）';
+    if (c.tg) return H.label(c) + '（' + H.ROMAN[c.tg] + ' の 副属' + (c.sev ? '七' : '') + '）';
+    if (c.bor) return H.label(c) + '（準固有）';
+    return chName0(c);
+  };
+  var chName0 = function (c) { return H.ROMAN[c.d] + ' ' + (c.nine ? '九の和音（Ⅴ₉）' : c.sev ? ['七の和音', '五六の和音', '三四の和音', '二の和音'][c.inv] : ['基本形', '六の和音（第1転回）', '四六の和音（第2転回）'][c.inv]); };
   var STEPS = [0, 2, 4, 5, 7, 9, 11];
   var VCN = ['S', 'A', 'T', 'B'], VJP = ['ソプラノ', 'アルト', 'テノール', 'バス'];
   var ACC = [[null, '自動'], [1, '♯'], [-1, '♭'], [0, '♮']];
@@ -42,7 +57,7 @@
     { g: '和音の つなぎ', id: 'par', s: '連続5・8度', ks: ['p5', 'p8'], t: '連続5度・連続8度', tip: '2 つの 声が 同じ向きに 5度 → 5度、8度 → 8度 と 進むのは 禁止。' },
     { id: 'res', s: '解決', ks: ['lt', 'sev'], t: '導音・第7音の 解決', tip: '導音は 半音 上の 主音へ。第7音は 2度 下へ。', need: function (t) { return t.chs.some(function (c, i) { return (c.d === 5 || c.d === 7 || c.sev) && i < t.chs.length - 1; }); } },
     { id: 'move', s: '跳躍', ks: ['leap', 'aug'], t: '跳躍・増減の 音程', tip: '1 オクターブを こえる 跳躍、増2度などの 動きは さける。' },
-    { g: '注意（⚠ ふつうは さける）', id: 'warn', s: '注意', ks: ['hidden', 'overlap', 'dblThird'], t: '隠伏・声部の 重なり・第3音の 重複', tip: 'ソプラノと バスが 同じ向きに 5度・8度へ（隠伏）、声部が 前の 位置を こえる、第3音を 重ねる ―― ふつうは さける。' }
+    { g: '注意（⚠ ふつうは さける）', id: 'warn', s: '注意', ks: ['hidden', 'overlap', 'dblThird'], t: '並達・声部の 重なり・第3音の 重複', tip: 'ソプラノと バスが 同じ向きに 5度・8度へ（並達）、声部が 前の 位置を こえる、第3音を 重ねる ―― ふつうは さける。' }
   ];
   // 単元ごとの 実践課題に つかう 進行（H.PROGS の name）
   var UP = {
@@ -151,7 +166,7 @@
     var un = S.unit && GK.UNIT[S.unit], clr = (GK.store.get('hlabUnit', {})[S.unit] || 0);
     V.innerHTML = '<div class="split"><aside class="panel side">' + (un ? '<h3>📖 ' + esc(un.no) + ' ' + esc(un.title) + ' の 実践</h3><button type="button" class="it" data-go="#hlab/u/' + S.unit + '/sop" aria-current="' + (S.mode === 'sop') + '"><b>🔴 ソプラノ課題</b><small>この単元の 和音進行で</small></button><button type="button" class="it" data-go="#hlab/u/' + S.unit + '/bass" aria-current="' + (S.mode === 'bass') + '"><b>🟣 バス課題</b><small>この単元の 和音進行で</small></button><button type="button" class="it" data-go="#' + S.unit + '"><b>◀ 授業にもどる</b><small>' + esc(un.goal) + '</small></button><button type="button" class="it" data-go="#hlab/sop"><b>✍️ 実践の トップへ</b><small>自由入力・自分で出題 など</small></button><p class="note" style="padding:6px 10px">この単元の クリア <b>' + clr + '</b> 回</p>' : '<h3>✍️ 和声の 実践</h3>') +
       (un ? '' : MODES.map(function (x) { return '<button type="button" class="it" data-go="#hlab/' + x[0] + '" aria-current="' + (S.mode === x[0]) + '"><b>' + x[1] + '</b><small>' + x[2] + '</small></button>'; }).join('')) + (un ? '' : '<p class="note" style="padding:2px 10px">単元ごとの 実践は、各単元の「✍️ 実践」から。</p>') +
-      '<button type="button" class="it" data-go="#home/harm"><b>◀ 和声法ラボの ホームへ</b><small>授業・演習・実践・ゲーム</small></button>' +
+      '<button type="button" class="it" data-go="#home/' + (GK.store.get('harmSub', 'basic') === 'adv' ? 'harm2' : 'harm') + '"><b>◀ 和声法ラボの ホームへ</b><small>授業・演習・実践・ゲーム</small></button>' +
       '<p class="note" style="padding:6px 10px">クリア <b>' + stat().clears + '</b> 回（満点 <b>' + stat().perfect + '</b> 回）</p>' +
       '</aside><section class="panel main"><div class="mbody" id="hbody"></div></section></div>';
     GK.harmLab($('#hbody'));
@@ -200,6 +215,7 @@
     function aim() {
       var t = Z.t, h = '<b>' + esc(H.keyName(t.key, t.minor)) + '</b>';
       if (!free) h += '<span class="hzprog">' + esc(t.name) + '</span>';
+      var md = t.chs.filter(function (c) { return c.dk != null; })[0]; if (md) h += '<span class="hzprog">→ ' + esc(H.keyName(t.key + md.dk, !!md.lm)) + ' に 転調</span>';
       var txt = make ? (S.mv === 0 ? 'ソプラノ' : 'バス') + 'の メロディーを 入れよう（和音の 音だけ）。できたら「この課題で 練習」。'
         : free ? '和音を えらんで、4 声を 書こう。'
         : t.gv === 0 ? '🔴 ソプラノに 合わせて、アルト・テノール・バスを 書こう。' : '🟣 バスに 合わせて、ソプラノ・アルト・テノールを 書こう。';
@@ -249,7 +265,7 @@
       var locked = function (jj) { return jj === t.gv || Z.show || (make && jj !== S.mv); };
       h += '<div class="hzfh"><button type="button" class="btn sm" data-a="prev"' + (i ? '' : ' disabled') + ' aria-label="まえの 和音">◀</button><b>' + (i + 1) + ' 番め　' + H.label(ch) + '</b><span class="hzfn">' + FUNC[ch.d] + '</span><button type="button" class="btn sm" data-a="next"' + (i < t.chs.length - 1 ? '' : ' disabled') + ' aria-label="つぎの 和音">▶</button>' +
         (!make ? '<button type="button" class="hzic" data-a="playcol" title="この 和音を 聴く">🔊</button>' : '') + '</div>' +
-        (free ? '<select id="hzCh" aria-label="和音">' + [1, 2, 3, 4, 5, 6, 7].map(function (dg) { return '<optgroup label="' + H.ROMAN[dg] + '">' + CHL.filter(function (c) { return c.d === dg; }).map(function (c) { return '<option value="' + chKey(c) + '"' + (chKey(c) === chKey(ch) ? ' selected' : '') + '>' + esc(chName(c)) + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select>' : '');
+        (free ? '<select id="hzCh" aria-label="和音">' + [1, 2, 3, 4, 5, 6, 7].map(function (dg) { return '<optgroup label="' + H.ROMAN[dg] + '">' + CHL.filter(function (c) { return c.d === dg && !H.isAlt(c); }).map(function (c) { return '<option value="' + chKey(c) + '"' + (chKey(c) === chKey(ch) ? ' selected' : '') + '>' + esc(chName(c)) + '</option>'; }).join('') + '</optgroup>'; }).join('') + ALTG.map(function (g) { return '<optgroup label="' + g[0] + '">' + g[1].filter(function (c) { return !(c.bor && t.minor); }).map(function (c) { return '<option value="' + chKey(c) + '"' + (chKey(c) === chKey(ch) ? ' selected' : '') + '>' + esc(chName(c)) + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select>' : '');
       var tip = '';
       if (!make) {
         if (i === 0) tip = '根音・第3音・第5音を そろえ、根音を 重ねる';

@@ -8,6 +8,14 @@
   'use strict';
   var GK = window.GK, M = GK.M, H = GK.H, U = GK.Q.util, UT = H.UT;
   var N = function (p) { return GK.nm(p); };
+  var tw = function (t, w) { var o = U.tx(t); o.w = w; return o; };
+  // まちがえた ときの 説明：どの 和音を どう 読みちがえたか
+  function whyMis(key, minor, right, wrong) {
+    var pr = H.pcs(key, minor, right), pw; try { pw = H.pcs(key, minor, wrong); } catch (e) { return ''; }
+    var nm = function (p) { return p.map(N).join('・'); }, sameSet = pr.map(N).sort().join() === pw.map(N).sort().join();
+    if (sameSet) return H.label(wrong) + ' なら バスは ' + N(pw[wrong.inv]) + '。この 楽譜の バスは <b>' + N(pr[right.inv]) + '</b>（' + H.role(right, right.inv) + '）なので <b>' + H.label(right) + '</b>。';
+    return H.label(wrong) + ' なら 音は ' + nm(pw) + '。この 楽譜の 音は <b>' + nm(pr) + '</b> なので <b>' + H.label(right) + '</b>。';
+  }
   var mc = U.mc, tx = U.tx, pick = U.pick, shuffle = U.shuffle, add = U.add;
   var kname = UT.kname, rkey = UT.rkey, fig = H.fig;
   var C = function (d, inv, sev, o) { return Object.assign({ d: d, inv: inv || 0, sev: !!sev, nine: false }, o || {}); };
@@ -37,18 +45,18 @@
   function analyze(id, unit, list, minor, focus) {
     add(id, unit, 3, function (R) {
       var P = solved(list, R, minor); if (!P) throw new Error(id);
-      var labs = P.chs.map(H.label), right = labs.join(' ‐ '), wr = [], tries = 0;
+      var labs = P.chs.map(H.label), right = labs.join(' ‐ '), wr = [], wy = [], tries = 0;
       var idxs = P.chs.map(function (c, i) { return i; }).filter(function (i) { return i > 0 && i < P.chs.length - 1; });
       if (focus) { var f = P.chs.map(function (c, i) { return focus(c) ? i : -1; }).filter(function (i) { return i >= 0; }); if (f.length) idxs = f.concat(f, idxs); }
       while (wr.length < 3 && tries++ < 80) {
         var i = pick(idxs, R), alts = confuse(P.chs[i], P.minor).filter(function (c) { try { return sig(P.key, P.minor, c) !== sig(P.key, P.minor, P.chs[i]); } catch (e) { return false; } });
         if (!alts.length) continue;
         var a = pick(alts, R), l2 = labs.slice(); l2[i] = H.label(a); var s2 = l2.join(' ‐ ');
-        if (s2 !== right && wr.indexOf(s2) < 0) wr.push(s2);
+        if (s2 !== right && wr.indexOf(s2) < 0) { wr.push(s2); wy.push((i + 1) + ' 番めの 和音を 読みちがえています。' + whyMis(P.key, P.minor, P.chs[i], a)); }
       }
-      var m = mc(R, tx(right), wr.map(function (w) { return tx(w); }), 4), sp = P.chs.length > 5 ? 44 : P.chs.length > 4 ? 48 : 54;
+      var m = mc(R, tx(right), wr.map(function (w, k) { return tw(w, wy[k]); }), 4), sp = P.chs.length > 5 ? 44 : P.chs.length > 4 ? 48 : 54;
       return {
-        q: kname(P.key, P.minor) + '。和音記号を 消した 4 声の 楽譜。正しい 和音記号の ならびは？', fig: fig(P.key, P.minor, P.chs, P.vs, { nolab: true, zoom: 2.4, sp: sp }), ch: m.ch, a: m.a,
+        q: kname(P.key, P.minor) + '。和音記号を 消した 4 声の 楽譜。正しい 和音記号の ならびは？', fig: fig(P.key, P.minor, P.chs, P.vs, { nolab: true, zoom: 2.4, sp: sp }), ch: m.ch, a: m.a, why: m.why,
         ex: '<b>' + right + '</b>。バス（いちばん 下）で 転回形、4 声の 音を 集めて 根音と 種類を きめる。' + P.chs.map(function (c) { return H.label(c) + '＝' + H.pcs(P.key, P.minor, c).map(N).join('・'); }).filter(function (x, i, a) { return a.indexOf(x) === i; }).join('、') + '。',
         exFig: fig(P.key, P.minor, P.chs, P.vs, { zoom: 2.4, sp: sp }), play: function () { H.play(P.vs); }
       };
@@ -61,9 +69,9 @@
       if (mn && ch.bor) mn = false;
       var key = rkey(R, mn), pcs = H.pcs(key, mn, ch), bass = pcs[ch.inv], up = shuffle(pcs.filter(function (_, q) { return q !== ch.inv; }), R);
       var right = H.label(ch), wr = [];
-      shuffle(confuse(ch, mn), R).forEach(function (c) { var l = H.label(c); try { if (l !== right && wr.indexOf(l) < 0 && sig(key, mn, c) !== sig(key, mn, ch)) wr.push(l); } catch (e) { } });
-      var m = mc(R, tx(right), wr.slice(0, 5).map(function (w) { return tx(w); }), 4);
-      return { q: kname(key, mn) + '。バスが <b>' + N(bass) + '</b>、上の 声部に <b>' + up.map(N).join('・') + '</b>。この 和音の 和音記号は？', ch: m.ch, a: m.a,
+      var wc = []; shuffle(confuse(ch, mn), R).forEach(function (c) { var l = H.label(c); try { if (l !== right && wr.indexOf(l) < 0 && sig(key, mn, c) !== sig(key, mn, ch)) { wr.push(l); wc.push(c); } } catch (e) { } });
+      var m = mc(R, tx(right), wr.slice(0, 5).map(function (w, k) { return tw(w, whyMis(key, mn, ch, wc[k])); }), 4);
+      return { q: kname(key, mn) + '。バスが <b>' + N(bass) + '</b>、上の 声部に <b>' + up.map(N).join('・') + '</b>。この 和音の 和音記号は？', ch: m.ch, a: m.a, why: m.why,
         ex: ch.a6 ? 'バス（♭6 の ' + N(pcs[0]) + '）と ' + N(pcs[2]) + '（♯4）が 増6度 → 増六の和音。ほかの 音が 主音だけ ＝ It⁺⁶、主音＋♭3 ＝ Ge⁺⁶、主音＋2 ＝ Fr⁺⁶ なので <b>' + right + '</b>。' : '3度ずつ 積みなおすと ' + pcs.map(N).join('・') + '（根音 ' + N(pcs[0]) + '）。バスが ' + H.role(ch, ch.inv) + ' なので <b>' + right + '</b>。', play: [[pcs.map(function (p, q) { return M.str(Object.assign({}, p, { o: q === ch.inv ? 3 : 4 })); }), 2]] };
     });
   }

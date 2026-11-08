@@ -34,11 +34,15 @@
     var base = ch.nine ? H.ROMAN[ch.d] + sub('9') : H.ROMAN[ch.d] + sub(ch.sev ? ['7', '65', '43', '42'][ch.inv] : ['', '6', '64'][ch.inv]);
     if (ch.tg) return (ch.nine ? 'Ⅴ' + sub('9') : 'Ⅴ' + sub(ch.sev ? ['7', '65', '43', '42'][ch.inv] : ['', '6', '64'][ch.inv])) + '/' + H.ROMAN[ch.tg];
     if (ch.bor) return '○' + base;
+    if (ch.pv) return base + '＝' + ch.pv;   // 共通和音（ピボット）：もとの 調 ＝ 新しい 調
     return base;
   };
   H.figure = function (ch) { if (ch.a6) return '+6'; if (ch.nine) return '9'; return ch.sev ? ['7', '6 5', '4 3', '4 2'][ch.inv] : ['', '6', '6 4'][ch.inv]; };
   var nn = function (p) { return { l: p.l, a: p.a }; };
+  // 転調：和音ごとの 調（dk＝もとの 調から 五度圏で いくつ、lm＝短調か）
+  H.loc = function (key, minor, ch) { return ch && ch.dk != null ? [key + ch.dk, !!ch.lm] : [key, minor]; };
   H.pcs = function (key, minor, ch) {
+    if (ch.dk != null) { var lc = H.loc(key, minor, ch); return H.pcs(lc[0], lc[1], Object.assign({}, ch, { dk: null })); }
     if (ch.tg || ch.nap || ch.a6) {
       var ton = Object.assign(M.keyTonic(key, minor), { o: 4 }), rt, out;
       if (ch.tg) {   // Ⅴ/tg：tg の 根音の 5度 上に 長三和音（＋短7度・長9度）
@@ -66,6 +70,8 @@
   // v：[S, A, T, B]。ng：まちがい、warn：ふつうは さける
   // prev：ひとつ前の 和音（Ⅴ₇ の あとの Ⅰ は 第5音を 省略して よい）
   H.checkChord = function (key, minor, ch, v, idx, prev) {
+    var lc0 = H.loc(key, minor, ch); key = lc0[0]; minor = lc0[1]; if (ch.dk != null) ch = Object.assign({}, ch, { dk: null });
+    if (prev && prev.dk != null) prev = Object.assign({}, prev, { dk: null });
     var out = [], pcs = H.pcs(key, minor, ch), lt = H.lt(key, minor), i = idx || 0;
     var add = function (kind, ng, vs, msg) { out.push({ i: i, j: i, kind: kind, ng: ng, v: vs, msg: msg }); };
     v = v.map(P);
@@ -113,6 +119,10 @@
 
   /* ---------- 2 つの 和音の つなぎの 検査 ---------- */
   H.checkTrans = function (key, minor, ch0, v0, ch1, v1, idx) {
+    // 導音・主音は 前の 和音の 調で（転調の あとは 新しい 調）。次の 和音は その 調から 見た 位置に 直す
+    var lc1 = H.loc(key, minor, ch0), k1 = H.loc(key, minor, ch1); key = lc1[0]; minor = lc1[1];
+    if (k1[0] !== key || k1[1] !== minor) ch1 = Object.assign({}, ch1, { dk: k1[0] - key, lm: k1[1] }); else if (ch1.dk != null) ch1 = Object.assign({}, ch1, { dk: null });
+    if (ch0.dk != null) ch0 = Object.assign({}, ch0, { dk: null });
     var out = [], lt = H.lt(key, minor), ton = H.tonic(key, minor), i = idx || 0;
     v0 = v0.map(P); v1 = v1.map(P);
     var add = function (kind, ng, vs, msg) { out.push({ i: i, j: i + 1, kind: kind, ng: ng, v: vs, msg: msg }); };
@@ -128,7 +138,7 @@
       if (mv && mw && mv === mw) {
         if (c0 === 7 && c1 === 7) add('p5', true, [a, b], H.VNAME[a] + 'と' + H.VNAME[b] + 'が 連続5度（' + N(v0[b]) + '‐' + N(v0[a]) + ' → ' + N(v1[b]) + '‐' + N(v1[a]) + '）');
         else if (c0 === 0 && c1 === 0) add('p8', true, [a, b], H.VNAME[a] + 'と' + H.VNAME[b] + 'が 連続8度（' + (d0 ? '' : '1度 ') + N(v0[b]) + ' → ' + N(v1[b]) + '）');
-        else if (a === 0 && b === 3 && (c1 === 7 || c1 === 0) && Math.abs(mid(v1[0]) - mid(v0[0])) > 2) add('hidden', false, [a, b], 'ソプラノと バスが 同じ向きに 進んで 5度・8度に（隠伏5度・8度）。ソプラノは 順次進行に すると 安全');
+        else if (a === 0 && b === 3 && (c1 === 7 || c1 === 0) && Math.abs(mid(v1[0]) - mid(v0[0])) > 2) add('hidden', false, [a, b], 'ソプラノと バスが 同じ向きに 進んで 5度・8度に（並達5度・8度）。ソプラノは 順次進行に すると 安全');
       }
     }
     // 旋律の 動き
@@ -397,7 +407,7 @@
   H.marksOf = function (issues) {
     var marks = [], bad = {};
     issues.forEach(function (x) {
-      if (x.i !== x.j && x.v.length === 2 && (x.kind === 'p5' || x.kind === 'p8' || x.kind === 'hidden')) marks.push({ i: x.i, j: x.j, vs: x.v, t: x.kind === 'p5' ? '連続5度' : x.kind === 'p8' ? '連続8度' : '隠伏' });
+      if (x.i !== x.j && x.v.length === 2 && (x.kind === 'p5' || x.kind === 'p8' || x.kind === 'hidden')) marks.push({ i: x.i, j: x.j, vs: x.v, t: x.kind === 'p5' ? '連続5度' : x.kind === 'p8' ? '連続8度' : '並達' });
       else x.v.forEach(function (vv) { (bad[x.j] = bad[x.j] || []).push(vv); if (x.i !== x.j) (bad[x.i] = bad[x.i] || []).push(vv); });
     });
     return { marks: marks, bad: bad };

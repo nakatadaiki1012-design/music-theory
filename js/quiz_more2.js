@@ -125,12 +125,12 @@
         ['バスの 動き方は？', '跳躍も してよい（根音を 弾く）', ['かならず 順次', '動かない', '上 3 声と 同じ'], 'バスは 和音の 根音（転回形なら その音）を とるので <b>跳躍 OK</b>。']
       ]);
     });
-    var CADS = [['正格終止', [5, 1]], ['変格終止', [4, 1]], ['半終止', [1, 5]], ['偽終止', [5, 6]]];
+    var CADS = [['全終止', [5, 1]], ['変格終止', [4, 1]], ['半終止', [1, 5]], ['偽終止', [5, 6]]];
     reg('cadWhere', 'h05', 2, '進行の 終わり方', function (R) {
       var x = pick(CADS, R), pre = pick([[1, 4], [1, 6, 4], [1, 2], [1, 6, 2], [1]], R), seq = x[0] === '半終止' ? pre.concat([x[1][1]]) : pre.concat(x[1]);
       if (x[0] === '変格終止') seq = [1, 5, 1, 4, 1]; if (x[0] === '偽終止') seq = pre.concat([5, 6]);
       var m = textQ(R, x[0], CADS.map(function (y) { return y[0]; }));
-      return { q: '和音進行 <b>' + seq.map(function (d) { return ROM[d]; }).join('‐') + '</b> の 終わり方は？', ch: m.ch, a: m.a, ex: '最後の 2 つ（' + ROM[seq[seq.length - 2]] + '→' + ROM[seq[seq.length - 1]] + '）で きまる。<b>' + x[0] + '</b>：正格 Ⅴ→Ⅰ、変格 Ⅳ→Ⅰ、半 …→Ⅴ、偽 Ⅴ→Ⅵ。' };
+      return { q: '和音進行 <b>' + seq.map(function (d) { return ROM[d]; }).join('‐') + '</b> の 終わり方は？', ch: m.ch, a: m.a, ex: '最後の 2 つ（' + ROM[seq[seq.length - 2]] + '→' + ROM[seq[seq.length - 1]] + '）で きまる。<b>' + x[0] + '</b>：全終止 Ⅴ→Ⅰ、変格 Ⅳ→Ⅰ、半 …→Ⅴ、偽 Ⅴ→Ⅵ。' };
     });
     reg('funcFill', 'h05', 2, 'はたらきの 穴うめ', function (R) {
       var opts = [['Ⅰ‐？‐Ⅴ‐Ⅰ', ['Ⅳ', 'Ⅱ'], 'S（下属）'], ['Ⅰ‐Ⅳ‐？‐Ⅰ', ['Ⅴ'], 'D（属）'], ['？‐Ⅳ‐Ⅴ‐Ⅰ', ['Ⅰ', 'Ⅵ'], 'T（主）'], ['Ⅰ‐Ⅵ‐？‐Ⅴ‐Ⅰ', ['Ⅱ', 'Ⅳ'], 'S（下属）']], x = pick(opts, R), right = pick(x[1], R);

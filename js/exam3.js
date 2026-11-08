@@ -24,11 +24,13 @@
     { chs: [Ch(1), Ch(6), Ch(4), Ch(5)], cad: 'half' }, { chs: [Ch(1), Ch(5, 1), Ch(1), Ch(5)], cad: 'half' },
     { chs: [Ch(1), Ch(6), Ch(4), Ch(1)], cad: 'plag' }, { chs: [Ch(1), Ch(4), Ch(5), Ch(6)], cad: 'dec' }
   ];
-  // 後半（転調先）：正格終止で 終わる
+  // 後半（転調先）：全終止で 終わる
   var PB = [[Ch(1), Ch(4), Ch(5, 0, 1), Ch(1)], [Ch(1), Ch(2, 1), Ch(5, 0, 1), Ch(1)], [Ch(1), Ch(6), Ch(5), Ch(1)], [Ch(1), Ch(4), Ch(5), Ch(1)]];
-  var CADN = { auth: '正格終止', half: '半終止', plag: '変格終止', dec: '偽終止' };
+  var CADN = { auth: '全終止', half: '半終止', plag: '変格終止', dec: '偽終止' };
   var TEMPI = [['Andante', '歩くような 速さで'], ['Moderato', '中くらいの 速さで'], ['Allegretto', 'やや 速く'], ['Adagio', 'ゆるやかに'], ['Allegro', '速く'], ['Andantino', 'アンダンテより やや 速く'], ['Lento', '遅く'], ['Vivace', 'いきいきと 速く']];
   var EXPR = [['dolce', 'やさしく 甘く'], ['cantabile', '歌うように'], ['grazioso', '優雅に'], ['espressivo', '表情豊かに'], ['leggiero', '軽く'], ['rit.', 'だんだん 遅く'], ['cresc.', 'だんだん 強く'], ['dim.', 'だんだん 弱く'], ['a tempo', 'もとの 速さで'], ['legato', 'なめらかに']];
+  // 装飾記号（VexFlow：mordent ＝ 縦線なし＝プラルトリラー、mordent_inverted ＝ 縦線あり＝モルデント）
+  var ORNS = [['tr', 'トリル', '上の 音と すばやく くり返す'], ['mordent', 'プラルトリラー', '上の 音を 1 回 はさむ'], ['mordent_inverted', 'モルデント', '下の 音を 1 回 はさむ・縦線'], ['turn', 'ターン', '上・主・下・主 と まわる']];
   var NCT = [['pass', '経過音'], ['neigh', '刺繍音'], ['app', '倚音'], ['sus', '掛留音']];
   var RHY = { 4: [[2, 2, 2, 2], [4, 2, 2], [2, 1, 1, 2, 2], [3, 1, 2, 2], [2, 2, 1, 1, 2], [2, 1, 1, 4], [1, 1, 2, 2, 2]], 3: [[2, 2, 2], [4, 2], [2, 1, 1, 2], [3, 1, 2], [1, 1, 2, 2]] };
   var DUR = { 1: '8', 2: 'q', 3: 'qd', 4: 'h', 6: 'hd', 8: 'w' };
@@ -57,6 +59,7 @@
       var bars = [];
       secs.forEach(function (s, si) { s.chs.forEach(function (c, i) { bars.push({ si: si, key: s.key, minor: s.minor, ch: c, v: s.vs[i], ty: typeOf(s.key, s.minor, c) }); }); });
       var U = meter * 2;   // 1 小節の 8分音符の 数
+      var lhPat = pick(meter === 3 ? ['block', 'alberti', 'broken', 'waltz'] : ['block', 'alberti', 'broken'], R);
       // 右手の 旋律
       var ok = true;
       bars.forEach(function (b, bi) {
@@ -93,8 +96,18 @@
         if (notes.some(function (n) { return !n.p; })) ok = false;
         b.rh = notes;
         // 左手：バス＋テノール
-        var lpat = last && bi === 7 ? [U] : meter === 4 ? [4, 4] : [U];
-        b.lh = lpat.map(function (d, k) { return { d: d, on: k * 4, ps: [b.v[3], b.v[2]] }; });
+        // 左手の 伴奏：和音・アルベルティ・分散和音・ワルツ（最後の 小節は 和音）
+        // 左手の 3 音：バス・テノール・アルトを テノールの すぐ 上（12 半音 以内）に。高すぎたら テノールと 同じに
+        var lo = b.v[3], md = Object.assign({}, b.v[2]), hi = Object.assign({}, b.v[1]);
+        for (var g0 = 0; g0 < 3 && mid(md) > 60 && mid(md) - 12 > mid(lo); g0++) md.o--;
+        for (var g = 0; g < 6 && mid(hi) > mid(md) + 12; g++) hi.o--;
+        for (g = 0; g < 6 && mid(hi) <= mid(md); g++) hi.o++;
+        if (mid(hi) > 64 || mid(hi) <= mid(md)) hi = md;
+        var pt = bi === 7 ? 'block' : lhPat;
+        if (pt === 'alberti') { var al = [lo, hi, md, hi]; b.lh = []; for (var q = 0; q < U; q++) b.lh.push({ d: 1, on: q, ps: [al[q % 4]] }); }
+        else if (pt === 'broken') { var br = meter === 4 ? [lo, md, hi, md] : [lo, md, hi]; b.lh = br.map(function (p, q) { return { d: 2, on: q * 2, ps: [p] }; }); }
+        else if (pt === 'waltz') { b.lh = [{ d: 2, on: 0, ps: [lo] }].concat([1, 2].map(function (q) { return { d: 2, on: q * 2, ps: [md, hi] }; })); }
+        else { var lpat = bi === 7 ? [U] : meter === 4 ? [4, 4] : [U]; b.lh = lpat.map(function (d, k) { return { d: d, on: k * 4, ps: [lo, md] }; }); }
       });
       if (!ok) continue;
       var ncts = []; bars.forEach(function (b, bi) { b.rh.forEach(function (n, k) { if (n.nct) ncts.push({ b: bi, k: k, kind: n.nct }); }); });
@@ -109,7 +122,17 @@
       var cb = shuf([1, 2, 5, 6].filter(function (i) { return bars[i].ty; }), R).slice(0, 2).sort(function (a, b) { return a - b; });
       if (cb.length < 2) continue;
       var tempo = pick(TEMPI, R), ex = pick(EXPR, R), exBar = /rit|a tempo/.test(ex[0]) ? 6 : /cresc|dim/.test(ex[0]) ? pick([2, 5], R) : 4;
+      // 装飾記号：長めの 音（4分音符 以上）に 1 つ
+      var longs = []; bars.forEach(function (b, bi) { if (bi === 7) return; b.rh.forEach(function (n, k) { if (n.d >= 2 && !n.nct && k > 0) longs.push({ b: bi, k: k }); }); });
+      if (!longs.length) continue;
+      var orn = Object.assign(pick(longs, R), { type: pick(['tr', 'mordent', 'mordent_inverted', 'turn'], R) });
+      // 移調：前半（A）を ある 音程だけ 上げ・下げすると 何調？
+      var TRV = [[2, 'M', 0, '長2度 上'], [3, 'm', 0, '短3度 上'], [4, 'P', 0, '完全4度 上'], [5, 'P', 0, '完全5度 上'], [2, 'M', 1, '長2度 下'], [3, 'm', 1, '短3度 下']], tv = pick(TRV, R);
+      var ton = Object.assign({}, M.keyTonic(f1, m1), { o: 4 }), nt = M.up(ton, tv[0], tv[1], !!tv[2]), tk = null;
+      for (var fk = -7; fk <= 7; fk++) { var t2 = M.keyTonic(fk, m1); if (t2.l === nt.l && t2.a === nt.a) tk = fk; }
+      if (tk == null || Math.abs(tk) > 5) continue;
       return {
+        lhPat: lhPat, orn: orn, trans: { txt: tv[3], key: tk, minor: m1 },
         meter: meter, bars: bars, secs: secs, tempo: tempo, expr: ex, exBar: exBar, dyn1: pick(['p', 'mp', 'mf'], R), dyn2: pick(['f', 'mf', 'p'], R),
         mel: Object.assign({}, pm, simp(pm.iv)), ver: Object.assign({}, pv, simp(pv.iv)), chords: cb, nct: pick(ncts, R), cad: pa.cad
       };
@@ -154,6 +177,7 @@
           var ac = accFor(n.p, st1); if (ac) sn.addModifier(new Vx.Accidental(ac), 0);
           if (n.d === 3 || n.d === 6) Vx.Dot.buildAndAttach([sn], { all: true });
           if (bi === 7) sn.addModifier(new Vx.Articulation('a@a').setPosition(3), 0);
+          if (P.orn && P.orn.b === bi && b.rh[P.orn.k] === n) sn.addModifier(new Vx.Ornament(P.orn.type), 0);
           return sn;
         });
         var ln = b.lh.map(function (n) {
@@ -165,7 +189,7 @@
         });
         var v1 = new Vx.Voice({ num_beats: P.meter, beat_value: 4 }).setMode(Vx.Voice.Mode.SOFT).addTickables(rn);
         var v2 = new Vx.Voice({ num_beats: P.meter, beat_value: 4 }).setMode(Vx.Voice.Mode.SOFT).addTickables(ln);
-        var beams = Vx.Beam.generateBeams(rn);
+        var beams = Vx.Beam.generateBeams(rn).concat(Vx.Beam.generateBeams(ln, { stem_direction: -1 }));
         new Vx.Formatter().joinVoices([v1]).joinVoices([v2]).format([v1, v2], Math.max(40, s1.getNoteEndX() - s1.getNoteStartX() - 14));
         v1.draw(ctx, s1); v2.draw(ctx, s2); beams.forEach(function (bm) { bm.setContext(ctx).draw(); });
         geo.rh[bi] = rn; geo.lh[bi] = ln; geo.bx[bi] = { x0: x, x1: x + w, n0: s1.getNoteStartX() };
@@ -209,6 +233,7 @@
     if (show('t0')) { var ft = G('t0'); ft('rect', { x: b0.n0 - 8, y: s0.y1 - 16, width: P.tempo[0].length * 9.5 + 10, height: 24, rx: 5, fill: 'none', stroke: '#8a5cc0', 'stroke-width': 1.8 }); T(ft.el, b0.n0 - 18, s0.y1 + 2, '①', { size: 15, c: '#8a5cc0' }); }
     if (show('t1')) { var fe = G('t1'), ex0 = nx(geo.rh[P.exBar][0]) + 2; fe('rect', { x: ex0 - 5, y: exY - 16, width: P.expr[0].length * 9 + 10, height: 22, rx: 5, fill: 'none', stroke: '#8a5cc0', 'stroke-width': 1.8 }); T(fe.el, ex0 - 15, exY + 1, '②', { size: 15, c: '#8a5cc0' }); }
     if (show('n0')) { var fn = G('n0'), sn = geo.rh[P.nct.b][P.nct.k]; fn('circle', { cx: nx(sn), cy: ny(sn), r: 17, fill: 'transparent', stroke: 'none', 'class': 'phit' }); fn('ellipse', { cx: nx(sn), cy: ny(sn), rx: 12, ry: 9.5, fill: 'none', stroke: '#2c8a5c', 'stroke-width': 2.4 }); T(fn.el, nx(sn), Math.min(ny(sn) - 16, geo.sys[sysOf(P.nct.b)].y1 + 30), '＊', { size: 18, c: '#2c8a5c' }); }
+    if (show('o0') && P.orn) { var fo = G('o0'), so = geo.rh[P.orn.b][P.orn.k], ox = nx(so) - 6, oy = Math.min(ny(so) - 26, geo.sys[sysOf(P.orn.b)].y1 + 28); fo('circle', { cx: ox, cy: oy, r: 18, fill: 'transparent', stroke: 'none', 'class': 'phit' }); fo('ellipse', { cx: ox, cy: oy, rx: 18, ry: 13, fill: 'none', stroke: '#8a5cc0', 'stroke-width': 2 }); T(fo.el, ox + 26, oy - 6, '◇', { size: 14, c: '#8a5cc0' }); }
     if (show('e0')) { var fc = G('e0'), a2 = (2 % BPS === 0 ? geo.bx[2].n0 - 6 : geo.bx[2].x0 + 4), b2 = geo.bx[3].x1 - 6, yy = geo.sys[sysOf(2)].y1 - 4; fc('rect', { x: a2, y: yy - 14, width: b2 - a2, height: 26, fill: 'transparent', stroke: 'none', 'class': 'phit' }); fc('path', { d: 'M' + a2 + ' ' + (yy + 8) + ' V' + yy + ' H' + b2 + ' V' + (yy + 8), fill: 'none', stroke: '#c08a0e', 'stroke-width': 1.8 }); T(fc.el, (a2 + b2) / 2, yy - 4, '終', { size: 14, c: '#c08a0e' }); }
     var bb2 = null; try { bb2 = svg.getBBox(); } catch (e) { }
     var y0 = bb2 ? Math.min(bb2.y - 6, top - 50) : 0, hh = bb2 ? bb2.y + bb2.height + 8 - y0 : top + SYS * NS;
@@ -246,6 +271,8 @@
     slots.push({ id: 't1', g: 4, lab: '②', kind: 'term', term: P.expr, opts: termOpts[1], need: ['v'], t: '② ' + P.expr[0] + ' の 意味' });
     slots.push({ id: 'n0', g: 5, lab: '＊', kind: 'nct', need: ['v'], t: '＊ の 音の 種類', sub: '非和声音' });
     slots.push({ id: 'e0', g: 5, lab: '終', kind: 'cad', need: ['v'], t: 'A の 終わり方（終止）', sub: '第3〜4小節' });
+    slots.push({ id: 'o0', g: 6, lab: '◇', kind: 'orn', need: ['v'], t: '◇ の 装飾記号の 名前' });
+    slots.push({ id: 'x0', g: 6, lab: '移', kind: 'key', s: { key: P.trans.key, minor: P.trans.minor }, need: ['k'], t: 'A を ' + P.trans.txt + ' に 移調すると 何調？', sub: 'A は ' + M.keyName(P.secs[0].key, P.secs[0].minor) });
     var S = function (id) { return slots.filter(function (x) { return x.id === id; })[0]; };
     var A = function (id) { return ans[id] || (ans[id] = {}); };
     var done = function (sl) { var a = A(sl.id); return sl.need.every(function (k) { return a[k] !== undefined; }); };
@@ -255,6 +282,7 @@
       if (sl.kind === 'ch') return { t: sl.b.ty[0], d: sl.b.ch.d, i: sl.b.ch.inv };
       if (sl.kind === 'term') return { v: sl.term[0] };
       if (sl.kind === 'nct') return { v: P.nct.kind };
+      if (sl.kind === 'orn') return { v: P.orn.type };
       return { v: P.cad };
     };
     var isOk = function (sl) { var r = right(sl), a = A(sl.id); return sl.need.every(function (k) { return String(a[k]) === String(r[k]); }); };
@@ -263,6 +291,7 @@
       if (sl.kind === 'key') return M.keyName(sl.s.key, sl.s.minor);
       if (sl.kind === 'ch') return sl.b.ty[1] + '・' + ROM[sl.b.ch.d] + '・' + INVN[sl.b.ch.inv] + '（' + M.keyName(sl.b.key, sl.b.minor) + ' の ' + H.label(sl.b.ch) + '）';
       if (sl.kind === 'term') return sl.term[0] + '＝' + sl.term[1];
+      if (sl.kind === 'orn') return ORNS.filter(function (x) { return x[0] === P.orn.type; })[0][1] + '（' + ORNS.filter(function (x) { return x[0] === P.orn.type; })[0][2] + '）';
       if (sl.kind === 'nct') return NCT.filter(function (x) { return x[0] === P.nct.kind; })[0][1] + (P.nct.kind === 'pass' ? '（3度 はなれた 和音の 音の 間を 順次に 通る）' : '（同じ 音へ もどる とちゅうの となりの 音）');
       return CADN[P.cad] + '（' + H.label(P.bars[2].ch) + ' → ' + H.label(P.bars[3].ch) + '）';
     };
@@ -283,7 +312,7 @@
     }
     var row = function (html) { return '<div class="xprow">' + html + '</div>'; };
     function drawSlots() {
-      $('#pSlots', body).innerHTML = [1, 2, 3, 4, 5].map(function (g) {
+      $('#pSlots', body).innerHTML = [1, 2, 3, 4, 5, 6].map(function (g) {
         return '<span class="xpgrp">' + slots.filter(function (x) { return x.g === g; }).map(function (sl) {
           return '<button type="button" class="xpd' + (sl.id === cur ? ' cur' : '') + (done(sl) ? ' fill' : '') + (graded ? (isOk(sl) ? ' ok' : ' ng') : '') + '" data-s="' + sl.id + '">' + sl.lab + '</button>';
         }).join('') + '</span>';
@@ -292,7 +321,7 @@
       go.textContent = graded ? '採点ずみ' : left ? '✔ 採点（あと ' + left + '）' : '✔ 採点する'; go.disabled = graded;
     }
     function drawPad() {
-      var sl = S(cur), no = ['', '問1', '問2', '問3', '問4', '問5'][sl.g], h = '<div class="xpph"><span class="xpq">' + no + '</span><b>' + sl.t + '</b>' + (sl.sub ? '<small>' + sl.sub + '</small>' : '') + '<button type="button" class="xph" id="pHear" aria-label="聴く">🔊</button></div>';
+      var sl = S(cur), no = ['', '問1', '問2', '問3', '問4', '問5', '問6'][sl.g], h = '<div class="xpph"><span class="xpq">' + no + '</span><b>' + sl.t + '</b>' + (sl.sub ? '<small>' + sl.sub + '</small>' : '') + '<button type="button" class="xph" id="pHear" aria-label="聴く">🔊</button></div>';
       if (sl.kind === 'iv') h += row(chips(sl, 'q', QUAL)) + row(chips(sl, 'd', [1, 2, 3, 4, 5, 6, 7, 8].map(function (d) { return [d, d + '度']; }), 'n8'));
       else if (sl.kind === 'key') {
         var nm = function (m) { return KEYF.map(function (f) { return [f + ',' + m, M.keyName(f, !!m).replace(/[長短]調$/, '')]; }); };
@@ -302,7 +331,8 @@
         h += row(chips(sl, 't', CTYPES.map(function (x) { return [x[0], x[1].replace('の和音', '')]; }))) + row(chips(sl, 'd', [1, 2, 3, 4, 5, 6, 7].map(function (d) { return [d, ROM[d]]; }), 'n7')) + row(chips(sl, 'i', INVS.map(function (x, i) { return [i, x]; })));
       } else if (sl.kind === 'term') h += row(chips(sl, 'v', sl.opts.map(function (o) { return [o[0], o[1]]; })));
       else if (sl.kind === 'nct') h += row(chips(sl, 'v', NCT));
-      else h += row(chips(sl, 'v', [['auth', '正格終止'], ['plag', '変格終止'], ['half', '半終止'], ['dec', '偽終止']]));
+      else if (sl.kind === 'orn') h += row(chips(sl, 'v', ORNS.map(function (x) { return [x[0], x[1]]; })));
+      else h += row(chips(sl, 'v', [['auth', '全終止'], ['plag', '変格終止'], ['half', '半終止'], ['dec', '偽終止']]));
       if (graded) h += '<div class="xfb ' + (isOk(sl) ? 'ok">⭕ 正解' : 'ng">✕ 正解は ' + esc(rightText(sl))) + '</div>';
       var pad = $('#pPad', body); pad.innerHTML = h;
       pad.querySelectorAll('.xc').forEach(function (b) { b.onclick = function () { choose(b.getAttribute('data-k'), b.getAttribute('data-v')); }; });
@@ -311,7 +341,8 @@
     }
     function hear(sl) {
       if (sl.kind === 'iv') { var b = P.bars[sl.p.b], x = sl.id === 'i0' ? [b.rh[sl.p.k].p, b.rh[sl.p.k2].p] : [b.lh[0].ps[0], b.rh[0].p]; M.play([[M.str(x[0]), 1], [M.str(x[1]), 1], [[M.str(x[0]), M.str(x[1])], 2]], 90); }
-      else if (sl.kind === 'key') playScore(P, sl.s === P.secs[0] ? 0 : 4, sl.s === P.secs[0] ? 3 : 7);
+      else if (sl.kind === 'key') playScore(P, sl.s === P.secs[1] ? 4 : 0, sl.s === P.secs[1] ? 7 : 3);
+      else if (sl.kind === 'orn') playScore(P, P.orn.b, P.orn.b);
       else if (sl.kind === 'ch') { var bb = sl.b; M.play([[bb.v.map(function (p) { return M.str(p); }), 2]], 80); }
       else if (sl.kind === 'nct') playScore(P, P.nct.b, P.nct.b);
       else if (sl.kind === 'cad') playScore(P, 2, 3);
@@ -350,7 +381,7 @@
   var F = GK.F, U = GK.Q.util, tx = U.tx, mc = U.mc, add = U.add;
   F.CUSTOM.score = function (box, a) { drawScore(box, a.P, a.o); };
   var sf = function (P, only) { return { c: 'score', a: { P: P, o: { only: only } } }; };
-  GK.UNIT.x01.types = GK.UNIT.x01.types.concat(['scoreTerm', 'scoreNct', 'scoreCad', 'scoreKey']);
+  GK.UNIT.x01.types = GK.UNIT.x01.types.concat(['scoreTerm', 'scoreNct', 'scoreCad', 'scoreKey', 'scoreOrn', 'scoreTrans']);
   add('scoreTerm', 'x01', 2, function (R) {
     var P = genScore(R), two = R() < 0.5, term = two ? P.expr : P.tempo, list = two ? EXPR : TEMPI;
     var m = mc(R, tx(term[1]), shuf(list.filter(function (x) { return x[1] !== term[1]; }), R).slice(0, 5).map(function (x) { return tx(x[1]); }), 4);
@@ -363,8 +394,8 @@
   });
   add('scoreCad', 'x01', 3, function (R) {
     var P = genScore(R), rt = CADN[P.cad];
-    var m = mc(R, tx(rt), ['正格終止', '変格終止', '半終止', '偽終止'].filter(function (x) { return x !== rt; }).map(function (x) { return tx(x); }), 4);
-    return { q: '前半（第3〜4小節「終」）の 終わり方は？', fig: sf(P, ['e0', 'k0']), ch: m.ch, a: m.a, ex: '<b>' + rt + '</b>（' + M.keyName(P.secs[0].key, P.secs[0].minor) + '：' + H.label(P.bars[2].ch) + ' → ' + H.label(P.bars[3].ch) + '）。Ⅴ→Ⅰ＝正格、Ⅳ→Ⅰ＝変格、～→Ⅴ＝半、Ⅴ→Ⅵ＝偽。' };
+    var m = mc(R, tx(rt), ['全終止', '変格終止', '半終止', '偽終止'].filter(function (x) { return x !== rt; }).map(function (x) { return tx(x); }), 4);
+    return { q: '前半（第3〜4小節「終」）の 終わり方は？', fig: sf(P, ['e0', 'k0']), ch: m.ch, a: m.a, ex: '<b>' + rt + '</b>（' + M.keyName(P.secs[0].key, P.secs[0].minor) + '：' + H.label(P.bars[2].ch) + ' → ' + H.label(P.bars[3].ch) + '）。Ⅴ→Ⅰ＝全終止、Ⅳ→Ⅰ＝変格、～→Ⅴ＝半、Ⅴ→Ⅵ＝偽。' };
   });
   add('scoreKey', 'x01', 3, function (R) {
     var P = genScore(R), s = P.secs[1], rt = M.keyName(s.key, s.minor), wr = [];
@@ -372,12 +403,25 @@
     var m = mc(R, tx(rt), wr.map(function (t) { return tx(t); }), 4);
     return { q: '後半（B）の 部分は 何調に 転調している？', fig: sf(P, ['k1']), ch: m.ch, a: m.a, ex: '<b>' + rt + '</b>。後半の 臨時記号（導音）と 終わりの 和音（Ⅴ→Ⅰ）から わかる。' };
   });
-  Object.assign(GK.TYPE_NAME, { scoreTerm: 'ピアノ曲の 楽語', scoreNct: 'ピアノ曲の 非和声音', scoreCad: 'ピアノ曲の 終止', scoreKey: 'ピアノ曲の 転調' });
+  add('scoreOrn', 'x01', 2, function (R) {
+    var P = genScore(R), rt = ORNS.filter(function (x) { return x[0] === P.orn.type; })[0];
+    var m = mc(R, tx(rt[1]), ORNS.filter(function (x) { return x !== rt; }).map(function (x) { return tx(x[1]); }), 4);
+    return { q: '楽譜の ◇ の 装飾記号の 名前は？', fig: sf(P, ['o0']), ch: m.ch, a: m.a, ex: '<b>' + rt[1] + '</b>：' + rt[2] + '。' };
+  });
+  add('scoreTrans', 'x01', 3, function (R) {
+    var P = genScore(R), rt = M.keyName(P.trans.key, P.trans.minor), wr = [];
+    [-2, -1, 1, 2, 3].forEach(function (d) { var n = M.keyName(P.trans.key + d, P.trans.minor); if (Math.abs(P.trans.key + d) <= 6 && n !== rt) wr.push(n); });
+    var m = mc(R, tx(rt), shuf(wr, R).map(function (w) { return tx(w); }), 4);
+    return { q: '前半（A・' + M.keyName(P.secs[0].key, P.secs[0].minor) + '）を <b>' + P.trans.txt + '</b> に 移調すると 何調？', fig: sf(P, ['k0']), ch: m.ch, a: m.a, ex: '主音を ' + P.trans.txt + ' に 動かすと <b>' + rt + '</b>。' };
+  });
+  Object.assign(GK.TYPE_NAME, { scoreTerm: 'ピアノ曲の 楽語', scoreNct: 'ピアノ曲の 非和声音', scoreCad: 'ピアノ曲の 終止', scoreKey: 'ピアノ曲の 転調', scoreOrn: 'ピアノ曲の 装飾記号', scoreTrans: 'ピアノ曲の 移調' });
   Object.assign(GK.HINTS || {}, {
     scoreTerm: '速さの 言葉か、気分・弾き方の 言葉か。英語や 似た 言葉も ヒント。',
     scoreNct: '＊の 前と 後ろの 音を 見よう。同じ 向きに 通りぬける？ となりへ 行って もどる？',
     scoreCad: '最後の 2 小節の 和音を 読もう。Ⅰで 終わる？ Ⅴで 止まる？',
-    scoreKey: '後半に 出てくる 臨時記号（導音）と、最後の 和音を 見よう。'
+    scoreKey: '後半に 出てくる 臨時記号（導音）と、最後の 和音を 見よう。',
+    scoreOrn: '記号の 形（波線・縦線の 有無・S 字）に 注目しよう。',
+    scoreTrans: 'もとの 調の 主音を その 音程だけ 動かすと、新しい 主音に なる。'
   });
   GK.EXAM.genScore = genScore; GK.EXAM.drawScore = drawScore;
 })();

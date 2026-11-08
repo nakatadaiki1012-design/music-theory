@@ -240,6 +240,7 @@
   GK.route(/^([uhc]\d\d)(?:\/(p|x|l|t))?(?:\/(\d+))?$/, function (m) {
     var u = GK.UNIT[m[1]]; if (!u) { GK.go('#home'); return; }
     if (m[2] === 'l') { GK.go(u.grp === 'harm' ? '#hlab/u/' + u.id : u.grp === 'cp' ? '#cplab' : '#home'); return; }
+    if (u.grp === 'harm') GK.store.set('harmSub', u.lv === 'adv' ? 'adv' : 'basic');
     var back = '#home/' + (u.grp === 'harm' ? (u.lv === 'adv' ? 'harm2' : 'harm') : u.grp === 'cp' ? 'cp' : 'theory');
     var step = m[2] || 'p', p = GK.prog(u.id);
     V.innerHTML = '<div class="uhead"><button type="button" class="btn back" data-go="' + back + '">◀ 一覧</button><div class="ut"><small>' + (u.grp === 'harm' ? '和声法ラボ' : u.grp === 'cp' ? '対位法ラボ' : '楽典ラボ') + '・' + u.no + '・' + esc(u.en) + '</small><h2>' + esc(u.title) + '</h2></div>' +

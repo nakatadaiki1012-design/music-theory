@@ -207,12 +207,13 @@
     var h = decodeURIComponent(location.hash.slice(1)) || 'home';
     var dc = /^(?:drill|game)\/c\/(theory|harm|cp)$/.exec(h), cs = dc ? dc[1] : /^(home\/harm|hlab|h\d\d)/.test(h) ? 'harm' : /^(home\/cp|cplab|c\d\d)/.test(h) ? 'cp' : /^(home\/theory|home\/tools|u\d\d|learn|tools|exam)/.test(h) ? 'theory' : null;
     if (cs) GK.store.set('course', cs);
+    var hu = /^(h\d\d)/.exec(h); if (hu && GK.UNIT[hu[1]]) GK.store.set('harmSub', GK.UNIT[hu[1]].lv === 'adv' ? 'adv' : 'basic'); else if (/^home\/harm2/.test(h)) GK.store.set('harmSub', 'adv'); else if (/^home\/harm$/.test(h)) GK.store.set('harmSub', 'basic');
     document.body.dataset.course = cs || GK.store.get('course', 'theory');
     var ck = document.body.dataset.course, C = COURSES[ck] || COURSES.theory;
     var tab = /^(drill|exam)/.test(h) ? 'drill' : /^(tools|hlab|cplab)/.test(h) ? 'third' : /^(game|ta$|host|join|battle|ens)/.test(h) ? 'game' : 'home';
     var br = GK.$('#brand'); if (br) br.innerHTML = '<span class="clef">𝄞</span>' + C.brand + '<b>ラボ</b>';
     GK.$$('#cnav button').forEach(function (b) {
-      var k = b.dataset.k; b.dataset.go = k === 'third' ? C.third[1] : C[k];
+      var k = b.dataset.k; b.dataset.go = k === 'third' ? C.third[1] : (k === 'home' && ck === 'harm' && GK.store.get('harmSub', 'basic') === 'adv') ? '#home/harm2' : C[k];
       var lb = b.querySelector('.lbl'); if (k === 'third') { b.firstChild.nodeValue = C.third[0]; if (lb) lb.textContent = ' ' + C.third[2]; }
       b.setAttribute('aria-current', k === tab ? 'true' : 'false');
     });

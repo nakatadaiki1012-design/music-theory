@@ -1236,7 +1236,7 @@
     }
   };
   // 奏法・装飾の記号
-  var ASYM = [['a.', 'staccato', 'スタッカート'], ['av', 'staccatissimo', 'スタッカーティッシモ'], ['a-', 'tenuto', 'テヌート'], ['a>', 'accent', 'アクセント'], ['a^', 'marcato', 'マルカート'], ['a@a', 'fermata', 'フェルマータ'], ['tr', 'tr（trillo）', 'トリル', 1], ['mordent', 'mordent', 'モルデント', 1], ['mordent_inverted', 'pralltriller', 'プラルトリラー', 1], ['turn', 'turn', 'ターン', 1]];
+  var ASYM = [['a.', 'staccato', 'スタッカート'], ['av', 'staccatissimo', 'スタッカーティッシモ'], ['a-', 'tenuto', 'テヌート'], ['a>', 'accent', 'アクセント'], ['a^', 'marcato', 'マルカート'], ['a@a', 'fermata', 'フェルマータ'], ['tr', 'tr（trillo）', 'トリル', 1], ['mordent_inverted', 'mordent', 'モルデント', 1], ['mordent', 'pralltriller', 'プラルトリラー', 1], ['turn', 'turn', 'ターン', 1]];
   T.artSym = {
     u: 'u15', st: 2, gen: function (R, st) {
       var pool = ASYM.filter(function (x) { return st >= 3 || !x[3] || x[0] === 'tr'; }), x = pick(pool, R), t = GK.termByName(x[1]);
