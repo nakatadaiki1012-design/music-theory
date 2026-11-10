@@ -9,10 +9,15 @@
   var GK = window.GK, M = GK.M, F = GK.F, CP = GK.CP = {};
   var VF = function () { return window.Vex && Vex.Flow; };
   var SC = {};
-  var scale = function (key) { return SC[key] || (SC[key] = M.scale(M.keyTonic(key, false), 'major')); };
-  CP.pit = function (key, n) { var s = scale(key), q = ((n % 7) + 7) % 7, o = Math.floor(n / 7), p = s[q]; return { l: p.l, a: p.a, o: p.o + o }; };
-  CP.mid = function (key, n) { return M.midi(CP.pit(key, n)); };
-  CP.name = function (key, n) { return GK.nm(CP.pit(key, n)); };
+  // 調：長調は 調号の 数（−7〜7）、短調は ＋100（例：イ短調 ＝ 100、ニ短調 ＝ 99）。短調は 自然短音階、終止の 導音だけ 半音 上げる（acc ＝ +1）
+  CP.isMin = function (key) { return key >= 50; };
+  CP.sig = function (key) { return key >= 50 ? key - 100 : key; };
+  CP.keyName = function (key) { return M.keyName(CP.sig(key), CP.isMin(key)); };
+  var scale = function (key) { return SC[key] || (SC[key] = M.scale(M.keyTonic(CP.sig(key), CP.isMin(key)), CP.isMin(key) ? 'natural' : 'major')); };
+  CP.pit = function (key, n, acc) { var s = scale(key), q = ((n % 7) + 7) % 7, o = Math.floor(n / 7), p = s[q]; return { l: p.l, a: p.a + (acc || 0), o: p.o + o }; };
+  CP.mid = function (key, n, acc) { return M.midi(CP.pit(key, n, acc)); };
+  CP.name = function (key, n, acc) { return GK.nm(CP.pit(key, n, acc)); };
+  CP.MINKEYS = [100, 101, 99, 102, 98];
   CP.KEYS = [0, 1, -1, 2, -2, 3, -3];
   CP.CFS = [[0, 2, 1, 0, 3, 2, 4, 3, 2, 1, 0], [0, 4, 3, 2, 4, 3, 2, 1, 0], [0, 3, 2, 4, 5, 4, 2, 3, 2, 1, 0], [0, 2, 3, 1, 2, 4, 3, 2, 1, 0], [0, 1, 2, 3, 4, 2, 3, 1, 0], [0, 2, 4, 3, 2, 1, 0], [0, 2, 1, 3, 2, 4, 3, 1, 0]];
 
@@ -23,7 +28,7 @@
   CP.degName = function (steps) { return CP.deg(steps) + '度'; };
 
   /* ---------- 時間軸（拍）の 展開 ---------- */
-  function timeline(cp) { var t = 0, r = []; cp.forEach(function (x, i) { r.push({ i: i, t: t, b: x.b, n: x.n, rest: !!x.rest, tie: !!x.tie }); t += x.b; }); return r; }
+  function timeline(cp) { var t = 0, r = []; cp.forEach(function (x, i) { r.push({ i: i, t: t, b: x.b, n: x.n, acc: x.acc || 0, rest: !!x.rest, tie: !!x.tie }); t += x.b; }); return r; }
   CP.timeline = timeline;
   function cfAt(cf, t) { return cf[Math.min(cf.length - 1, Math.floor(t / 4))]; }
 
@@ -32,12 +37,12 @@
      返す： [{ k: 種類, t: 拍, bar: 小節（0 から）, ng: true, msg }] */
   CP.check = function (spec, partial) {
     var key = spec.key, cf = spec.cf, cp = spec.cp, ab = spec.above !== false, sp = spec.sp || 1, tl = timeline(cp), L = cf.length, iss = [];
-    var sg = ab ? 1 : -1, mid = function (n) { return CP.mid(key, n); };
+    var sg = ab ? 1 : -1, mid = function (n) { return CP.mid(key, n); }, mx = function (x) { return CP.mid(key, x.n, x.acc); };
     var add = function (k, t, msg) { iss.push({ k: k, t: t, bar: Math.floor(t / 4), ng: true, msg: msg }); };
     var notes = tl.filter(function (x) { return !x.rest; });
     var onset = notes.filter(function (x, j) { return !(j > 0 && notes[j - 1].tie); });         // 発音する 音（つなぎの 後半は 数えない）
     var vert = function (x) { var c = cfAt(cf, x.t); return (x.n - c) * sg; };                    // 上の 声から 見た 何度ぶん（正：対位線が 外側）
-    var cons = function (x) { var c = cfAt(cf, x.t); return CP.cls(mid(x.n) - mid(c)); };
+    var cons = function (x) { var c = cfAt(cf, x.t); return CP.cls(mx(x) - mid(c)); };
     /* 始まり */
     if (onset.length) {
       var f = onset[0], v0 = vert(f);
@@ -60,17 +65,18 @@
     if (sp === 4) {
       tl.forEach(function (x, j) {
         if (x.rest || j === 0 || !tl[j - 1].tie || x.t % 4 !== 0) return;
-        if (CP.cls(mid(x.n) - mid(cfAt(cf, x.t))) !== 'D') return;
+        if (CP.cls(mx(x) - mid(cfAt(cf, x.t))) !== 'D') return;
         var nx = tl[j + 1];
         if (!nx || nx.rest || nx.n !== x.n - 1) add('susp', x.t, '掛留で ぶつかった 音（' + CP.deg(vert(x)) + '度）は 2度 下がって 解決する');
       });
     }
     /* 旋律 */
     for (var j = 1; j < onset.length; j++) {
-      var a = onset[j - 1], b = onset[j], dl = b.n - a.n, ad = Math.abs(dl), tm = Math.abs(mid(b.n) - mid(a.n));
+      var a = onset[j - 1], b = onset[j], dl = b.n - a.n, ad = Math.abs(dl), tm = Math.abs(mx(b) - mx(a));
       if (dl === 0) add('rep', b.t, '同じ音が くりかえされている');
       else if (ad > 4) add('leap', b.t, CP.deg(dl) + '度の 大きな 跳躍（5度 までに）');
       else if (tm === 6) add('tri', b.t, '増4度・減5度の 跳躍は さける');
+      else if (ad === 1 && tm === 3) add('tri', b.t, '増2度の 進行は さける（短調で 第6音 → 上げた 導音）');
       if (ad >= 3 && ad <= 4 && onset[j + 1]) { var d2 = onset[j + 1].n - b.n; if (!(Math.abs(d2) === 1 && d2 * dl < 0)) add('leapRec', onset[j + 1].t, '跳躍の あとは 反対向きの 順次進行で もどる'); }
     }
     /* 声部の 動き：定旋律が 動く 直前と 直後を くらべる */
@@ -79,7 +85,7 @@
       var t1 = bar * 4, a1 = soundAt(tl, t1 - 0.01), b1 = soundAt(tl, t1);
       if (!a1 || !b1) continue;
       var c0 = cf[bar - 1], c1 = cf[bar], ca = cf[bar] - cf[bar - 1], cpd = b1.n - a1.n;
-      var va = (a1.n - c0) * sg, vb = (b1.n - c1) * sg, pa = CP.cls(mid(a1.n) - mid(c0)) === 'P' && vperf(va), pb = CP.cls(mid(b1.n) - mid(c1)) === 'P' && vperf(vb);
+      var va = (a1.n - c0) * sg, vb = (b1.n - c1) * sg, pa = CP.cls(mx(a1) - mid(c0)) === 'P' && vperf(va), pb = CP.cls(mx(b1) - mid(c1)) === 'P' && vperf(vb);
       var sim = ca !== 0 && cpd !== 0 && (ca > 0) === (cpd > 0);
       if (sim && pa && pb && (va % 7) === (vb % 7)) add('par', t1, (vb % 7 === 4 ? '連続5度' : '連続8度') + '（同じ向きに 動いて 同じ 完全音程）');
       else if (sim && pb && !pa && sp === 1) add('hid', t1, '隠伏5度・8度（同じ向きに 動いて 完全音程に ぶつかる）');
@@ -88,7 +94,7 @@
       var s0 = soundAt(tl, (bq - 1) * 4), s1 = soundAt(tl, bq * 4);
       if (!s0 || !s1 || s0.n === s1.n) continue;
       var u0 = (s0.n - cf[bq - 1]) * sg, u1 = (s1.n - cf[bq]) * sg, cd = cf[bq] - cf[bq - 1], pd = s1.n - s0.n;
-      if (cd !== 0 && (cd > 0) === (pd > 0) && vperf(u0) && vperf(u1) && u0 % 7 === u1 % 7 && CP.cls(mid(s0.n) - mid(cf[bq - 1])) === 'P' && CP.cls(mid(s1.n) - mid(cf[bq])) === 'P') add('par', bq * 4, '強拍から 強拍へ ' + (u1 % 7 === 4 ? '連続5度' : '連続8度') + '（間に 弱拍の 音が あっても 禁止）');
+      if (cd !== 0 && (cd > 0) === (pd > 0) && vperf(u0) && vperf(u1) && u0 % 7 === u1 % 7 && CP.cls(mx(s0) - mid(cf[bq - 1])) === 'P' && CP.cls(mx(s1) - mid(cf[bq])) === 'P') add('par', bq * 4, '強拍から 強拍へ ' + (u1 % 7 === 4 ? '連続5度' : '連続8度') + '（間に 弱拍の 音が あっても 禁止）');
     }
     /* 終わり */
     if (!partial) {
@@ -97,7 +103,7 @@
       else {
         if (lv !== 0 && lv !== 7) add('end', last.t, '最後は 1度か 8度で おわる');
         var pen = onset[onset.length - 2];
-        if (pen && Math.floor(pen.t / 4) === L - 2) { if (pen.n - cf[L - 2] !== (ab ? 5 : -2)) add('penult', pen.t, '終止の 直前は ' + (ab ? '6度（導音）' : '3度（導音）') + 'に する'); }
+        if (pen && Math.floor(pen.t / 4) === L - 2) { if (pen.n - cf[L - 2] !== (ab ? 5 : -2)) add('penult', pen.t, '終止の 直前は ' + (ab ? '6度（導音）' : '3度（導音）') + 'に する'); else if (CP.isMin(key) && !pen.acc) add('penult', pen.t, '短調では 終止の 前の 導音を 半音 上げる（' + CP.name(key, pen.n, 1) + '）'); }
       }
     }
     return iss;
@@ -135,12 +141,14 @@
       if (i === slots.length) return CP.check({ key: key, cf: cf, cp: out, above: above, sp: sp }).length === 0;
       var s = slots[i];
       if (s.rest) { out.push({ b: s.b, rest: true }); if (go(i + 1)) return true; out.pop(); return false; }
-      if (s.second) { var pv = out[out.length - 1]; out.push({ b: s.b, n: pv.n }); if (go(i + 1)) return true; out.pop(); return false; }
+      if (s.second) { var pv = out[out.length - 1]; out.push({ b: s.b, n: pv.n, acc: pv.acc }); if (go(i + 1)) return true; out.pop(); return false; }
       var cs = shuf(cand(s));
       // 終止の 直前は 導音
       if (i === penIdx) cs = cs.filter(function (n) { return n - cfAt(cf, s.t) === (above ? 5 : -2); });
       for (var q = 0; q < cs.length; q++) {
         var o = { b: s.b, n: cs[q] }; if (s.tie) o.tie = true;
+        // 短調：終止の 導音は 半音 上げる。その 小節の 第6音も 上げて 増2度を さける（旋律短音階の 上行）
+        if (CP.isMin(key) && s.t >= (L - 2) * 4 && s.t < (L - 1) * 4 && [5, 6].indexOf(((cs[q] % 7) + 7) % 7) >= 0) o.acc = 1;
         out.push(o);
         if (CP.check({ key: key, cf: cf, cp: out, above: above, sp: sp }, true).length === 0 && go(i + 1)) return true;
         out.pop();
@@ -192,14 +200,14 @@
     var cfItems = cf.map(function (n, i) { return { n: n, b: 4, t: i * 4 }; });
     var onsets = {}; cfItems.forEach(function (x) { onsets[x.t] = 1; }); tl.forEach(function (x) { onsets[x.t] = 1; });
     var nOn = Object.keys(onsets).length, sp = spec.sp || (cp.some(function (x) { return x.b < 4; }) ? 30 : 42);
-    var probe = new V.Stave(0, 0, 400); probe.addClef('treble'); if (key) probe.addKeySignature(M.keyVF(key, false)); probe.format && probe.format();
+    var probe = new V.Stave(0, 0, 400); probe.addClef('treble'); if (CP.sig(key)) probe.addKeySignature(M.keyVF(CP.sig(key), CP.isMin(key))); probe.format && probe.format();
     var x0 = 4, first = probe.getNoteStartX(), W = Math.round(x0 + first + nOn * sp + 26), Hh = top + 40 + gap + 40 + 60;
     var r = new V.Renderer(el, V.Renderer.Backends.SVG); r.resize(W, Hh);
     var ctx = r.getContext(); ctx.setFillStyle('currentColor'); ctx.setStrokeStyle('currentColor');
     var svg = el.querySelector('svg');
     var st1 = new V.Stave(x0, top, W - x0 - 4), st2 = new V.Stave(x0, top + gap, W - x0 - 4);
     st1.addClef('treble'); st2.addClef('bass');
-    if (key) { st1.addKeySignature(M.keyVF(key, false)); st2.addKeySignature(M.keyVF(key, false)); }
+    if (CP.sig(key)) { st1.addKeySignature(M.keyVF(CP.sig(key), CP.isMin(key))); st2.addKeySignature(M.keyVF(CP.sig(key), CP.isMin(key))); }
     st1.setEndBarType(V.Barline.type.END); st2.setEndBarType(V.Barline.type.END);
     st1.setContext(ctx).draw(); st2.setContext(ctx).draw();
     new V.StaveConnector(st1, st2).setType('brace').setContext(ctx).draw();
@@ -207,16 +215,16 @@
     new V.StaveConnector(st1, st2).setType('boldDoubleRight').setContext(ctx).draw();
     var bad = {}; (spec.bad || []).forEach(function (t) { bad[t] = 1; });
     var qs = {}; (spec.q || []).forEach(function (i) { qs[i] = 1; });
-    var mk = function (n, b, clef, up, t, rest, col) {
+    var mk = function (n, b, clef, up, t, rest, col, acc) {
       var s;
       if (rest) s = new V.StaveNote({ clef: clef, keys: [clef === 'treble' ? 'b/4' : 'd/3'], duration: DUR[b] + 'r' });
-      else { var p = CP.pit(key, n); s = new V.StaveNote({ clef: clef, keys: [M.vf(p)], duration: DUR[b], stem_direction: up ? 1 : -1 }); }
+      else { var p = CP.pit(key, n, acc); s = new V.StaveNote({ clef: clef, keys: [M.vf(p)], duration: DUR[b], stem_direction: up ? 1 : -1 }); if (acc) s.addModifier(new V.Accidental({ '-1': 'b', '0': 'n', '1': '#', '2': '##' }[p.a] || '#'), 0); }
       if (bad[t]) col = '#d3302a';
       if (col) s.setStyle({ fillStyle: col, strokeStyle: col });
       return s;
     };
     var cfN = cfItems.map(function (x) { return mk(x.n, 4, above ? 'bass' : 'treble', !above, x.t, false, spec.cfCol || null); });
-    var cpN = tl.map(function (x) { return mk(x.n, x.b, above ? 'treble' : 'bass', above, x.t, x.rest || !!qs[x.i], spec.col || null); });
+    var cpN = tl.map(function (x, k) { return mk(x.n, x.b, above ? 'treble' : 'bass', above, x.t, x.rest || !!qs[x.i], spec.col || null, k > 0 && tl[k - 1].tie && tl[k - 1].acc ? 0 : x.acc); });
     var total = L * 4, mkV = function (arr) { return new V.Voice({ num_beats: total, beat_value: 4 }).setMode(V.Voice.Mode.SOFT).addTickables(arr); };
     var vU = mkV(above ? cpN : cfN), vL = mkV(above ? cfN : cpN);
     var fm = new V.Formatter(); fm.joinVoices([vU]); fm.joinVoices([vL]);
@@ -258,6 +266,7 @@
   F.CUSTOM.cpfig = function (box, a) { M.cpfig(box, a); };
   CP.fig = function (key, cf, cp, above, o) { return { c: 'cpfig', a: Object.assign({ key: key, cf: cf, cp: cp, above: above }, o || {}) }; };
   CP.sound = function (tl, t) { return soundAt(tl, t); };
+  CP.cfAt = cfAt;
 
   // 定旋律を 楽譜に 置く 高さ（上に つける ときは 低めの 五線、下に つける ときは 高めの 五線）
   CP.place = function (key, pool, above) {
@@ -272,7 +281,7 @@
   /* ---------- 音を 鳴らす ---------- */
   CP.play = function (key, cf, cp, above) {
     var ev = [], tl = timeline(cp), sec = 0.5;
-    tl.forEach(function (x, i) { if (x.rest || (tl[i - 1] && tl[i - 1].tie && !tl[i - 1].rest)) return; var d = x.b; if (x.tie && tl[i + 1]) d += tl[i + 1].b; ev.push([M.str(CP.pit(key, x.n)), d * sec]); });
+    tl.forEach(function (x, i) { if (x.rest || (tl[i - 1] && tl[i - 1].tie && !tl[i - 1].rest)) return; var d = x.b; if (x.tie && tl[i + 1]) d += tl[i + 1].b; ev.push([M.str(CP.pit(key, x.n, x.acc)), d * sec]); });
     return ev;
   };
 })();

@@ -1065,6 +1065,15 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 .xp2 .xwscore svg { min-width: 0 !important; width: 100% !important; max-width: 100% !important; }
 .xp2 { max-width: 980px; }
 @media (max-width: 899px) { .xp2 .xwscore { max-height: 44vh; overflow-y: auto !important; overflow-x: hidden !important; scroll-behavior: smooth; } }
+
+/* 対位法の 実践 */
+.cpl .ctl .seg button small { font-size: 10.5px; margin-left: 3px; color: var(--muted); }
+.cpl .ctl .seg button[aria-pressed="true"] small { color: inherit; }
+.cpsel { display: flex; flex-direction: column; gap: 8px; border: 2px solid var(--ink); border-radius: 12px; padding: 10px 12px; background: var(--panel); }
+.cpsh { display: flex; align-items: center; gap: 10px; } .cpsh b { flex: 1; text-align: center; font-size: 15px; }
+.cpsn { display: flex; align-items: center; gap: 10px; justify-content: center; } .cpsn span { display: flex; flex-direction: column; align-items: center; min-width: 7em; }
+.cpsn em { font-style: normal; font-size: 24px; font-weight: 800; } .cpsn small { font-size: 12px; color: var(--muted); }
+.cpsn .btn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -1088,38 +1097,39 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261108e"></script>
-<script src="js/music.js?v=20261108e"></script>
-<script src="js/core.js?v=20261108e"></script>
-<script src="js/figs.js?v=20261108e"></script>
-<script src="js/terms.js?v=20261108e"></script>
-<script src="js/terms_info.js?v=20261108e"></script>
-<script src="js/terms_pro.js?v=20261108e"></script>
-<script src="js/typenames.js?v=20261108e"></script>
-<script src="js/harmony.js?v=20261108e"></script>
-<script src="js/lessons.js?v=20261108e"></script>
-<script src="js/quiz.js?v=20261108e"></script>
-<script src="js/quiz_more.js?v=20261108e"></script>
-<script src="js/app.js?v=20261108e"></script>
-<script src="js/exam.js?v=20261108e"></script>
-<script src="js/exam2.js?v=20261108e"></script>
-<script src="js/motivate.js?v=20261108e"></script>
-<script src="js/learn.js?v=20261108e"></script>
-<script src="js/harmony_units.js?v=20261108e"></script>
-<script src="js/harmony_lab.js?v=20261108e"></script>
-<script src="js/harmony_units2.js?v=20261108e"></script>
-<script src="js/harmony_units3.js?v=20261108e"></script>
-<script src="js/harmony_units4.js?v=20261108e"></script>
-<script src="js/harmony_units5.js?v=20261108e"></script>
-<script src="js/harmony_units6.js?v=20261108e"></script>
-<script src="js/counterpoint.js?v=20261108e"></script>
-<script src="js/counterpoint_units.js?v=20261108e"></script>
-<script src="js/harmony_reg.js?v=20261108e"></script>
-<script src="js/quiz_more2.js?v=20261108e"></script>
-<script src="js/theory_more.js?v=20261108e"></script>
-<script src="js/stage.js?v=20261108e"></script>
-<script src="js/hints.js?v=20261108e"></script>
-<script src="js/exam3.js?v=20261108e"></script>
-<script src="js/game.js?v=20261108e"></script>
+<script src="js/config.js?v=20261110a"></script>
+<script src="js/music.js?v=20261110a"></script>
+<script src="js/core.js?v=20261110a"></script>
+<script src="js/figs.js?v=20261110a"></script>
+<script src="js/terms.js?v=20261110a"></script>
+<script src="js/terms_info.js?v=20261110a"></script>
+<script src="js/terms_pro.js?v=20261110a"></script>
+<script src="js/typenames.js?v=20261110a"></script>
+<script src="js/harmony.js?v=20261110a"></script>
+<script src="js/lessons.js?v=20261110a"></script>
+<script src="js/quiz.js?v=20261110a"></script>
+<script src="js/quiz_more.js?v=20261110a"></script>
+<script src="js/app.js?v=20261110a"></script>
+<script src="js/exam.js?v=20261110a"></script>
+<script src="js/exam2.js?v=20261110a"></script>
+<script src="js/motivate.js?v=20261110a"></script>
+<script src="js/learn.js?v=20261110a"></script>
+<script src="js/harmony_units.js?v=20261110a"></script>
+<script src="js/harmony_lab.js?v=20261110a"></script>
+<script src="js/harmony_units2.js?v=20261110a"></script>
+<script src="js/harmony_units3.js?v=20261110a"></script>
+<script src="js/harmony_units4.js?v=20261110a"></script>
+<script src="js/harmony_units5.js?v=20261110a"></script>
+<script src="js/harmony_units6.js?v=20261110a"></script>
+<script src="js/counterpoint.js?v=20261110a"></script>
+<script src="js/counterpoint_units.js?v=20261110a"></script>
+<script src="js/counterpoint_units2.js?v=20261110a"></script>
+<script src="js/harmony_reg.js?v=20261110a"></script>
+<script src="js/quiz_more2.js?v=20261110a"></script>
+<script src="js/theory_more.js?v=20261110a"></script>
+<script src="js/stage.js?v=20261110a"></script>
+<script src="js/hints.js?v=20261110a"></script>
+<script src="js/exam3.js?v=20261110a"></script>
+<script src="js/game.js?v=20261110a"></script>
 </body>
 </html>
