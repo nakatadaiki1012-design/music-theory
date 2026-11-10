@@ -50,24 +50,26 @@
     }
     /* 縦の 関係 */
     onset.forEach(function (x, j) {
-      var c = cons(x), st = vert(x), strong = sp === 1 ? true : sp === 2 ? x.t % 4 === 0 : sp === 3 ? x.t % 2 === 0 : x.t % 4 === 2 ? true : false;
+      var c = cons(x), st = vert(x), strong = sp === 1 ? true : sp === 2 ? x.t % 4 === 0 : sp === 3 ? x.t % 2 === 0 : sp === 5 ? (x.t % 4 === 0 || x.tie || (x.b < 2 && x.t % 2 === 0)) : x.t % 4 === 2 ? true : false;
       if (sp === 4 && x.t % 4 === 0 && j > 0) strong = true;
       if (st < 0) add('cross', x.t, '声部が 交差している（対位線が 定旋律の 反対側に 出た）');
       else if (st === 0 && x !== onset[0] && Math.floor(x.t / 4) !== L - 1) add('uni', x.t, '途中で 同じ音（1度）に なっている（最初と 最後だけ）');
       if (c === 'D') {
         var prev = onset[j - 1], next = onset[j + 1], ok = false;
-        if (!strong && prev && next) { var d1 = x.n - prev.n, d2 = next.n - x.n; ok = Math.abs(d1) === 1 && d1 === d2; }  // 弱拍の 経過音
+        if (!strong && prev && next) { var d1 = x.n - prev.n, d2 = next.n - x.n; ok = Math.abs(d1) === 1 && (d1 === d2 || ((sp === 3 || sp === 5) && x.b < 2 && d2 === -d1)); }  // 弱拍の 経過音（第3・5類の 4分音符は 刺繍音も）
         if (!strong && partial && !next) ok = true;                                                                       // 次の音が まだ 決まっていない
-        if (!ok) add('dis', x.t, CP.deg(st) + '度（不協和）が ' + (strong ? '強拍に ある' : '弱拍に あるが 経過音（順次進行）に なっていない'));
+        if (!ok) add('dis', x.t, CP.deg(st) + '度（不協和）が ' + (strong ? (x.tie ? 'タイの 前半（掛留の 準備）に ある。準備の 音は 協和に' : '強拍に ある') : '弱拍に あるが ' + ((sp === 3 || sp === 5) && x.b < 2 ? '経過音・刺繍音（順次進行）' : '経過音（同じ向きの 順次進行）') + 'に なっていない'));
       }
     });
     /* 掛留の 不協和（つなぎの 後ろ側が 小節の 頭に 来る） */
-    if (sp === 4) {
+    if (sp >= 4) {
       tl.forEach(function (x, j) {
         if (x.rest || j === 0 || !tl[j - 1].tie || x.t % 4 !== 0) return;
         if (CP.cls(mx(x) - mid(cfAt(cf, x.t))) !== 'D') return;
         var nx = tl[j + 1];
-        if (!nx || nx.rest || nx.n !== x.n - 1) add('susp', x.t, '掛留で ぶつかった 音（' + CP.deg(vert(x)) + '度）は 2度 下がって 解決する');
+        if (!nx) { if (!partial) add('susp', x.t, '掛留で ぶつかった 音は 2度 下がって 解決する'); return; }
+        if (nx.rest || nx.n !== x.n - 1) add('susp', x.t, '掛留で ぶつかった 音（' + CP.deg(vert(x)) + '度）は 2度 下がって 解決する');
+        else { var sv = vert(x); if (ab ? sv === 1 : sv % 7 === 6) add('susp', x.t, ab ? '2度 → 1度の 掛留は 使わない（解決が 同じ音に なる）' : '下の 声の 7度 → 8度の 掛留は 使わない'); }
       });
     }
     /* 旋律 */
@@ -108,16 +110,41 @@
     }
     return iss;
   };
+  /* ---------- もっと よくする ための アドバイス（ルール違反 では ない） ---------- */
+  CP.advice = function (spec) {
+    var key = spec.key, cf = spec.cf, ab = spec.above !== false, sg = ab ? 1 : -1, tl = timeline(spec.cp), L = cf.length, r = [];
+    var on = tl.filter(function (x, j) { return !x.rest && !(j > 0 && tl[j - 1].tie); });
+    if (on.length < 3) return r;
+    var ns = on.map(function (x) { return x.n; }), hi = Math.max.apply(null, ns), lo = Math.min.apply(null, ns);
+    var peak = ab ? hi : lo, pc = 0, lastPk = -1; on.forEach(function (x, j) { if (x.n === peak && (j === 0 || on[j - 1].n !== peak)) { pc++; lastPk = j; } });
+    if (pc > 1) r.push('いちばん ' + (ab ? '高い' : '低い') + ' 音（' + CP.name(key, peak) + '）が ' + pc + ' 回 出ている。山（頂点）は 1 回に すると 旋律に まとまりが 出る。');
+    if (hi - lo < 4 && L >= 8) r.push('音域が せまい（' + CP.deg(hi - lo) + '度）。6度〜10度くらい 使うと のびのび 聞こえる。');
+    var leaps = 0, big = 0, run = 0, maxRun = 0; for (var j = 1; j < on.length; j++) { var d = on[j].n - on[j - 1].n; if (Math.abs(d) >= 2) leaps++; if (Math.abs(d) >= 3) big++; var d0 = j > 1 ? on[j - 1].n - on[j - 2].n : 0; run = d0 && (d > 0) === (d0 > 0) ? run + 1 : 1; maxRun = Math.max(maxRun, run); }
+    if (leaps > (on.length - 1) / 2 || big > Math.max(2, (on.length - 1) / 4)) r.push('跳躍が 多め（3度以上 ' + leaps + ' 回・4度以上 ' + big + ' 回）。順次進行（2度）を 中心に すると 歌いやすい。');
+    if (maxRun >= 6) r.push('同じ 向きに ' + maxRun + ' 回 続けて 動いている。ときどき 向きを かえると 形が はっきりする。');
+    // 小節の 頭どうしの 動き
+    var par = 0, maxPar = 0, kind = 0, cont = 0, mv = 0;
+    for (var b = 1; b < L; b++) {
+      var a0 = soundAt(tl, (b - 1) * 4), a1 = soundAt(tl, b * 4); if (!a0 || !a1) { par = 0; continue; }
+      var v0 = ((a0.n - cf[b - 1]) * sg) % 7, v1 = ((a1.n - cf[b]) * sg) % 7, cd = cf[b] - cf[b - 1], pd = a1.n - a0.n;
+      if (cd && pd) { mv++; if ((cd > 0) !== (pd > 0)) cont++; }
+      if (cd && pd && (cd > 0) === (pd > 0) && v0 === v1 && (v1 === 2 || v1 === 5)) { par = par ? par + 1 : 2; if (par > maxPar) { maxPar = par; kind = v1; } } else par = 0;
+    }
+    if (maxPar >= 4) r.push((kind === 2 ? '3度' : '6度') + 'の 並行が ' + maxPar + ' 回 つづく。反行を はさむと 2 つの 声が 独立して 聞こえる。');
+    if (mv >= 4 && cont / mv < 0.3) r.push('反行（定旋律と 反対向き）が 少ない（' + cont + ' / ' + mv + '）。反行を ふやすと 声部が 独立する。');
+    return r;
+  };
   function vperf(v) { v = Math.abs(v) % 7; return v === 0 || v === 4; }
   function soundAt(tl, t) { var r = null; tl.forEach(function (x) { if (x.t <= t + 1e-9 && t < x.t + x.b - 1e-9) r = x; }); return r && !r.rest ? r : null; }
 
   /* ---------- お手本づくり（深さ優先で さがす） ----------
      返す：cp 配列 または null */
-  CP.slots = function (L, sp) {
+  CP.slots = function (L, sp, R) {
     var s = [], bar;
     if (sp === 1) for (bar = 0; bar < L; bar++) s.push({ b: 4 });
     else if (sp === 2) { for (bar = 0; bar < L - 1; bar++) { s.push({ b: 2 }); s.push({ b: 2 }); } s.push({ b: 4 }); }
     else if (sp === 3) { for (bar = 0; bar < L - 1; bar++) for (var k = 0; k < 4; k++) s.push({ b: 1 }); s.push({ b: 4 }); }
+    else if (sp === 5) return CP.rhythm5(L, R || Math.random);
     else {  // 第4類：最初は 2 拍の 休符。つなぎの 音を くりかえし、最後は 全音符
       s.push({ b: 2, rest: true });
       for (bar = 0; bar < L - 2; bar++) { s.push({ b: 2, tie: true, g: bar }); s.push({ b: 2, g: bar, second: true }); }
@@ -125,8 +152,28 @@
     }
     return s;
   };
-  CP.gen = function (key, cf, above, sp, R) {
-    var L = cf.length, slots = CP.slots(L, sp), sg = above ? 1 : -1, budget = 14000, out = [];
+  // 第5類の リズム：小節ごとに 2分・4分・タイ（掛留）を まぜる。終止は「掛留 → 導音」が 多い
+  CP.rhythm5 = function (L, R) {
+    var s = [], tieIn = false, prev = '', same = 0;
+    var pk = function (a) { return a[Math.floor(R() * a.length)]; };
+    for (var bar = 0; bar < L - 1; bar++) {
+      var tieOut, fill;
+      if (bar === L - 3) tieOut = R() < 0.65; else if (bar === L - 2) tieOut = false; else tieOut = R() < 0.35;
+      if (bar === 0) { s.push({ b: 2, rest: true }); fill = tieOut ? [2] : pk([[2], [1, 1]]); }
+      else if (tieIn) { s.push({ b: 2, g: bar - 1, second: true }); fill = tieOut ? [2] : pk([[2], [1, 1]]); }
+      else {
+        var opts = tieOut ? [[2, 2], [1, 1, 2]] : [[2, 2], [2, 1, 1], [1, 1, 1, 1], [2, 1, 1]];
+        fill = pk(opts); if (fill.join() === prev && ++same >= 1) fill = pk(opts); else if (fill.join() !== prev) same = 0;
+        prev = fill.join();
+      }
+      fill.forEach(function (b, k) { var o = { b: b }; if (tieOut && k === fill.length - 1) { o.tie = true; o.g = bar; } s.push(o); });
+      tieIn = tieOut;
+    }
+    s.push({ b: 4 });
+    return s;
+  };
+  CP.gen = function (key, cf, above, sp, R, sl) {
+    var L = cf.length, slots = (sl || CP.slots(L, sp, R)).map(function (x) { return Object.assign({}, x); }), sg = above ? 1 : -1, budget = 14000, out = [];
     var tpos = 0; slots.forEach(function (s) { s.t = tpos; tpos += s.b; });
     var penIdx = -1; slots.forEach(function (s, i) { if (!s.rest && !s.second && s.t < (L - 1) * 4) penIdx = i; });
     var cand = function (s) {
@@ -142,7 +189,8 @@
       var s = slots[i];
       if (s.rest) { out.push({ b: s.b, rest: true }); if (go(i + 1)) return true; out.pop(); return false; }
       if (s.second) { var pv = out[out.length - 1]; out.push({ b: s.b, n: pv.n, acc: pv.acc }); if (go(i + 1)) return true; out.pop(); return false; }
-      var cs = shuf(cand(s));
+      var cs = shuf(cand(s)), pv0 = null; for (var z = out.length - 1; z >= 0 && pv0 == null; z--) if (!out[z].rest) pv0 = out[z].n;
+      if (pv0 != null) { var wt = {}; cs.forEach(function (n) { var d = Math.abs(n - pv0); wt[n] = (d === 0 ? 6 : d === 1 ? 0 : d === 2 ? 1.2 : d + 1) + R() * 2.6; }); cs.sort(function (a, b) { return wt[a] - wt[b]; }); }  // 順次進行を 優先（少し ランダム）
       // 終止の 直前は 導音
       if (i === penIdx) cs = cs.filter(function (n) { return n - cfAt(cf, s.t) === (above ? 5 : -2); });
       for (var q = 0; q < cs.length; q++) {

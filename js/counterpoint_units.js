@@ -12,7 +12,7 @@
   var rkey = function (R) { return pick(CP.KEYS, R); };
   var row2 = function (a, b, ta, tb) { var x = Object.assign({}, a, { ttl: ta }), y = Object.assign({}, b, { ttl: tb }); return { row: [x, y] }; };
   var KN = { dis: '不協和音程', par: '連続5度・8度', hid: '隠伏5度・8度', leap: '大きすぎる 跳躍', leapRec: '跳躍の あとの 動き', rep: '同じ音の くりかえし', cross: '声部の 交差', end: '終わり方', penult: '終止の 直前', uni: '途中の 1度', susp: '掛留の 解決', start: '始め方', tri: '増4度・減5度の 跳躍', climax: '最高音が 2回' };
-  var SPN = { 1: '第1類（1対1）', 2: '第2類（2対1）', 3: '第3類（4対1）', 4: '第4類（シンコペーション）' };
+  var SPN = { 1: '第1類（1対1）', 2: '第2類（2対1）', 3: '第3類（4対1）', 4: '第4類（シンコペーション）', 5: '第5類（華麗対位法）' };
 
   /* ---------- 例を つくる 道具 ---------- */
   var poolsFor = function (sp, o) { return CP.CFS.filter(function (p) { return !(sp >= 4 && p.length < 8) && !(o && o.short && p.length > (sp === 3 ? 8 : 9)); }); };
@@ -261,15 +261,16 @@
 
   /* =================== c06 第3類・第4類・第5類 =================== */
   add('spName', 'c06', 1, function (R) {
-    var sp = pick([1, 2, 3, 4], R), b = rbuild(sp, R, { short: true }), m = textMc(R, SPN[sp], [1, 2, 3, 4].map(function (k) { return SPN[k]; }));
-    var why = { 1: '定旋律 1 音に 対位線 1 音（全音符）', 2: '定旋律 1 音に 対位線 2 音（2分音符）', 3: '定旋律 1 音に 対位線 4 音（4分音符）', 4: '対位線が <b>小節線を またいで</b> タイで つながれる（シンコペーション）' };
+    var sp = pick([1, 2, 3, 4, 5], R), b = rbuild(sp, R, { short: true }), m = textMc(R, SPN[sp], [1, 2, 3, 4, 5].map(function (k) { return SPN[k]; }));
+    var why = { 1: '定旋律 1 音に 対位線 1 音（全音符）', 2: '定旋律 1 音に 対位線 2 音（2分音符）', 3: '定旋律 1 音に 対位線 4 音（4分音符）', 4: '対位線が <b>小節線を またいで</b> タイで つながれる（シンコペーション）', 5: '2分音符・4分音符・タイが <b>まざって</b> いる' };
     return { q: 'この 対位法は どの 種類？', fig: fig(b, { lab: false }), ch: m.ch, a: m.a, ex: '<b>' + SPN[sp] + '</b>：' + why[sp] + '。', exFig: fig(b, { lab: true }), play: playOf(b) };
   });
   add('sp3Rule', 'c06', 2, function (R) {
     return factQ(R, [
       ['第3類 対位法では 定旋律 1 音に 対位線 何音？', '<b>4 音</b>（4分音符 4 つ）', ['1 音', '2 音', '8 音'], '第3類は <b>4対1</b>。最後の 小節だけ 全音符。'],
       ['第3類で 協和音程で なければ ならない 拍は？', '<b>1拍め と 3拍め</b>', ['すべての 拍', '1拍めだけ', '4拍め だけ'], '4分音符の うち <b>1拍め と 3拍め</b> は 協和音程。2拍め・4拍めには 経過音の 不協和が 来られる。'],
-      ['第3類で 不協和が 来られる 拍は？', '<b>2拍め・4拍め</b>（経過音 として）', ['1拍め', '3拍め', 'どの 拍でも'], '弱い 拍（2・4拍め）に 順次進行の <b>経過音</b> として。'],
+      ['第3類で 不協和が 来られる 拍は？', '<b>2拍め・4拍め</b>（経過音・刺繍音 として）', ['1拍め', '3拍め', 'どの 拍でも'], '弱い 拍（2・4拍め）に 順次進行の <b>経過音</b> や <b>刺繍音</b> として。'],
+      ['第3類で「ド → レ → ド」の レ（弱拍・不協和）は？', '<b>使える</b>（刺繍音）', ['使えない', '強拍なら 使える', '跳躍なら 使える'], '2度 上がって すぐ もどる ＝ <b>刺繍音</b>。第2類（2分音符）では 使えないが、第3類・第5類の 4分音符なら OK。'],
       ['第3類で 終止の ひとつ前（最後の 4分音符）は？', '<b>導音</b>', ['属音', '主音', '上主音'], '第1・2類と 同じく 終止の 直前は 導音（上に つける とき 6度）。']
     ]);
   });
@@ -292,9 +293,28 @@
     }
     throw new Error('suspFig');
   });
+  add('nctKind', 'c06', 2, function (R) {
+    var NK = ['経過音', '刺繍音', '掛留'];
+    for (var t = 0; t < 80; t++) {
+      var sp = pick([3, 5, 5, 4], R), b = rbuild(sp, R, { short: true }), tl = CP.timeline(b.cp), hits = [];
+      tl.forEach(function (x, j) {
+        if (x.rest) return; var c = CP.cfAt(b.cf, x.t); if (CP.cls(CP.mid(b.key, x.n, x.acc) - CP.mid(b.key, c)) !== 'D') return;
+        var pv = tl[j - 1], nx = tl[j + 1];
+        if (pv && pv.tie && x.t % 4 === 0) hits.push({ x: x, k: 2 });
+        else if (pv && nx && !pv.rest && !pv.tie) { var d1 = x.n - pv.n, d2 = nx.n - x.n; hits.push({ x: x, k: d1 === d2 ? 0 : 1 }); }
+      });
+      if (!hits.length) continue;
+      var want = pick([0, 1, 2], R), hs = hits.filter(function (h) { return h.k === want; }), h = hs.length ? pick(hs, R) : pick(hits, R), m = textMc(R, NK[h.k], NK.concat(['倚音']));
+      var why = ['前後が <b>同じ 向きの 2度</b> で つながる → <b>経過音</b>', '2度 動いて <b>もとの 音に もどる</b> → <b>刺繍音</b>', '前の 小節から <b>タイで つながって</b> 強拍で ぶつかり、2度 下がって 解決 → <b>掛留</b>'][h.k];
+      return { q: '赤い 音は 不協和だけど 正しい 使い方。何と いう 音？', fig: fig(b, { lab: false, bad: [h.x.t] }), ch: m.ch, a: m.a, ex: why + '。', exFig: fig(b, { lab: true, bad: [h.x.t] }), play: playOf(b) };
+    }
+    throw new Error('nctKind');
+  });
   add('sp5Rule', 'c06', 1, function (R) {
     return factQ(R, [
-      ['第5類（華麗対位法）とは？', '第1〜4類を <b>まぜて</b> 自由に 動く', ['全音符だけ', '8分音符 だけ', '1 声だけ'], '第5類は これまでの <b>全種類 を ミックス</b>。2分・4分・8分音符や タイを 自由に まぜる。'],
+      ['第5類（華麗対位法）とは？', '第1〜4類を <b>まぜて</b> 自由に 動く', ['全音符だけ', '8分音符 だけ', '1 声だけ'], '第5類は これまでの <b>全種類 を ミックス</b>。2分・4分・8分音符や タイを 自由に まぜる（このアプリの 実践では 2分・4分・タイ）。'],
+      ['第5類で 強拍に 不協和が 来て よい のは？', '前から <b>タイで つながった 掛留</b>（2度 下行で 解決）', ['跳躍で 入った 音', '4分音符なら いつでも', 'どんな ときも 不可'], '強拍の 不協和は <b>掛留</b> だけ。タイの 前半（準備）は 協和で、2度 下がって 解決する。'],
+      ['掛留で 使わない 組み合わせは？', '上の 声の <b>2 → 1</b>・下の 声の <b>7 → 8</b>', ['上の 声の 7 → 6', '上の 声の 4 → 3', '下の 声の 2 → 3'], '上の 9 → 8 は よいが、上の 2 → 1（同じ音へ 解決）と 下の 7 → 8 は 使わない。'],
       ['第5類で 使える 音符の 組み合わせは？', '全音符・2分・4分・（8分）・タイ など <b>自由に まぜる</b>', ['4分音符 だけ', '全音符 だけ', '2分音符 だけ'], '旋律らしい 流れの ある 対位線を 作る。バッハの 音楽へ つながる。'],
       ['厳格対位法で 学ぶ ことは？', '<b>声部の 独立性</b> と ルールの 基本', ['和音の 名前', '楽器の 名前', '調号の 数'], '2 声を 横に 美しく 動かす 力が、和声や 作曲の 土台に なる。']
     ]);
@@ -303,7 +323,15 @@
   /* =================== 授業 =================== */
   var hasDis = function (b) { return b.cp.some(function (x) { return !x.rest && CP.cls(CP.mid(b.key, x.n) - CP.mid(b.key, b.cf[Math.min(b.cf.length - 1, Math.floor(CP.timeline(b.cp).filter(function (y) { return y.i === b.cp.indexOf(x); })[0].t / 4))])) === 'D'; }); };
   var tryB = function (sp, above, pis, need) { var fb = null; for (var i = 0; i < pis.length; i++) for (var sd = 1; sd < 60; sd++) { var r = build(sp, above, 0, pis[i], sd); if (r && !fb) fb = r; if (r && (!need || hasDis(r))) return r; } return fb; };
-  var ex1 = tryB(1, true, [5, 4, 0]), ex1b = tryB(1, false, [5, 4, 0]), ex2 = tryB(2, true, [5, 4, 0], true), ex3 = tryB(3, true, [5, 4], true), ex4 = tryB(4, true, [4, 6, 0]);
+  var ex1 = tryB(1, true, [5, 4, 0]), ex1b = tryB(1, false, [5, 4, 0]), ex2 = tryB(2, true, [5, 4, 0], true), ex3 = tryB(3, true, [5, 4], true), ex4 = tryB(4, true, [4, 6, 0]), ex5 = (function () {   // 第5類の 譜例：タイ（掛留）を ふくみ、旋律の 形が きれいな もの
+    var fb = null;
+    for (var sd = 1; sd < 160; sd++) { var r = build(5, true, 0, [5, 4, 0][sd % 3], sd); if (!r) continue; fb = fb || r;
+      var ties = r.cp.filter(function (x) { return x.tie; }).length, L = r.cf.length, cad = r.cp.length > 3 && r.cp[r.cp.length - 4].tie;
+      var fl = {}; r.cp.forEach(function (x, i) { if (i + 3 < r.cp.length) { var k = [0, 1, 2, 3].map(function (d) { return r.cp[i + d].n - r.cp[i].n; }).join(); fl[k] = (fl[k] || 0) + 1; } });
+      var rep = Object.keys(fl).some(function (k) { return fl[k] > 1 && k !== '0,0,0,0'; });
+      if (ties >= 2 && cad && !rep && hasDis(r) && !CP.advice(r).length) return r; }
+    return fb;
+  })();
   var pf = function (b, o) { return b ? fig(b, o) : { html: '' }; };
   var fl = function (sp, k, seed, above) { try { var R = GK.rng(seed); for (var t = 0; t < 40; t++) { var cf = CP.place(0, CP.CFS[t % CP.CFS.length], above), f = CP.flawed(0, cf, above, sp, k, R); if (f) return { key: 0, cf: cf, cp: f.cp, above: above, sp: sp, issues: f.issues }; } } catch (e) {} return null; };
   var flDis = fl(1, 'dis', 2, true), flPar = fl(1, 'par', 5, true), flLeap = fl(1, 'leap', 3, true);
@@ -369,13 +397,14 @@
       id: 'c06', title: '第3類・第4類・第5類', en: 'Third to Fifth Species', sym: '③', goal: '4対1・シンコペーション・華麗対位法が わかる',
       cards: [
         { k: '✨ ひとことで言うと', h: '3 つの 発展', b: '<b>第3類</b>：4分音符 4 つ。<b>第4類</b>：タイで つなぐ <b>シンコペーション</b>。<b>第5類</b>：ぜんぶ ミックスした <b>華麗対位法</b>。', fig: pf(ex3, { lab: false, zoom: 2 }) },
-        { k: 'ポイント 1', h: '第3類（4対1）', b: '4分音符 4 つ。<b>1拍め・3拍め</b> は 協和、<b>2拍め・4拍め</b> は 順次進行の 経過音 なら 不協和も OK。最後の 小節は 全音符。', fig: pf(ex3, { lab: true, zoom: 2 }) },
+        { k: 'ポイント 1', h: '第3類（4対1）', b: '4分音符 4 つ。<b>1拍め・3拍め</b> は 協和、<b>2拍め・4拍め</b> は 順次進行の <b>経過音</b> か <b>刺繍音</b>（2度 動いて もどる）なら 不協和も OK。最後の 小節は 全音符。', fig: pf(ex3, { lab: true, zoom: 2 }) },
         { k: 'ポイント 2', h: '第4類（シンコペーション）', b: '対位線が <b>小節線を またいで</b> タイで つながる。小節の 頭で 定旋律と ぶつかって <b>不協和</b> に なる ことが ある（<b>掛留</b>）。その 音は <b>2度 下行</b> して 解決する。', fig: pf(ex4, { lab: true, zoom: 2 }) },
-        { k: 'ポイント 3', h: '掛留の 組み合わせ', b: '対位線を 上に つける とき：<b>7度 → 6度</b>・<b>4度 → 3度</b>・<b>9度 → 8度</b>。下に つける とき：<b>2度 → 3度</b>。数字の 組み合わせで 覚えよう。', fig: { html: table(['対位線の 位置', '掛留の 音程'], [['上', '7 → 6 ・ 4 → 3 ・ 9 → 8'], ['下', '2 → 3 ・ 4 → 5 ・ 9 → 10']], { fs: 15, mw: 420 }) } },
+        { k: 'ポイント 3', h: '掛留の 組み合わせ', b: '対位線を 上に つける とき：<b>7度 → 6度</b>・<b>4度 → 3度</b>・<b>9度 → 8度</b>。下に つける とき：<b>2度 → 3度</b>。数字の 組み合わせで 覚えよう。ただし <b>上の 2 → 1</b>（同じ音へ 解決）と <b>下の 7 → 8</b> は 使わない（上の 9 → 8 は OK）。', fig: { html: table(['対位線の 位置', '掛留の 音程'], [['上', '7 → 6 ・ 4 → 3 ・ 9 → 8'], ['下', '2 → 3 ・ 4 → 5 ・ 9 → 10']], { fs: 15, mw: 420 }) } },
+        { k: 'ポイント 4', h: '第5類（華麗対位法）', b: '2分音符・4分音符・タイを <b>まぜて</b>、歌うような 対位線に する。決まりは それぞれの 類と 同じ：<b>強拍は 協和</b>（不協和は 掛留だけ）、弱拍の 不協和は <b>経過音</b>（4分音符なら <b>刺繍音</b> も）。終わりは「掛留 → 導音 → 主音」が 定番。', fig: pf(ex5, { lab: true, zoom: 2 }) },
         MEMO('第3〜5類の まとめ', 'ルールは 少しずつ ふえる。', [['第3類 ＝ 4対1', '1拍め・3拍め ＝ 協和'], ['第4類 ＝ タイで 掛留', '不協和は 2度 下行で 解決'], ['第5類 ＝ ミックス', '旋律らしさ を 大切に']])
       ],
-      sum: ['第3類：4分音符 4 つ。1・3拍めは 協和、2・4拍めは 経過音 OK', '第4類：シンコペーション。不協和の 掛留は 2度 下行で 解決（7→6・4→3・9→8・2→3）', '第5類：ぜんぶを まぜた 華麗対位法'],
-      types: ['spName', 'sp3Rule', 'suspRule', 'suspFig', 'sp5Rule']
+      sum: ['第3類：4分音符 4 つ。1・3拍めは 協和、2・4拍めは 経過音 OK', '第4類：シンコペーション。不協和の 掛留は 2度 下行で 解決（7→6・4→3・9→8・2→3）', '第5類：ぜんぶを まぜた 華麗対位法。強拍の 不協和は 掛留だけ'],
+      types: ['spName', 'sp3Rule', 'suspRule', 'suspFig', 'nctKind', 'sp5Rule']
     }
   ];
 
@@ -384,7 +413,7 @@
   Object.assign(GK.TYPE_NAME, {
     cfRule: '対位法の 基本', cfEnd: '定旋律の 終わり', cfFlaw: '旋律の まちがい', conClass: '協和・不協和', conRule: '音程の 種類', conName: '音程の 度数', conFind: '不協和を 見つける',
     motName: '声部の 動き', motDef: '動きの 名前', motBad: '連続・隠伏', motRule: '動きの 決まり', cp1Rule: '第1類の 決まり', cp1End: '終止の 直前', cp1Find: 'まちがいの 小節', cp1Name: 'まちがいの 名前', cp1Fill: '穴うめ（第1類）',
-    sp2Rule: '第2類の 決まり', sp2Weak: '弱拍の 不協和', sp2Name: '第2類の まちがい', sp2Find: '第2類の 小節', spName: '第何類', sp3Rule: '第3類の 決まり', suspRule: '掛留の 決まり', suspFig: '掛留の 不協和', sp5Rule: '第5類'
+    sp2Rule: '第2類の 決まり', sp2Weak: '弱拍の 不協和', sp2Name: '第2類の まちがい', sp2Find: '第2類の 小節', spName: '第何類', sp3Rule: '第3類の 決まり', suspRule: '掛留の 決まり', suspFig: '掛留の 不協和', nctKind: '経過音・刺繍音・掛留', sp5Rule: '第5類'
   });
   GK.Q.addTips({
     '2 つの メロディーを 独立に 重ねる。定旋律は 主音で はじまり「上主音 → 主音」で おわる': 'cfRule,cfEnd,cfFlaw',
@@ -398,17 +427,21 @@
   /* =================== 対位法の 実践（第1類〜第4類・長調／短調） =================== */
   var S = Object.assign({ above: true, lv: 1, sp: 1, minor: false }, GK.store.get('cplab', {}));
   var saveS = function () { GK.store.set('cplab', { above: S.above, lv: S.lv, sp: S.sp, minor: S.minor }); };
-  var SPS = [[1, '第1類', '1対1'], [2, '第2類', '2対1'], [3, '第3類', '4対1'], [4, '第4類', '掛留']];
+  var SPS = [[1, '第1類', '1対1'], [2, '第2類', '2対1'], [3, '第3類', '4対1'], [4, '第4類', '掛留'], [5, '第5類', 'まぜる']];
   function newTask() {
     var R = GK.rng(Math.floor(Math.random() * 1e9)), b = null;
     var pools = CP.CFS.filter(function (p) { return (S.sp < 4 || p.length >= 8) && (S.lv === 1 ? p.length <= 8 : S.lv === 2 ? p.length <= 9 : p.length >= 9); });
     if (!pools.length) pools = CP.CFS;
     for (var t = 0; t < 60 && !b; t++) {
-      var key = pick(S.minor ? CP.MINKEYS : CP.KEYS, R), cf = CP.place(key, pick(pools, R), S.above), model = CP.gen(key, cf, S.above, S.sp, R);
-      if (model) b = { key: key, cf: cf, model: model, sp: S.sp, above: S.above };
+      var key = pick(S.minor ? CP.MINKEYS : CP.KEYS, R), cf = CP.place(key, pick(pools, R), S.above), sl = CP.slots(cf.length, S.sp, R), model = CP.gen(key, cf, S.above, S.sp, R, sl);
+      if (model) {   // お手本は 旋律の 形が いちばん よいものを えらぶ
+        var sc = function (m) { return CP.advice({ key: key, cf: cf, cp: m, above: S.above }).length; }, bs = sc(model);
+        for (var k2 = 0; k2 < 5 && bs > 0; k2++) { var m2 = CP.gen(key, cf, S.above, S.sp, R, sl); if (m2 && sc(m2) < bs) { model = m2; bs = sc(m2); } }
+        b = { key: key, cf: cf, model: model, sp: S.sp, above: S.above, sl: sl };
+      }
     }
     if (!b) { S.sp = 1; return newTask(); }
-    b.cp = CP.slots(b.cf.length, b.sp).map(function (x) { return { b: x.b, rest: !!x.rest, tie: !!x.tie, second: !!x.second, n: x.rest ? undefined : null }; });
+    b.cp = b.sl.map(function (x) { return { b: x.b, rest: !!x.rest, tie: !!x.tie, second: !!x.second, n: x.rest ? undefined : null }; });
     b.sel = editable(b)[0]; b.show = false; b.done = false; b.hint = 0; b.hints = 0; b.sug = null; b.msg = '';
     S.t = b;
   }
@@ -520,7 +553,8 @@
       var u = $('#cUse', body); if (u) u.onclick = function () { setNote(t, t.sug.i, t.sug.n, t.sug.acc); var k = ed.indexOf(t.sel); if (k + 1 < ed.length && t.cp[ed[k + 1]].n == null) t.sel = ed[k + 1]; draw(); };
       var res = '';
       if (t.show) res = '<div class="hok">📖 お手本：完全協和で はじまり、' + (CP.isMin(t.key) ? '導音（と 第6音）を 半音 上げて、' : '') + '導音から 主音へ。強拍は 協和音程。</div>';
-      else if (!iss.length && !left) { res = '<div class="hok">🎉 かんぺき！ ルール違反は ありません' + (t.hints ? '（ヒント ' + t.hints + ' 回）' : '') + '</div>'; if (!t.done) { t.done = true; GK.earn(t.hints ? 8 : 15 + t.sp * 3); GK.fx('fanfare'); GK.confetti && GK.confetti(30); var st = GK.store.get('cplabStat', { clears: 0 }); st.clears++; GK.store.set('cplabStat', st); } }
+      else if (!iss.length && !left) { var adv = CP.advice({ key: t.key, cf: t.cf, cp: pr.cp, above: t.above });
+        res = '<div class="hok">🎉 かんぺき！ ルール違反は ありません' + (t.hints ? '（ヒント ' + t.hints + ' 回）' : '') + '</div>' + (adv.length ? '<p class="hi"><b>🌱 もっと よくするには</b></p>' + adv.map(function (z) { return '<p class="hi">・' + esc(z) + '</p>'; }).join('') : '<p class="hi">🌟 旋律の 形も きれい！（山は 1 つ・反行も じゅうぶん）</p>'); if (!t.done) { t.done = true; GK.earn(t.hints ? 8 : 15 + t.sp * 3); GK.fx('fanfare'); GK.confetti && GK.confetti(30); var st = GK.store.get('cplabStat', { clears: 0 }); st.clears++; GK.store.set('cplabStat', st); } }
       else if (!iss.length) res = '<div class="hok">○ ここまで OK（あと ' + left + ' 音）</div>';
       else res = '<div class="hng">✕ まちがい ' + iss.length + ' 個</div>' + iss.map(function (z) { return '<p class="hi ng"><b>✕ ' + (z.bar + 1) + ' 小節め</b>　' + esc(z.msg) + '</p>'; }).join('');
       $('#cRes', body).innerHTML = res;
