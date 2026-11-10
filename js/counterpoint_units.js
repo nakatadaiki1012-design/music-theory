@@ -538,6 +538,9 @@
       var shown = t.show ? t.model : t.cp.map(function (x) { return x.rest ? { b: x.b, rest: true } : { b: x.b, n: x.n == null ? CP.cfAt(t.cf, 0) : x.n, acc: x.acc || 0, tie: x.tie }; });
       var qi = t.show ? [] : t.cp.map(function (x, i) { return !x.rest && x.n == null ? i : -1; }).filter(function (i) { return i >= 0; });
       geo = M.cpfig($('#cStaff', body), { key: t.key, cf: t.cf, cp: shown, above: t.above, q: qi, qLab: qi, bad: iss.map(function (x) { return x.t; }), zoom: 2.4 });
+      // スマホで 長い 課題：小さく なりすぎない よう 横スクロールに して、えらんでいる 音を 見せる
+      var stEl = $('#cStaff', body);
+      if (geo && window.innerWidth < 640) { var W0 = +geo.svg.dataset.w, cw = stEl.clientWidth || 340; if (W0 * 0.8 > cw) { stEl.classList.add('cpscroll'); geo.svg.classList.add('cpwide'); geo.svg.style.setProperty('--cpw', Math.round(W0 * 0.8) + 'px'); var sx = geo.xAt[tOf(t, t.sel)]; if (sx != null) stEl.scrollLeft = Math.max(0, sx * 0.8 - cw / 2); } }
       // えらんでいる 音の 目じるし
       if (geo && !t.show) { var xs = geo.xAt[tOf(t, t.sel)]; if (xs != null) { var r = M.svgEl(geo.svg, 'rect', { x: xs - 14, y: geo.y1 - 70, width: 28, height: geo.y2 - geo.y1 + 120, rx: 6, fill: '#e8b73a', opacity: '.2' }); geo.svg.insertBefore(r, geo.svg.firstChild); } }
       // えらんでいる 音の パネル

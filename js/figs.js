@@ -18,6 +18,8 @@
       for (var i = 0; i < sp.bars.length; i += sp.wrap) lines.push(sp.bars.slice(i, i + sp.wrap));
       fig = Object.assign({}, fig, { score: null, col: lines.map(function (bs, j) { return { score: Object.assign({}, sp, { bars: bs, time: j === 0 ? sp.time : null, end: j === lines.length - 1 ? sp.end : null, wrap: null, w: sp.wrapW || 260 }) }; }) });
     }
+    // スマホでは 対位法の 譜例や 2 つ ならんだ 旋律を 横に ならべず 縦に つむ
+    if (fig.row && window.innerWidth < 640 && (fig.row.some(function (f) { return f && f.c === 'cpfig'; }) || (fig.row.length === 2 && fig.row.every(function (f) { return f && f.score && !f.score.grand && ((f.score.notes || []).length >= 4 || (f.score.bars || []).length >= 2); })))) fig = Object.assign({}, fig, { row: null, col: fig.row });
     var w = document.createElement('div'); w.className = 'fig'; el.appendChild(w);
     if (fig.ttl) { var t = document.createElement('div'); t.className = 'ttl2'; t.innerHTML = fig.ttl; w.appendChild(t); }
     var box = document.createElement('div');

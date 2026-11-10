@@ -187,7 +187,7 @@
      ========================================================= */
   // ホームの 3 つの タブ：🎼 楽典 ／ 🎹 和声法 ／ 🧰 道具と 学習サポート
   GK.route(/^home(?:\/(theory|harm|harm2|cp|tools))?$/, function (m) {
-    var tab = m[1] || GK.store.get('homeTab', 'theory');
+    var ck0 = GK.courseKey(), tab = m[1] || (ck0 === 'harm' ? (GK.store.get('harmSub', 'basic') === 'adv' ? 'harm2' : 'harm') : ck0 === 'cp' ? 'cp' : GK.store.get('homeTab', 'theory') === 'tools' ? 'tools' : 'theory');   // 上の 名前（コース）と 中身を そろえる
     if ((tab === 'harm' || tab === 'harm2') && !(GK.HUNITS && GK.HUNITS.length)) tab = 'theory';
     // 和声法は「基礎（第1巻）」と「応用（音大の 授業レベル）」の 2 つの タブ
     var sub = tab === 'harm2' ? 'adv' : tab === 'harm' ? 'basic' : null; if (sub) { GK.store.set('harmSub', sub); }

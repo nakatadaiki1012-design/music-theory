@@ -124,7 +124,19 @@
   /* ---------- クラス対戦・演習で つかう 4 択の 入試形式（楽譜を 読む） ---------- */
   var F = GK.F, U = GK.Q.util, tx = U.tx, mc = U.mc, add = U.add;
   GK.UNIT.x01 = { id: 'x01', no: 'X1', title: '入試形式（大譜表）', en: 'Exam Score', sym: '🎓', grp: 'exam', goal: '', types: ['pieceIv', 'pieceKey', 'pieceChord'] };
-  F.CUSTOM.piece = function (box, a) { drawPiece(box, a.P, a.o); };
+  F.CUSTOM.piece = function (box, a) {
+    var geo = drawPiece(box, a.P, a.o);
+    // スマホでは 小さく なりすぎるので 横スクロールに（目じるしの ある ところを 見せる）
+    if (geo && window.innerWidth < 640) {
+      var svg = geo.svg, vb = svg.viewBox.baseVal, cw = box.clientWidth || 340, s = 0.9;
+      if (vb.width * s > cw) {
+        box.style.cssText += ';overflow-x:auto;overflow-y:hidden;justify-content:flex-start;display:block;-webkit-overflow-scrolling:touch';
+        svg.style.width = Math.round(vb.width * s) + 'px'; svg.style.maxWidth = 'none'; svg.style.height = Math.round(vb.height * s) + 'px';
+        var mk = svg.querySelector('.pmk'); if (mk) { var bb = mk.getBBox(); box.scrollLeft = Math.max(0, (bb.x - vb.x + bb.width / 2) * s - cw / 2); }
+        var hint = document.createElement('div'); hint.className = 'cap'; hint.textContent = '← 横に スクロール できます →'; box.parentNode.appendChild(hint);
+      }
+    }
+  };
   var pf = function (P, o) { return { c: 'piece', a: { P: P, o: o } }; };
   var ROM = ['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ'];
   add('pieceIv', 'x01', 2, function (R) {

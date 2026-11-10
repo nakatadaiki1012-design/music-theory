@@ -249,18 +249,18 @@
     var onsets = {}; cfItems.forEach(function (x) { onsets[x.t] = 1; }); tl.forEach(function (x) { onsets[x.t] = 1; });
     var nOn = Object.keys(onsets).length, sp = spec.sp || (cp.some(function (x) { return x.b < 4; }) ? 30 : 42);
     var probe = new V.Stave(0, 0, 400); probe.addClef('treble'); if (CP.sig(key)) probe.addKeySignature(M.keyVF(CP.sig(key), CP.isMin(key))); probe.format && probe.format();
-    var x0 = 4, first = probe.getNoteStartX(), W = Math.round(x0 + first + nOn * sp + 26), Hh = top + 40 + gap + 40 + 60;
+    var x0 = 4, first = probe.getNoteStartX(), W = Math.round(x0 + first + nOn * sp + 40), Hh = top + 40 + gap + 40 + 60;
     var r = new V.Renderer(el, V.Renderer.Backends.SVG); r.resize(W, Hh);
     var ctx = r.getContext(); ctx.setFillStyle('currentColor'); ctx.setStrokeStyle('currentColor');
     var svg = el.querySelector('svg');
     var st1 = new V.Stave(x0, top, W - x0 - 4), st2 = new V.Stave(x0, top + gap, W - x0 - 4);
     st1.addClef('treble'); st2.addClef('bass');
     if (CP.sig(key)) { st1.addKeySignature(M.keyVF(CP.sig(key), CP.isMin(key))); st2.addKeySignature(M.keyVF(CP.sig(key), CP.isMin(key))); }
-    st1.setEndBarType(V.Barline.type.END); st2.setEndBarType(V.Barline.type.END);
+    if (!spec.noEnd) { st1.setEndBarType(V.Barline.type.END); st2.setEndBarType(V.Barline.type.END); }
     st1.setContext(ctx).draw(); st2.setContext(ctx).draw();
     new V.StaveConnector(st1, st2).setType('brace').setContext(ctx).draw();
     new V.StaveConnector(st1, st2).setType('singleLeft').setContext(ctx).draw();
-    new V.StaveConnector(st1, st2).setType('boldDoubleRight').setContext(ctx).draw();
+    new V.StaveConnector(st1, st2).setType(spec.noEnd ? 'singleRight' : 'boldDoubleRight').setContext(ctx).draw();
     var bad = {}; (spec.bad || []).forEach(function (t) { bad[t] = 1; });
     var qs = {}; (spec.q || []).forEach(function (i) { qs[i] = 1; });
     var mk = function (n, b, clef, up, t, rest, col, acc) {
@@ -304,14 +304,34 @@
       if (pv == null || xAt[tt] == null) continue;
       var bx = (xAt[pv] + xAt[tt]) / 2 + 2; M.svgEl(svg, 'line', { x1: bx, y1: yTop, x2: bx, y2: yBot, stroke: 'currentColor', 'stroke-width': 1 });
     }
-    if (spec.nums !== false && L > 1) for (var bn = 0; bn < L; bn++) if (xAt[bn * 4] != null) M.svgText(svg, xAt[bn * 4], top + 12, String(bn + 1), { size: 11, c: '#9a9486', fixed: true });
+    var qT = {}; (spec.qLab || []).forEach(function (i) { if (tl[i]) qT[tl[i].t] = 1; });
+    if (spec.nums !== false && L > 1) for (var bn = 0; bn < L; bn++) if (xAt[bn * 4] != null && !qT[bn * 4]) M.svgText(svg, xAt[bn * 4], top + 12, String(bn + 1 + (spec.bar0 || 0)), { size: 11, c: '#9a9486', fixed: true });
     (spec.qLab || []).forEach(function (i) { var x = tl[i]; if (x) M.svgText(svg, xAt[x.t], top + (above ? 18 : gap + 18), '？', { size: 22, c: '#d3302a' }); });
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + Hh); svg.removeAttribute('width'); svg.removeAttribute('height'); svg.setAttribute('class', 'vf');
     svg.style.width = ''; svg.style.height = ''; svg.style.maxWidth = Math.round(W * (spec.zoom || 2)) + 'px'; svg.dataset.w = W;
     M.fit(svg, W, top + 40, top + gap + 80);
     return { svg: svg, xAt: xAt, y1: st1.getYForLine(4), y2: st2.getYForLine(4) };
   };
-  F.CUSTOM.cpfig = function (box, a) { M.cpfig(box, a); };
+  // スマホなど せまい 画面では 長い 譜例を 2 段に 分ける
+  CP.split = function (a, h) {
+    var tl = timeline(a.cp), part = function (b0, b1) {
+      var t0 = b0 * 4, t1 = b1 * 4, idx = [], cp = [];
+      tl.forEach(function (x, i) { if (x.t >= t0 && x.t < t1) { idx.push(i); cp.push(a.cp[i]); } });   // 小節線を またぐ 音は ない（タイは 別の 音）
+      var map = function (list) { return (list || []).map(function (i) { return idx.indexOf(i); }).filter(function (i) { return i >= 0; }); };
+      return Object.assign({}, a, { cf: a.cf.slice(b0, b1), cp: cp, q: map(a.q), qLab: map(a.qLab), bad: (a.bad || []).filter(function (t) { return t >= t0 && t < t1; }).map(function (t) { return t - t0; }), bar0: b0, noEnd: b1 < a.cf.length });
+    };
+    return [part(0, h), part(h, a.cf.length)];
+  };
+  F.CUSTOM.cpfig = function (box, a) {
+    var w = box.clientWidth || (box.parentElement && box.parentElement.clientWidth) || window.innerWidth;
+    if (a.cf.length > 5 && (window.innerWidth < 640 || w < 360) && !a.noSplit) {
+      var h = Math.ceil(a.cf.length / 2), ps = CP.split(a, h);
+      box.style.flexDirection = 'column';
+      ps.forEach(function (pa) { var d = document.createElement('div'); d.style.cssText = 'flex:1 1 0;min-height:0;display:flex;width:100%'; box.appendChild(d); M.cpfig(d, pa); });
+      return;
+    }
+    M.cpfig(box, a);
+  };
   CP.fig = function (key, cf, cp, above, o) { return { c: 'cpfig', a: Object.assign({ key: key, cf: cf, cp: cp, above: above }, o || {}) }; };
   CP.sound = function (tl, t) { return soundAt(tl, t); };
   CP.cfAt = cfAt;

@@ -170,7 +170,7 @@ window.GK = window.GK || {};
        noKeyAcc: true（調号を書かない）
      }
      note = { k: 'C4' | ['C4','E4','G4'], d: 'q' | 'hd' | '8r', c: 色, kc: [色...], lab: '下の文字', top: '上の文字',
-              tie: true（次とタイ）, acc: 'auto' | 'show' | 'none', art: 'a.', orn: 'tr' | 'mordent' | 'mordent_inverted' | 'turn'（装飾記号）, t3: true（3連符）, bar: 色帯 }
+              tie: true（次とタイ）, tieB: true（大譜表で ヘ音記号側だけ タイ）, acc: 'auto' | 'show' | 'none', art: 'a.', orn: 'tr' | 'mordent' | 'mordent_inverted' | 'turn'（装飾記号）, t3: true（3連符）, bar: 色帯 }
      ========================================================= */
   var VF = function () { return window.Vex && Vex.Flow; };
   var INK = 'currentColor';
@@ -266,7 +266,8 @@ window.GK = window.GK || {};
     try { bb = svg.getBBox(); } catch (e) { }
     if (!bb || !bb.height) return;
     var a = Math.min(bb.y - 6, y0 - 24), b = Math.max(bb.y + bb.height + 6, y1 + 24);
-    svg.setAttribute('viewBox', '0 ' + a + ' ' + W + ' ' + (b - a));
+    var l = Math.min(0, Math.floor(bb.x) - 2), r = Math.max(W, Math.ceil(bb.x + bb.width) + 2);   // 大譜表の ｛ や 右はしの 文字も 入れる
+    svg.setAttribute('viewBox', l + ' ' + a + ' ' + (r - l) + ' ' + (b - a));
   }
   M.fit = fit;
   // 楽譜を el の中に描く。戻り値：{ svg, notes: [{ x, ys, n, sn }], staves }
@@ -395,7 +396,7 @@ window.GK = window.GK || {};
         new V.StaveTie({ first_note: n0, last_note: n1, first_indices: idx, last_indices: idx }).setContext(ctx).draw();
       }
       var b0 = allB[i];
-      if (g && g.tie && b0 && !(b0 instanceof V.GhostNote) && allB[i + 1]) {
+      if (g && (g.tie || g.tieB) && b0 && !(b0 instanceof V.GhostNote) && allB[i + 1]) {
         var idb = b0.getKeys().map(function (_, j) { return j; });
         new V.StaveTie({ first_note: b0, last_note: allB[i + 1], first_indices: idb, last_indices: idb }).setContext(ctx).draw();
       }
