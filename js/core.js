@@ -330,6 +330,7 @@
     var ck = document.body.dataset.course, C = COURSES[ck] || COURSES.theory;
     var tab = /^(drill|exam)/.test(h) ? 'drill' : /^(tools|hlab|cplab)/.test(h) ? 'third' : /^(game|ta$|host|join|battle|ens)/.test(h) ? 'game' : 'home';
     var br = GK.$('#brand'); if (br) br.innerHTML = '<span class="clef">𝄞</span>' + C.brand + '<b>ラボ</b>';
+    if (document.title !== C.brand + 'ラボ') document.title = C.brand + 'ラボ';   // タブの 名前も コースに あわせる
     GK.$$('#cnav button').forEach(function (b) {
       var k = b.dataset.k; b.dataset.go = k === 'third' ? C.third[1] : (k === 'home' && ck === 'harm' && GK.store.get('harmSub', 'basic') === 'adv') ? '#home/harm2' : C[k];
       var lb = b.querySelector('.lbl'); if (k === 'third') { b.firstChild.nodeValue = C.third[0]; if (lb) lb.textContent = ' ' + C.third[2]; }
