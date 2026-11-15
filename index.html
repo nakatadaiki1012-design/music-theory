@@ -145,6 +145,7 @@ h2.ttl { font-family: var(--font-display); font-size: 22px; margin: 0; line-heig
 .cswitch button[aria-pressed="true"] { background: var(--warm); color: #fff; }
 @media (max-width: 1040px) { .cswitch .lbl { display: none; } .cswitch button { padding: 3px 8px; } }
 @media (max-width: 840px) { .cnav .lbl { display: none; } }
+@media (max-width: 480px) { .top { flex-wrap: wrap; row-gap: 4px; } .brand b { display: none; } }   /* せまい スマホ：入りきらない ときは 2 段に（⚙ が 切れない ように） */
 @media (max-width: 640px) { .cswitch .lbl { display: none; } .cswitch { margin-right: 0; } .cswitch button { padding: 3px 5px; font-size: 12px; } .brand { font-size: 14.5px !important; letter-spacing: 0; } .brand .clef { display: none; } .cnav button { padding: 4px 3px !important; } .top .tools { gap: 2px; } .top .ibtn { padding-left: 5px; padding-right: 5px; } }
 /* コース（楽典・和声法・対位法）ごとの 色 */
 body[data-course="harm"] { --warm: #2f6bb8; --warm-soft: rgba(47, 107, 184, .15); }
@@ -1098,39 +1099,39 @@ dialog::backdrop { background: rgba(20, 22, 20, .45); }
 <dialog id="dlg"></dialog>
 
 <script src="js/vendor/vexflow-bravura.js"></script>
-<script src="js/config.js?v=20261112a"></script>
-<script src="js/music.js?v=20261112a"></script>
-<script src="js/core.js?v=20261112a"></script>
-<script src="js/figs.js?v=20261112a"></script>
-<script src="js/terms.js?v=20261112a"></script>
-<script src="js/terms_info.js?v=20261112a"></script>
-<script src="js/terms_pro.js?v=20261112a"></script>
-<script src="js/typenames.js?v=20261112a"></script>
-<script src="js/harmony.js?v=20261112a"></script>
-<script src="js/lessons.js?v=20261112a"></script>
-<script src="js/quiz.js?v=20261112a"></script>
-<script src="js/quiz_more.js?v=20261112a"></script>
-<script src="js/app.js?v=20261112a"></script>
-<script src="js/exam.js?v=20261112a"></script>
-<script src="js/exam2.js?v=20261112a"></script>
-<script src="js/motivate.js?v=20261112a"></script>
-<script src="js/learn.js?v=20261112a"></script>
-<script src="js/harmony_units.js?v=20261112a"></script>
-<script src="js/harmony_lab.js?v=20261112a"></script>
-<script src="js/harmony_units2.js?v=20261112a"></script>
-<script src="js/harmony_units3.js?v=20261112a"></script>
-<script src="js/harmony_units4.js?v=20261112a"></script>
-<script src="js/harmony_units5.js?v=20261112a"></script>
-<script src="js/harmony_units6.js?v=20261112a"></script>
-<script src="js/counterpoint.js?v=20261112a"></script>
-<script src="js/counterpoint_units.js?v=20261112a"></script>
-<script src="js/counterpoint_units2.js?v=20261112a"></script>
-<script src="js/harmony_reg.js?v=20261112a"></script>
-<script src="js/quiz_more2.js?v=20261112a"></script>
-<script src="js/theory_more.js?v=20261112a"></script>
-<script src="js/stage.js?v=20261112a"></script>
-<script src="js/hints.js?v=20261112a"></script>
-<script src="js/exam3.js?v=20261112a"></script>
-<script src="js/game.js?v=20261112a"></script>
+<script src="js/config.js?v=20261115a"></script>
+<script src="js/music.js?v=20261115a"></script>
+<script src="js/core.js?v=20261115a"></script>
+<script src="js/figs.js?v=20261115a"></script>
+<script src="js/terms.js?v=20261115a"></script>
+<script src="js/terms_info.js?v=20261115a"></script>
+<script src="js/terms_pro.js?v=20261115a"></script>
+<script src="js/typenames.js?v=20261115a"></script>
+<script src="js/harmony.js?v=20261115a"></script>
+<script src="js/lessons.js?v=20261115a"></script>
+<script src="js/quiz.js?v=20261115a"></script>
+<script src="js/quiz_more.js?v=20261115a"></script>
+<script src="js/app.js?v=20261115a"></script>
+<script src="js/exam.js?v=20261115a"></script>
+<script src="js/exam2.js?v=20261115a"></script>
+<script src="js/motivate.js?v=20261115a"></script>
+<script src="js/learn.js?v=20261115a"></script>
+<script src="js/harmony_units.js?v=20261115a"></script>
+<script src="js/harmony_lab.js?v=20261115a"></script>
+<script src="js/harmony_units2.js?v=20261115a"></script>
+<script src="js/harmony_units3.js?v=20261115a"></script>
+<script src="js/harmony_units4.js?v=20261115a"></script>
+<script src="js/harmony_units5.js?v=20261115a"></script>
+<script src="js/harmony_units6.js?v=20261115a"></script>
+<script src="js/counterpoint.js?v=20261115a"></script>
+<script src="js/counterpoint_units.js?v=20261115a"></script>
+<script src="js/counterpoint_units2.js?v=20261115a"></script>
+<script src="js/harmony_reg.js?v=20261115a"></script>
+<script src="js/quiz_more2.js?v=20261115a"></script>
+<script src="js/theory_more.js?v=20261115a"></script>
+<script src="js/stage.js?v=20261115a"></script>
+<script src="js/hints.js?v=20261115a"></script>
+<script src="js/exam3.js?v=20261115a"></script>
+<script src="js/game.js?v=20261115a"></script>
 </body>
 </html>
