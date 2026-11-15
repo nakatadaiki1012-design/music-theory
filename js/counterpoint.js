@@ -110,6 +110,53 @@
     }
     return iss;
   };
+  /* ---------- お手本の 解説：その 音を えらんだ 理由 ----------
+     返す：[{ k: 見出し, t: 文 }] */
+  var MOTN = { contrary: '反進行（反対向き）', oblique: '斜進行（片方だけ 動く）', similar: '同進行（同じ向き・音程が かわる）', parallel: '平行進行（同じ向き・同じ 音程）' };
+  CP.explain = function (spec, i) {
+    var key = spec.key, cf = spec.cf, ab = spec.above !== false, sg = ab ? 1 : -1, sp = spec.sp || 1, tl = timeline(spec.cp), L = cf.length, x = tl[i], r = [];
+    if (!x || x.rest) return r;
+    var nm = function (n, a) { return CP.name(key, n, a); }, mx = function (y) { return CP.mid(key, y.n, y.acc); };
+    var c = cfAt(cf, x.t), st = (x.n - c) * sg, cls = CP.cls(mx(x) - CP.mid(key, c)), deg = CP.deg(st);
+    var tieSec = i > 0 && tl[i - 1].tie && !tl[i - 1].rest, prev = i > 0 && !tl[i - 1].rest ? tl[i - 1] : null, next = tl[i + 1] && !tl[i + 1].rest ? tl[i + 1] : null;
+    var onsets = tl.filter(function (y, j) { return !y.rest && !(j > 0 && tl[j - 1].tie); }), first = onsets[0] === x;
+    var pen = onsets.filter(function (y) { return y.t < (L - 1) * 4; }).pop();
+    var beat = x.t % 4, strong = beat === 0, bn = sp === 1 ? '' : (beat + 1) + '拍め（' + (strong ? '強拍' : beat === 2 ? (sp === 3 ? 'なかば強い 拍' : '弱拍') : '弱拍') + '）・';
+    r.push({ k: '縦の 音程', t: bn + '定旋律の ' + nm(c) + ' と <b>' + deg + '度</b>（' + CP.CLS[cls] + '）' });
+    // 役わり
+    if (first) r.push({ k: 'はじまり', t: '最初は <b>完全協和音程</b>（' + (ab ? '1度・5度・8度' : '1度・8度') + '）で はじめる' });
+    if (x.t >= (L - 1) * 4) r.push({ k: 'おわり', t: '最後は 主音どうしの <b>' + (st ? CP.degName(st) + (st > 7 ? '（2 オクターブ）' : '') : '1度') + '</b> で おわる' });
+    else if (pen === x) r.push({ k: '終止の 直前', t: '<b>導音</b>（' + nm(x.n, x.acc) + '）。次で 主音へ 2度 上がって おわる' + (CP.isMin(key) && x.acc ? '（短調なので 半音 上げる）' : '') + '。' + (ab ? '上に つける ときは 6度' : '下に つける ときは 3度') });
+    if (x.tie) r.push({ k: '掛留の 準備', t: 'タイで 次の 小節の 頭まで のばす。のばす 前の ここは <b>協和</b>に しておく' });
+    if (tieSec) {
+      if (cls === 'D') r.push({ k: '掛留', t: '前から のばした 音が 強拍で 定旋律と ぶつかる（<b>' + deg + '度</b>）。このあと <b>2度 下がって</b> 解決する' });
+      else r.push({ k: 'タイ', t: '前から のばした 音。ここでは 協和なので 解決は いらない' });
+    } else if (prev && i > 1 && tl[i - 2].tie && !tl[i - 2].rest && x.n === prev.n - 1 && CP.cls(mx(prev) - CP.mid(key, cfAt(cf, prev.t))) === 'D') r.push({ k: '掛留の 解決', t: 'ぶつかった 音が <b>2度 下がって</b> 協和（' + deg + '度）へ 落ちつく' });
+    if (cls === 'D' && !tieSec && prev && next) {
+      var d1 = x.n - prev.n, d2 = next.n - x.n;
+      if (d1 === d2) r.push({ k: '経過音', t: '弱拍の 不協和。前後が <b>同じ 向きの 2度</b>で つながるので 使える' });
+      else r.push({ k: '刺繍音', t: '弱拍の 不協和。2度 動いて <b>もとの 音に もどる</b>（4分音符だけ 使える）' });
+    }
+    // 定旋律との 動き（小節の 頭）
+    if (x.t > 0 && beat === 0) {
+      var a0 = CP.sound(tl, x.t - 0.01), c0 = cf[x.t / 4 - 1];
+      if (a0) {
+        var cd = c - c0, pd = x.n - a0.n, v0 = (a0.n - c0) * sg, kind = !cd || !pd ? 'oblique' : (cd > 0) !== (pd > 0) ? 'contrary' : v0 === st ? 'parallel' : 'similar';
+        var perf = cls === 'P';
+        r.push({ k: '動き', t: '定旋律と <b>' + MOTN[kind] + '</b>' + (perf && kind === 'contrary' ? '。完全音程へは 反進行で 入るので 安全' : perf && kind === 'oblique' ? '。斜進行なので 完全音程でも 安全' : kind === 'parallel' ? '。3度・6度の 平行は 3 回 くらいまで' : kind === 'contrary' ? '。反進行は 声部が いちばん 独立する' : '') });
+      }
+    }
+    // 旋律
+    if (prev && !tieSec) {
+      var d = x.n - prev.n, ad = Math.abs(d), pp = i > 1 && !tl[i - 2].rest ? tl[i - 2] : null, dp = pp ? prev.n - pp.n : 0;
+      var txt = d === 0 ? '同じ 高さ' : ad === 1 ? '<b>順次進行</b>（2度 ' + (d > 0 ? '上' : '下') + '）' : '<b>跳躍</b>（' + CP.degName(d) + ' ' + (d > 0 ? '上' : '下') + '）';
+      if (ad === 1 && Math.abs(dp) >= 3 && d * dp < 0) txt += '。直前の 跳躍を <b>反対向きの 2度</b>で もどしている';
+      else if (ad >= 3) txt += '。次は 反対向きの 2度で もどる';
+      r.push({ k: '旋律', t: txt });
+    }
+    return r;
+  };
+
   /* ---------- もっと よくする ための アドバイス（ルール違反 では ない） ---------- */
   CP.advice = function (spec) {
     var key = spec.key, cf = spec.cf, ab = spec.above !== false, sg = ab ? 1 : -1, tl = timeline(spec.cp), L = cf.length, r = [];
