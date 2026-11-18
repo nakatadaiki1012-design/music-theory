@@ -26,7 +26,7 @@
     pool.forEach(function (w) { if (list.length < n - 1 && !seen[w.k]) { seen[w.k] = 1; list.push(w); } });
     // 正解だけ 目立って 長い（説明つき）ときは かっこ書きを はずす（「いちばん長いのが 正解」を 防ぐ）
     var orig = right;
-    if (plain(right) && list.length && list.every(plain)) {
+    if (plain(right) && list.length && list.every(plain) && !list.some(function (w) { return /（/.test(String(w.t)); })) {   // まちがいにも かっこ書きが あれば そろって いるので そのまま
       var mx = Math.max.apply(null, list.map(len));
       if (len(right) > mx * 1.3 + 2) { var t2 = String(right.t).replace(/（[^）]*）/g, '').replace(/[\s　]+$/, ''); if (t2.replace(/<[^>]+>/g, '').trim().length >= 2) right = { k: right.k, t: t2, w: right.w };
         var bs = String(right.t).match(/<b>[^<]*<\/b>/g);
@@ -1309,10 +1309,23 @@
   GK.Q.addTips = function (m) { Object.keys(m).forEach(function (k) { m[k].split(',').forEach(function (id) { TIPS[id] = k; }); }); };
   Object.keys(T).forEach(function (k) { T[k].id = k; });
   // 1 問つくる
+  // 選択肢から「答えだけ 目立つ」手がかりを 消す
+  //  ・太字（<b>）は 選択肢では 使わない（解説では そのまま）
+  //  ・正解にだけ（…）の 補足が ついて いる ときは、選択肢では 補足を 外す（補足は 解説で わかる）
+  function fair(q) {
+    if (!q.ch || q.ch.some(function (c) { return typeof c !== 'string'; })) return;
+    q.ch = q.ch.map(function (c) { return c.replace(/<\/?b>/g, ''); });
+    var P = /（[^（）]*）/g, R0 = q.ch[q.a];
+    if (P.test(R0) && q.ch.every(function (c, i) { return i === q.a || !/（/.test(c); })) {
+      var r2 = R0.replace(P, '').replace(/\s+/g, ' ').trim();
+      if (r2 && q.ch.indexOf(r2) < 0) q.ch[q.a] = r2;
+    }
+  }
   GK.Q.make = function (id, R, st) {
     var t = T[id], s = st || t.st;
     var q = t.gen(R, s);
     q.t = id; q.u = t.u; q.st = Math.max(t.st, Math.min(3, s)); q.ear = !!(t.ear || q.ear);
+    fair(q);
     // 楽語は 解説に 語源（いちばんの 覚え方）が 入るので 覚え方の 一言は 省く
     if (!q.tip && TIPS[id] && !(q.term && GK.termByName(q.term) && GK.termByName(q.term).nu)) q.tip = TIPS[id];
     return q;

@@ -92,6 +92,14 @@
       if (sim && pa && pb && (va % 7) === (vb % 7)) add('par', t1, (vb % 7 === 4 ? '連続5度' : '連続8度') + '（同じ向きに 動いて 同じ 完全音程）');
       else if (sim && pb && !pa && sp === 1) add('hid', t1, '隠伏5度・8度（同じ向きに 動いて 完全音程に ぶつかる）');
     }
+    if (sp === 1) {   // 3度・6度の 平行は 3 回まで（同じ 音程が 5 つ 並ぶと 声部が 独立して 聞こえない）
+      var run = 0;
+      for (var q1 = 1; q1 < onset.length; q1++) {
+        var p0 = onset[q1 - 1], p1 = onset[q1], c0 = cfAt(cf, p0.t), c1 = cfAt(cf, p1.t), w0 = ((p0.n - c0) * sg) % 7, w1 = ((p1.n - c1) * sg) % 7, mv = c1 - c0, mp = p1.n - p0.n;
+        run = mv && mp && (mv > 0) === (mp > 0) && w0 === w1 && (w1 === 2 || w1 === 5) ? run + 1 : 0;
+        if (run === 4) add('par3', p1.t, (w1 === 2 ? '3度' : '6度') + 'の 平行が 4 回 続いた（3 回までに。反行を はさむ）');
+      }
+    }
     if (sp >= 2) for (var bq = 1; bq < L; bq++) {      // 強拍から 強拍への 連続5度・8度
       var s0 = soundAt(tl, (bq - 1) * 4), s1 = soundAt(tl, bq * 4);
       if (!s0 || !s1 || s0.n === s1.n) continue;
